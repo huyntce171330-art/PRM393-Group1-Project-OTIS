@@ -19,6 +19,4 @@ Future<void> init() async {
   final database = await DatabaseHelper.database;
   sl.registerLazySingleton<Database>(() => database);
   print("SQLite Connected Successfully");
-
-  // tiếp tục đăng ký datasource, repository, bloc...
 }
