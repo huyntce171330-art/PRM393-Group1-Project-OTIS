@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'presentation/screens/home_screen.dart';
 
 class OtisApp extends StatelessWidget {
   const OtisApp({super.key});
@@ -13,6 +14,7 @@ class OtisApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
+      home: const HomeScreen(),
     );
   }
 }

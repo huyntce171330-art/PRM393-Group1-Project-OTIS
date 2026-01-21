@@ -1,5 +1,18 @@
-// Home screen of the application.
-//
-// Steps:
-// 1. Use `Scaffold` with `NavBar`.
-// 2. Show `ProductListScreen` or `CategoryListScreen` based on selected tab.
+import 'package:flutter/material.dart';
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('OTIS Home'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: const Center(
+        child: Text('Welcome to Otis Project', style: TextStyle(fontSize: 24)),
+      ),
+    );
+  }
+}
