@@ -16,7 +16,6 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'otis.db');
 
-    // Kiểm tra xem database đã tồn tại chưa
     final exists = await databaseExists(path);
 
     if (!exists) {
@@ -26,7 +25,6 @@ class DatabaseHelper {
         await Directory(dirname(path)).create(recursive: true);
       } catch (_) {}
 
-      // Copy từ assets vào bộ nhớ máy
       ByteData data = await rootBundle.load(
         join("assets", "database", "otis.db"),
       );
@@ -35,9 +33,8 @@ class DatabaseHelper {
         data.lengthInBytes,
       );
 
-      // Ghi file
       await File(path).writeAsBytes(bytes, flush: true);
-      print("✅ Database copied successfully");
+      print("Database copied successfully");
     } else {
       print("Opening existing database");
     }

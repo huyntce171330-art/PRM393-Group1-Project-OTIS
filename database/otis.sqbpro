@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="otis.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="3728"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="categories" custom_title="0" dock_id="1" table="4,10:maincategories"/><dock_state state="000000ff00000000fd00000001000000020000000000000000fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000ffffffff0000011300ffffff000000000000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1*">-- 1. Xóa bảng cũ nếu có (để làm sạch)
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS categories;
+
+-- 2. Tạo bảng CATEGORIES
+CREATE TABLE categories (
+    category_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Tạo bảng PRODUCTS
+-- Lưu ý: Tôi đã bỏ tạm FK brand_id, vehicle_type_id... nếu bạn chưa tạo bảng đó
+CREATE TABLE products (
+    product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id INTEGER REFERENCES categories(category_id),
+    
+    brand_id INTEGER, -- Tạm thời để trống constraint nếu chưa có bảng brands
+    vehicle_type_id INTEGER,
+    tire_size_id INTEGER,
+
+    name TEXT NOT NULL,
+    description TEXT,
+    price REAL NOT NULL, -- SQLite dùng REAL cho số thực
+    stock_quantity INTEGER DEFAULT 0,
+    image_url TEXT, -- Lưu URL ảnh ở đây
+
+    status TEXT CHECK(status IN ('available','out_of_stock','inactive')) DEFAULT 'available',
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. INSERT DATA MẪU
+
+-- Thêm Categories
+INSERT INTO categories (name, description) VALUES ('Lốp Xe', 'Các loại lốp xe chính hãng');
+INSERT INTO categories (name, description) VALUES ('Dầu Nhớt', 'Dầu nhớt cao cấp cho động cơ');
+
+-- Thêm Products (Có link ảnh Cloudinary)
+-- Sản phẩm 1
+INSERT INTO products (category_id, name, description, price, stock_quantity, image_url, status)
+VALUES (
+    1, 
+    'Lốp Michelin Primacy 4', 
+    'Lốp xe êm ái, bám đường tốt, công nghệ mới.', 
+    2500000, 
+    10, 
+    'https://res.cloudinary.com/dj7jvklwp/image/upload/v1768495113/e30fb14e-1d18-485a-b661-6f77be7f3c5c.png',
+    'available'
+);
+
+-- Sản phẩm 2
+INSERT INTO products (category_id, name, description, price, stock_quantity, image_url, status)
+VALUES (
+    2, 
+    'Dầu Nhớt Castrol Power 1', 
+    'Dầu nhớt tổng hợp toàn phần cho xe máy.', 
+    150000, 
+    50, 
+    'https://res.cloudinary.com/dj7jvklwp/image/upload/v1768495080/4b50620a-8f51-4e19-82b7-3ebee3854a3c.png',
+    'available'
+);</sql><current_tab id="0"/></tab_sql></sqlb_project>
