@@ -14,19 +14,19 @@ class DatabaseHelper {
 
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'otis.db');
+    final path = join(dbPath, 'otis_v1.0.db');
 
     final exists = await databaseExists(path);
 
     if (!exists) {
-      print("Creating new copy from asset");
+      print("Creating new copy from asset ${path}");
 
       try {
         await Directory(dirname(path)).create(recursive: true);
       } catch (_) {}
 
       ByteData data = await rootBundle.load(
-        join("assets", "database", "otis.db"),
+        join("assets", "database", "otis_v1.0.db"),
       );
       List<int> bytes = data.buffer.asUint8List(
         data.offsetInBytes,
@@ -34,9 +34,9 @@ class DatabaseHelper {
       );
 
       await File(path).writeAsBytes(bytes, flush: true);
-      print("Database copied successfully");
+      print("Database copied successfully ${path}");
     } else {
-      print("Opening existing database");
+      print("Opening existing database ${path}");
     }
 
     return await openDatabase(path, version: 1);

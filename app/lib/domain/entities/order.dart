@@ -1,11 +1,32 @@
-// Entity representing an Order.
-//
-// Steps:
-// 1. Define class `Order` (extend Equatable).
-// 2. Add properties:
-//    - `final String id;`
-//    - `final List<OrderItem> items;`
-//    - `final double totalAmount;`
-//    - `final String status;` (e.g., 'pending', 'paid', 'shipped')
-//    - `final DateTime createdAt;`
-//    - `final String paymentMethod;`
+import 'package:equatable/equatable.dart';
+
+class Order extends Equatable {
+  final int orderId;
+  final String code;
+  final int userId;
+  final double totalAmount;
+  final String status;
+  final String shippingAddress;
+  final DateTime createdAt;
+
+  const Order({
+    required this.orderId,
+    required this.code,
+    required this.userId,
+    required this.totalAmount,
+    required this.status,
+    required this.shippingAddress,
+    required this.createdAt,
+  });
+
+  @override
+  List<Object?> get props => [
+    orderId,
+    code,
+    userId,
+    totalAmount,
+    status,
+    shippingAddress,
+    createdAt,
+  ];
+}

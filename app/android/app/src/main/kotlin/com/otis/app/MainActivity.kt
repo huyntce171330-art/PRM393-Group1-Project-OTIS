@@ -1,4 +1,4 @@
-package com.example.frontend_otis
+package com.otis.app
 
 import io.flutter.embedding.android.FlutterActivity
 
