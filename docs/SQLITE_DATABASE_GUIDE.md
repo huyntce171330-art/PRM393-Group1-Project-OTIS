@@ -3,7 +3,7 @@ Lần đầu phải làm chuyện này
 
 
 cd T:\PRM393-Group1-Project-OTIS
-dart create_db_standalone.dart
+dart app/bin/create_db_standalone.dart
 
 
 
