@@ -18,6 +18,7 @@ import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
 import '../../../core/injections/auth_injection.dart';
+import '../home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -52,10 +53,15 @@ class _LoginScreenState extends State<LoginScreen> {
               }
 
               if (state is Authenticated) {
-                // TODO: Navigate to HomeScreen
-                // Navigator.pushReplacement(...)
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const HomeScreen(),
+                  ),
+                );
               }
             },
+
             builder: (context, state) {
               return Padding(
                 padding: const EdgeInsets.all(24),
@@ -126,9 +132,12 @@ class _LoginScreenState extends State<LoginScreen> {
         onPressed: state is AuthLoading
             ? null
             : () {
+          // STEP 1: DEBUG — confirm button press
+          print('LOGIN CLICKED: ${_emailController.text}');
+
           context.read<AuthBloc>().add(
             LoginEvent(
-              email: _emailController.text,
+              phone: _emailController.text,
               password: _passwordController.text,
             ),
           );
@@ -139,6 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
 
   Widget _buildRegisterButton(BuildContext context) {
     return TextButton(

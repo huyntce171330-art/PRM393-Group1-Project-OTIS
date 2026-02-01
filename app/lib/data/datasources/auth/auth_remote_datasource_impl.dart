@@ -24,11 +24,11 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
   AuthRemoteDatasourceImpl(this.database);
 
   @override
-  Future<UserModel> login(String email, String password) async {
+  Future<UserModel> login(String phone, String password) async {
     final result = await database.query(
       'users',
-      where: 'email = ? AND password_hash = ? AND status = ?',
-      whereArgs: [email, password, 'active'],
+      where: 'phone = ? AND password_hash = ? AND status = ?',
+      whereArgs: [phone, password, 'active'],
     );
 
     if (result.isEmpty) {

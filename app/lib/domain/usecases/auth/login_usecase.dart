@@ -18,11 +18,11 @@ class LoginUsecase {
   LoginUsecase(this.repository);
 
   Future<Either<Failure, User>> call({
-    required String email,
+    required String phone,
     required String password,
   }) {
     return repository.login(
-      email: email,
+      phone: phone,
       password: password,
     );
   }
