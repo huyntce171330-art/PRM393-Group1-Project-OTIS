@@ -13,86 +13,60 @@
 //    - Call (optional) API `/auth/logout`.
 //    - Clear local tokens (SharedPreferences/SecureStorage).
 
-import 'package:dio/dio.dart';
-import 'package:frontend_otis/data/models/user_model.dart';
+import 'package:sqflite/sqflite.dart';
+
 import 'auth_remote_datasource.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../models/user_model.dart';
 
-/// Implementation of AuthRemoteDatasource using Dio
 class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
-  final Dio dio;
+  final Database database;
 
-  AuthRemoteDatasourceImpl(this.dio);
+  AuthRemoteDatasourceImpl(this.database);
 
-  /// Login user with email & password
   @override
   Future<UserModel> login(String email, String password) async {
-    try {
-      final response = await dio.post(
-        '/auth/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
-      );
+    final result = await database.query(
+      'users',
+      where: 'email = ? AND password_hash = ? AND status = ?',
+      whereArgs: [email, password, 'active'],
+    );
 
-      final userModel = UserModel.fromJson(response.data);
-
-      // Optional: Save token to SharedPreferences if API returns one
-      final token = response.data['token'];
-      if (token != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
-      }
-
-      return userModel;
-    } catch (e) {
-      // Throw exception to be handled in repository
-      throw Exception('Login failed: $e');
+    if (result.isEmpty) {
+      throw Exception('Invalid email or password');
     }
+
+    return UserModel.fromJson(result.first);
   }
 
-  /// Register user with name, email, password, phone
   @override
   Future<UserModel> register(
-      String name, String email, String password, String phone) async {
-    try {
-      final response = await dio.post(
-        '/auth/register',
-        data: {
-          'full_name': name,
-          'email': email,
-          'password': password,
-          'phone': phone,
-        },
-      );
+      String name,
+      String email,
+      String password,
+      String phone,
+      ) async {
+    await database.insert(
+      'users',
+      {
+        'name': name,
+        'email': email,
+        'password': password,
+        'phone': phone,
+      },
+    );
 
-      final userModel = UserModel.fromJson(response.data);
+    final result = await database.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
 
-      // Optional: Save token if API returns one
-      final token = response.data['token'];
-      if (token != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
-      }
-
-      return userModel;
-    } catch (e) {
-      throw Exception('Register failed: $e');
-    }
+    return UserModel.fromJson(result.first);
   }
 
-  /// Logout user
   @override
   Future<void> logout() async {
-    try {
-      await dio.post('/auth/logout');
-
-      // Clear token from local storage
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('auth_token');
-    } catch (e) {
-      throw Exception('Logout failed: $e');
-    }
+    // Local app → nothing to clear
+    return;
   }
 }

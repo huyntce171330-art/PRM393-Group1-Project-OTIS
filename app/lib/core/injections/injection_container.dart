@@ -10,6 +10,8 @@
 
 import 'package:sqflite/sqflite.dart';
 import 'package:get_it/get_it.dart';
+import '../../data/datasources/auth/auth_remote_datasource.dart';
+import '../../data/datasources/auth/auth_remote_datasource_impl.dart';
 import './database_helper.dart';
 
 final sl = GetIt.instance;
@@ -18,5 +20,11 @@ Future<void> init() async {
   // DATABASE
   final database = await DatabaseHelper.database;
   sl.registerLazySingleton<Database>(() => database);
+
+  // AUTH DATASOURCE (still called "remote" by design)
+  sl.registerLazySingleton<AuthRemoteDatasource>(
+        () => AuthRemoteDatasourceImpl(sl()),
+  );
+
   print("SQLite Connected Successfully");
 }

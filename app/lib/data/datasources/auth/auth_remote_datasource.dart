@@ -6,17 +6,16 @@
 // 3. Define `Future<UserModel> register(String name, String email, String password, String phone);`
 // 4. Define `Future<void> logout();` (optional if handled locally, but API might have logout endpoint).
 
-  import 'package:frontend_otis/data/models/user_model.dart';
+  import '../../models/user_model.dart';
 
-  /// Interface for authentication remote data source
   abstract class AuthRemoteDatasource {
-    /// Login user with email and password
     Future<UserModel> login(String email, String password);
-
-    /// Register user with name, email, password, phone
     Future<UserModel> register(
-        String name, String email, String password, String phone);
-
-    /// Logout user (optional API call)
+        String name,
+        String email,
+        String password,
+        String phone,
+        );
     Future<void> logout();
   }
+
