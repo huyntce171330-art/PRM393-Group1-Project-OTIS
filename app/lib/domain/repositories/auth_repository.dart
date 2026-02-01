@@ -8,3 +8,24 @@
 //    - Adjust parameters based on your User model and API requirements.
 // 5. Define `Future<Either<Failure, void>> logout();`
 //    - This might clear local tokens.
+
+import 'package:fpdart/fpdart.dart';
+
+import '../../core/error/failures.dart';
+import '../entities/user.dart';
+
+abstract class AuthRepository {
+  Future<Either<Failure, User>> login({
+    required String email,
+    required String password,
+  });
+
+  Future<Either<Failure, User>> register({
+    required String fullName,
+    required String email,
+    required String password,
+    required String phone,
+  });
+
+  Future<Either<Failure, void>> logout();
+}

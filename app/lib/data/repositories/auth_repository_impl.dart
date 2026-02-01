@@ -13,3 +13,59 @@
 // 5. Implement `logout`:
 //    - Call `remoteDatasource.logout`.
 //    - Return `Right(null)`.
+
+import 'package:fpdart/fpdart.dart';
+import 'package:frontend_otis/domain/entities/user.dart';
+import 'package:frontend_otis/domain/repositories/auth_repository.dart';
+import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart';
+import 'package:frontend_otis/core/error/failures.dart';
+
+
+/// Repository implementation connecting Domain and Data layers
+class AuthRepositoryImpl implements AuthRepository {
+  final AuthRemoteDatasource remoteDatasource;
+
+  AuthRepositoryImpl(this.remoteDatasource);
+
+  /// Login user
+  @override
+  Future<Either<Failure, User>> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final userModel = await remoteDatasource.login(email, password);
+      return Right(userModel.toDomain());
+    } catch (e) {
+      return Left(ServerFailure('Login failed: ${e.toString()}'));
+    }
+  }
+
+  /// Register user
+  @override
+  Future<Either<Failure, User>> register({
+    required String email,
+    required String fullName,
+    required String password,
+    required String phone,
+  }) async {
+    try {
+      final userModel = await remoteDatasource.register(fullName, email, password, phone);
+      return Right(userModel.toDomain());
+    } catch (e) {
+      return Left(ServerFailure('Register failed: ${e.toString()}'));
+    }
+  }
+
+
+  /// Logout user
+  @override
+  Future<Either<Failure, void>> logout() async {
+    try {
+      await remoteDatasource.logout();
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure('Logout failed: ${e.toString()}'));
+    }
+  }
+}
