@@ -1,5 +1,7 @@
-import 'package:frontend_otis/core/enums/enums.dart';
+import 'package:frontend_otis/core/enums/enums.dart' as enums;
 import 'package:frontend_otis/domain/entities/user.dart';
+import 'package:frontend_otis/domain/entities/user_role.dart' as entities;
+import 'package:frontend_otis/data/models/user_role_model.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user_model.g.dart';
@@ -39,12 +41,12 @@ class UserModel {
   /// URL to user's avatar image
   final String avatarUrl;
 
-  /// User's role in the system
-  @UserRoleConverter()
-  final UserRole role;
+  /// User's role in the system (nullable for dynamic roles from DB)
+  @JsonKey(fromJson: _roleFromJson, toJson: _roleToJson)
+  final entities.UserRole? role;
 
   /// User's current status
-  final UserStatus status;
+  final enums.UserStatus status;
 
   /// When the user was created
   final DateTime createdAt;
@@ -59,7 +61,7 @@ class UserModel {
       address: _parseString(json['address'], defaultValue: ''),
       shopName: _parseString(json['shop_name'], defaultValue: ''),
       avatarUrl: _parseString(json['avatar_url'], defaultValue: ''),
-      role: _parseUserRole(json['role_id']),
+      role: _parseUserRole(json['role_id'], json['role']),
       status: _parseUserStatus(json['status']),
       createdAt: _parseDateTime(json['created_at']),
     );
@@ -127,44 +129,70 @@ class UserModel {
   }
 
   /// Parse role_id from JSON to UserRole enum with defensive handling.
-  static UserRole _parseUserRole(dynamic value) {
-    if (value == null) return UserRole.customer; // Default to customer
+  /// Falls back to enum conversion if role object not provided.
+  static entities.UserRole? _parseUserRole(dynamic value, dynamic roleJson) {
+    // Try to parse from role object if available
+    if (roleJson != null && roleJson is Map<String, dynamic>) {
+      final roleModel = UserRoleModel.fromJson(roleJson);
+      return roleModel.toDomain();
+    }
+
+    // Fallback to role_id integer conversion
+    if (value == null) return null;
 
     if (value is int) {
-      return const UserRoleConverter().fromJson(value);
+      return const enums.UserRoleConverter().fromJson(value) as entities.UserRole?;
     }
 
     if (value is String) {
-      // Try to parse string as int first
       final intValue = int.tryParse(value);
       if (intValue != null) {
-        return const UserRoleConverter().fromJson(intValue);
+        return const enums.UserRoleConverter().fromJson(intValue) as entities.UserRole?;
       }
     }
 
-    // Default to customer for invalid values
-    return UserRole.customer;
+    return null;
+  }
+
+  /// Custom fromJson for UserRole? field
+  static entities.UserRole? _roleFromJson(dynamic json) {
+    if (json == null) return null;
+    if (json is Map<String, dynamic>) {
+      final roleModel = UserRoleModel.fromJson(json);
+      return roleModel.toDomain();
+    }
+    // Handle integer role_id
+    if (json is int) {
+      return const enums.UserRoleConverter().fromJson(json) as entities.UserRole?;
+    }
+    return null;
+  }
+
+  /// Custom toJson for UserRole? field
+  static dynamic _roleToJson(entities.UserRole? role) {
+    if (role == null) return null;
+    return UserRoleModel.fromDomain(role).toJson();
   }
 
   /// Parse status from JSON to UserStatus enum with defensive handling.
-  static UserStatus _parseUserStatus(dynamic value) {
-    if (value == null) return UserStatus.active; // Default to active
+  static enums.UserStatus _parseUserStatus(dynamic value) {
+    if (value == null) return enums.UserStatus.active; // Default to active
 
     if (value is String) {
       final normalized = value.toLowerCase().trim();
       switch (normalized) {
         case 'active':
-          return UserStatus.active;
+          return enums.UserStatus.active;
         case 'inactive':
-          return UserStatus.inactive;
+          return enums.UserStatus.inactive;
         default:
           // Default to active for unknown status values
-          return UserStatus.active;
+          return enums.UserStatus.active;
       }
     }
 
     // Default to active for non-string values
-    return UserStatus.active;
+    return enums.UserStatus.active;
   }
 
   /// Parse created_at from JSON to DateTime with defensive handling.

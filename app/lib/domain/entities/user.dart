@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:frontend_otis/core/enums/enums.dart';
+import 'package:frontend_otis/core/enums/enums.dart' as enums;
+
+import 'user_role.dart' as entities;
 
 part 'user.freezed.dart';
 
@@ -28,21 +30,21 @@ class User with _$User {
     /// URL to user's avatar image
     required String avatarUrl,
 
-    /// User's role in the system
-    required UserRole role,
+    /// User's role in the system (nullable for dynamic roles from DB)
+    entities.UserRole? role,
 
     /// User's current status
-    required UserStatus status,
+    required enums.UserStatus status,
 
     /// When the user was created
     required DateTime createdAt,
   }) = _User;
 
   /// Check if the user has admin privileges
-  bool get isAdmin => role == UserRole.admin;
+  bool get isAdmin => role?.isAdmin ?? false;
 
   /// Check if the user is active
-  bool get isActive => status == UserStatus.active;
+  bool get isActive => status == enums.UserStatus.active;
 
   /// Get the user's display name (full name or phone if name is empty)
   String get displayName => fullName.isNotEmpty ? fullName : phone;

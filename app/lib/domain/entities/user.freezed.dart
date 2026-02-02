@@ -1,8 +1,3 @@
-// coverage:ignore-file
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint
-// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
-
 part of 'user.dart';
 
 // **************************************************************************
@@ -35,11 +30,11 @@ mixin _$User {
   /// URL to user's avatar image
   String get avatarUrl => throw _privateConstructorUsedError;
 
-  /// User's role in the system
-  UserRole get role => throw _privateConstructorUsedError;
+  /// User's role in the system (nullable for dynamic roles from DB)
+  entities.UserRole? get role => throw _privateConstructorUsedError;
 
   /// User's current status
-  UserStatus get status => throw _privateConstructorUsedError;
+  enums.UserStatus get status => throw _privateConstructorUsedError;
 
   /// When the user was created
   DateTime get createdAt => throw _privateConstructorUsedError;
@@ -62,10 +57,12 @@ abstract class $UserCopyWith<$Res> {
     String address,
     String shopName,
     String avatarUrl,
-    UserRole role,
-    UserStatus status,
+    entities.UserRole? role,
+    enums.UserStatus status,
     DateTime createdAt,
   });
+
+  entities.$UserRoleCopyWith<$Res>? get role;
 }
 
 /// @nodoc
@@ -89,7 +86,7 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
     Object? address = null,
     Object? shopName = null,
     Object? avatarUrl = null,
-    Object? role = null,
+    Object? role = freezed,
     Object? status = null,
     Object? createdAt = null,
   }) {
@@ -119,14 +116,14 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
                 ? _value.avatarUrl
                 : avatarUrl // ignore: cast_nullable_to_non_nullable
                       as String,
-            role: null == role
+            role: freezed == role
                 ? _value.role
                 : role // ignore: cast_nullable_to_non_nullable
-                      as UserRole,
+                      as entities.UserRole?,
             status: null == status
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
-                      as UserStatus,
+                      as enums.UserStatus,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -134,6 +131,20 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
           )
           as $Val,
     );
+  }
+
+  /// Create a copy of User
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  entities.$UserRoleCopyWith<$Res>? get role {
+    if (_value.role == null) {
+      return null;
+    }
+
+    return entities.$UserRoleCopyWith<$Res>(_value.role!, (value) {
+      return _then(_value.copyWith(role: value) as $Val);
+    });
   }
 }
 
@@ -152,10 +163,13 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
     String address,
     String shopName,
     String avatarUrl,
-    UserRole role,
-    UserStatus status,
+    entities.UserRole? role,
+    enums.UserStatus status,
     DateTime createdAt,
   });
+
+  @override
+  entities.$UserRoleCopyWith<$Res>? get role;
 }
 
 /// @nodoc
@@ -176,7 +190,7 @@ class __$$UserImplCopyWithImpl<$Res>
     Object? address = null,
     Object? shopName = null,
     Object? avatarUrl = null,
-    Object? role = null,
+    Object? role = freezed,
     Object? status = null,
     Object? createdAt = null,
   }) {
@@ -206,14 +220,14 @@ class __$$UserImplCopyWithImpl<$Res>
             ? _value.avatarUrl
             : avatarUrl // ignore: cast_nullable_to_non_nullable
                   as String,
-        role: null == role
+        role: freezed == role
             ? _value.role
             : role // ignore: cast_nullable_to_non_nullable
-                  as UserRole,
+                  as entities.UserRole?,
         status: null == status
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
-                  as UserStatus,
+                  as enums.UserStatus,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -233,7 +247,7 @@ class _$UserImpl extends _User {
     required this.address,
     required this.shopName,
     required this.avatarUrl,
-    required this.role,
+    this.role,
     required this.status,
     required this.createdAt,
   }) : super._();
@@ -262,13 +276,13 @@ class _$UserImpl extends _User {
   @override
   final String avatarUrl;
 
-  /// User's role in the system
+  /// User's role in the system (nullable for dynamic roles from DB)
   @override
-  final UserRole role;
+  final entities.UserRole? role;
 
   /// User's current status
   @override
-  final UserStatus status;
+  final enums.UserStatus status;
 
   /// When the user was created
   @override
@@ -330,8 +344,8 @@ abstract class _User extends User {
     required final String address,
     required final String shopName,
     required final String avatarUrl,
-    required final UserRole role,
-    required final UserStatus status,
+    final entities.UserRole? role,
+    required final enums.UserStatus status,
     required final DateTime createdAt,
   }) = _$UserImpl;
   const _User._() : super._();
@@ -360,13 +374,13 @@ abstract class _User extends User {
   @override
   String get avatarUrl;
 
-  /// User's role in the system
+  /// User's role in the system (nullable for dynamic roles from DB)
   @override
-  UserRole get role;
+  entities.UserRole? get role;
 
   /// User's current status
   @override
-  UserStatus get status;
+  enums.UserStatus get status;
 
   /// When the user was created
   @override
