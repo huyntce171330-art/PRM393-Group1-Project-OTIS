@@ -28,7 +28,10 @@ class LoginEvent extends AuthEvent {
   final String phone;
   final String password;
 
-  const LoginEvent({required this.phone, required this.password});
+  const LoginEvent({
+    required this.phone,
+    required this.password,
+  });
 
   @override
   List<Object?> get props => [phone, password];
@@ -37,19 +40,17 @@ class LoginEvent extends AuthEvent {
 /// Event to register a new user
 class RegisterEvent extends AuthEvent {
   final String fullName;
-  final String email;
-  final String password;
   final String phone;
+  final String password;
 
   const RegisterEvent({
     required this.fullName,
-    required this.email,
-    required this.password,
     required this.phone,
+    required this.password,
   });
 
   @override
-  List<Object?> get props => [fullName, email, password, phone];
+  List<Object?> get props => [fullName, phone, password];
 }
 
 /// Event to log out the current user
@@ -57,3 +58,4 @@ class LogoutEvent extends AuthEvent {}
 
 /// Optional: Event to check auth status on app start
 class CheckAuthStatusEvent extends AuthEvent {}
+

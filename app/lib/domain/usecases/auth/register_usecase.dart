@@ -19,15 +19,13 @@ class RegisterUsecase {
 
   Future<Either<Failure, User>> call({
     required String fullName,
-    required String email,
-    required String password,
     required String phone,
+    required String password,
   }) {
     return repository.register(
       fullName: fullName,
-      email: email,
-      password: password,
       phone: phone,
+      password: password,
     );
   }
 }

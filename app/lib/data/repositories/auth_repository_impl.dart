@@ -20,7 +20,6 @@ import 'package:frontend_otis/domain/repositories/auth_repository.dart';
 import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart';
 import 'package:frontend_otis/core/error/failures.dart';
 
-
 /// Repository implementation connecting Domain and Data layers
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource remoteDatasource;
@@ -36,27 +35,33 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final userModel = await remoteDatasource.login(phone, password);
       return Right(userModel.toDomain());
-    } catch (e) {
-      return Left(ServerFailure('Login failed: ${e.toString()}'));
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (_) {
+      return Left(ServerFailure('Login failed'));
     }
   }
 
   /// Register user
   @override
   Future<Either<Failure, User>> register({
-    required String email,
-    required String fullName,
-    required String password,
     required String phone,
+    required String password,
+    required String fullName,
   }) async {
     try {
-      final userModel = await remoteDatasource.register(fullName, email, password, phone);
+      final userModel = await remoteDatasource.register(
+        fullName,
+        password,
+        phone,
+      );
       return Right(userModel.toDomain());
-    } catch (e) {
-      return Left(ServerFailure('Register failed: ${e.toString()}'));
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (_) {
+      return Left(ServerFailure('Register failed'));
     }
   }
-
 
   /// Logout user
   @override
@@ -64,8 +69,11 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await remoteDatasource.logout();
       return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure('Logout failed: ${e.toString()}'));
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (_) {
+      return Left(ServerFailure('Logout failed'));
     }
   }
 }
+

@@ -11,8 +11,7 @@
   abstract class AuthRemoteDatasource {
     Future<UserModel> login(String phone, String password);
     Future<UserModel> register(
-        String name,
-        String email,
+        String fullName,
         String password,
         String phone,
         );

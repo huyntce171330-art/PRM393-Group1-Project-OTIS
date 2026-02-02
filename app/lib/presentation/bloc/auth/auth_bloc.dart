@@ -22,7 +22,6 @@ import 'package:frontend_otis/domain/usecases/auth/logout_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
-
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUsecase loginUsecase;
   final RegisterUsecase registerUsecase;
@@ -33,10 +32,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.registerUsecase,
     required this.logoutUsecase,
   }) : super(AuthInitial()) {
-    // Handle LoginEvent
+    /// Login
     on<LoginEvent>((event, emit) async {
       emit(AuthLoading());
-      final result = await loginUsecase(phone: event.phone, password: event.password);
+
+      final result = await loginUsecase(
+        phone: event.phone,
+        password: event.password,
+      );
 
       result.fold(
             (failure) => emit(AuthError(failure.message)),
@@ -44,14 +47,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     });
 
-    // Handle RegisterEvent
+    /// Register
     on<RegisterEvent>((event, emit) async {
       emit(AuthLoading());
+
       final result = await registerUsecase(
         fullName: event.fullName,
-        email: event.email,
-        password: event.password,
         phone: event.phone,
+        password: event.password,
       );
 
       result.fold(
@@ -60,20 +63,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     });
 
-    // Handle LogoutEvent
+    /// Logout
     on<LogoutEvent>((event, emit) async {
+      emit(AuthLoading());
+
       final result = await logoutUsecase();
+
       result.fold(
             (failure) => emit(AuthError(failure.message)),
             (_) => emit(Unauthenticated()),
       );
     });
 
-    // Optional: Handle CheckAuthStatusEvent
+    /// Check auth status (placeholder)
     on<CheckAuthStatusEvent>((event, emit) async {
-      // Implementation depends on local token check if desired
-      // Example: emit(Unauthenticated()) if no token
       emit(Unauthenticated());
     });
   }
 }
+
