@@ -5,6 +5,7 @@ import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
 import '../auth/register_screen.dart';
+import 'forgot_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,9 +32,11 @@ class _LoginScreenState extends State<LoginScreen> {
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
             }
 
             if (state is Authenticated) {
@@ -51,6 +54,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   _buildPhoneField(),
                   const SizedBox(height: 16),
                   _buildPasswordField(),
+                  const SizedBox(height: 8),
+                  _buildForgotPasswordButton(context),
                   const SizedBox(height: 24),
                   _buildLoginButton(context, state),
                   const SizedBox(height: 16),
@@ -141,6 +146,28 @@ class _LoginScreenState extends State<LoginScreen> {
       child: const Text(
         "Chưa có tài khoản? Đăng ký",
         style: TextStyle(fontSize: 14),
+      ),
+    );
+  }
+  Widget _buildForgotPasswordButton(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => BlocProvider.value(
+                value: context.read<AuthBloc>(),
+                child: const OtpScreen(),
+              ),
+            ),
+          );
+        },
+        child: const Text(
+          'Quên mật khẩu?',
+          style: TextStyle(fontSize: 13),
+        ),
       ),
     );
   }

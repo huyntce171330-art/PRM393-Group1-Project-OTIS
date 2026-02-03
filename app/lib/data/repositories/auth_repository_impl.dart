@@ -75,5 +75,71 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure('Logout failed'));
     }
   }
-}
 
+  // ─────────────────────────────────────────────
+  // 🔐 OTP
+  // ─────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, void>> requestOtp({
+    required String phone,
+  }) async {
+    try {
+      await remoteDatasource.requestOtp(phone);
+      return const Right(null);
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (_) {
+      return Left(ServerFailure('Request OTP failed'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyOtp({
+    required String phone,
+    required String otp,
+  }) async {
+    try {
+      await remoteDatasource.verifyOtp(phone, otp);
+      return const Right(null);
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (_) {
+      return Left(ServerFailure('Verify OTP failed'));
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // 🔑 Password
+  // ─────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, void>> resetPassword({
+    required String phone,
+    required String newPassword,
+  }) async {
+    try {
+      await remoteDatasource.resetPassword(phone, newPassword);
+      return const Right(null);
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (_) {
+      return Left(ServerFailure('Reset password failed'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> changePassword({
+    required String phone,
+    required String newPassword,
+  }) async {
+    try {
+      await remoteDatasource.changePassword(phone, newPassword);
+      return const Right(null);
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (_) {
+      return Left(ServerFailure('Change password failed'));
+    }
+  }
+}

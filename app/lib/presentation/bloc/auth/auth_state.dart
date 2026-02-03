@@ -49,3 +49,13 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+/// OTP has been sent successfully
+class OtpSent extends AuthState {}
+
+/// OTP has been verified successfully
+class OtpVerified extends AuthState {}
+
+/// Password was changed or reset successfully
+class PasswordChanged extends AuthState {}
+

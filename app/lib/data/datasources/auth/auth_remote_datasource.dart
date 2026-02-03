@@ -9,12 +9,38 @@
   import '../../models/user_model.dart';
 
   abstract class AuthRemoteDatasource {
+    /// Login
     Future<UserModel> login(String phone, String password);
+
+    /// Register
     Future<UserModel> register(
         String fullName,
         String password,
         String phone,
         );
+
+    /// Logout
     Future<void> logout();
+
+    // ─────────────────────────────────────────────
+    //  OTP
+    // ─────────────────────────────────────────────
+
+    /// Generate & send OTP (console)
+    Future<void> requestOtp(String phone);
+
+    /// Verify OTP
+    Future<void> verifyOtp(String phone, String otp);
+
+    // ─────────────────────────────────────────────
+    //  Password
+    // ─────────────────────────────────────────────
+
+    /// Forgot password flow
+    Future<void> resetPassword(String phone, String newPassword);
+
+    /// Change password (logged-in user)
+    Future<void> changePassword(String phone, String newPassword);
   }
+
 
