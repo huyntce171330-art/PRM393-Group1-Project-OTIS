@@ -16,6 +16,7 @@ CREATE TABLE users (
   full_name TEXT,
   address TEXT,
   shop_name TEXT,
+  avatar_url TEXT,
   role_id INTEGER,
   status TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -150,11 +151,11 @@ INSERT INTO user_roles (role_name) VALUES
 ('customer');
 
 -- 2. USERS
-INSERT INTO users (phone, password_hash, full_name, address, shop_name, role_id, status) VALUES
-('0900000000','hash_admin','Admin System','HCM','Admin Shop',1,'active'),
-('0900000001','hash_u1','Nguyen Van A','HCM','Shop A',2,'active'),
-('0900000002','hash_u2','Tran Thi B','Ha Noi','Shop B',2,'active'),
-('0900000003','hash_u3','Le Van C','Da Nang','Shop C',2,'active');
+INSERT INTO users (phone, password_hash, full_name, address, shop_name, avatar_url, role_id, status) VALUES
+('0900000000','hash_admin','Admin System','HCM','Admin Shop','https://example.com/avatar-admin.png',1,'active'),
+('0900000001','hash_u1','Nguyen Van A','HCM','Shop A','https://example.com/avatar-user1.png',2,'active'),
+('0900000002','hash_u2','Tran Thi B','Ha Noi','Shop B','https://example.com/avatar-user2.png',2,'active'),
+('0900000003','hash_u3','Le Van C','Da Nang','Shop C','https://example.com/avatar-user3.png',2,'active');
 
 -- 3. BRANDS
 INSERT INTO brands (name, logo_url) VALUES
