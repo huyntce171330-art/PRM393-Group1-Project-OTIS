@@ -28,7 +28,7 @@ class OrderItem with _$OrderItem {
     return '${unitPrice.toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
-    )} VND';
+    )} đ';
   }
 
   /// Get formatted total price
@@ -36,7 +36,7 @@ class OrderItem with _$OrderItem {
     return '${totalPrice.toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
-    )} VND';
+    )} đ';
   }
 
   /// Check if the order item is valid

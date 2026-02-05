@@ -21,7 +21,16 @@ mixin _$ProductState {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(List<Product> products) loaded,
+    required TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )
+    loaded,
     required TResult Function(Product product) detailLoaded,
     required TResult Function(String message) error,
   }) => throw _privateConstructorUsedError;
@@ -29,7 +38,16 @@ mixin _$ProductState {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(List<Product> products)? loaded,
+    TResult? Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult? Function(Product product)? detailLoaded,
     TResult? Function(String message)? error,
   }) => throw _privateConstructorUsedError;
@@ -37,7 +55,16 @@ mixin _$ProductState {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(List<Product> products)? loaded,
+    TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult Function(Product product)? detailLoaded,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -136,7 +163,16 @@ class _$ProductInitialImpl extends ProductInitial {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(List<Product> products) loaded,
+    required TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )
+    loaded,
     required TResult Function(Product product) detailLoaded,
     required TResult Function(String message) error,
   }) {
@@ -148,7 +184,16 @@ class _$ProductInitialImpl extends ProductInitial {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(List<Product> products)? loaded,
+    TResult? Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult? Function(Product product)? detailLoaded,
     TResult? Function(String message)? error,
   }) {
@@ -160,7 +205,16 @@ class _$ProductInitialImpl extends ProductInitial {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(List<Product> products)? loaded,
+    TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult Function(Product product)? detailLoaded,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -262,7 +316,16 @@ class _$ProductLoadingImpl extends ProductLoading {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(List<Product> products) loaded,
+    required TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )
+    loaded,
     required TResult Function(Product product) detailLoaded,
     required TResult Function(String message) error,
   }) {
@@ -274,7 +337,16 @@ class _$ProductLoadingImpl extends ProductLoading {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(List<Product> products)? loaded,
+    TResult? Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult? Function(Product product)? detailLoaded,
     TResult? Function(String message)? error,
   }) {
@@ -286,7 +358,16 @@ class _$ProductLoadingImpl extends ProductLoading {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(List<Product> products)? loaded,
+    TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult Function(Product product)? detailLoaded,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -350,7 +431,15 @@ abstract class _$$ProductLoadedImplCopyWith<$Res> {
     $Res Function(_$ProductLoadedImpl) then,
   ) = __$$ProductLoadedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({List<Product> products});
+  $Res call({
+    List<Product> products,
+    ProductFilter filter,
+    int currentPage,
+    int totalPages,
+    bool hasMore,
+    int totalCount,
+    bool isLoadingMore,
+  });
 }
 
 /// @nodoc
@@ -366,13 +455,45 @@ class __$$ProductLoadedImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? products = null}) {
+  $Res call({
+    Object? products = null,
+    Object? filter = null,
+    Object? currentPage = null,
+    Object? totalPages = null,
+    Object? hasMore = null,
+    Object? totalCount = null,
+    Object? isLoadingMore = null,
+  }) {
     return _then(
       _$ProductLoadedImpl(
         products: null == products
             ? _value._products
             : products // ignore: cast_nullable_to_non_nullable
                   as List<Product>,
+        filter: null == filter
+            ? _value.filter
+            : filter // ignore: cast_nullable_to_non_nullable
+                  as ProductFilter,
+        currentPage: null == currentPage
+            ? _value.currentPage
+            : currentPage // ignore: cast_nullable_to_non_nullable
+                  as int,
+        totalPages: null == totalPages
+            ? _value.totalPages
+            : totalPages // ignore: cast_nullable_to_non_nullable
+                  as int,
+        hasMore: null == hasMore
+            ? _value.hasMore
+            : hasMore // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        totalCount: null == totalCount
+            ? _value.totalCount
+            : totalCount // ignore: cast_nullable_to_non_nullable
+                  as int,
+        isLoadingMore: null == isLoadingMore
+            ? _value.isLoadingMore
+            : isLoadingMore // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -381,9 +502,16 @@ class __$$ProductLoadedImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$ProductLoadedImpl extends ProductLoaded {
-  const _$ProductLoadedImpl({required final List<Product> products})
-    : _products = products,
-      super._();
+  const _$ProductLoadedImpl({
+    required final List<Product> products,
+    required this.filter,
+    required this.currentPage,
+    required this.totalPages,
+    required this.hasMore,
+    required this.totalCount,
+    this.isLoadingMore = false,
+  }) : _products = products,
+       super._();
 
   final List<Product> _products;
   @override
@@ -394,8 +522,22 @@ class _$ProductLoadedImpl extends ProductLoaded {
   }
 
   @override
+  final ProductFilter filter;
+  @override
+  final int currentPage;
+  @override
+  final int totalPages;
+  @override
+  final bool hasMore;
+  @override
+  final int totalCount;
+  @override
+  @JsonKey()
+  final bool isLoadingMore;
+
+  @override
   String toString() {
-    return 'ProductState.loaded(products: $products)';
+    return 'ProductState.loaded(products: $products, filter: $filter, currentPage: $currentPage, totalPages: $totalPages, hasMore: $hasMore, totalCount: $totalCount, isLoadingMore: $isLoadingMore)';
   }
 
   @override
@@ -403,12 +545,30 @@ class _$ProductLoadedImpl extends ProductLoaded {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ProductLoadedImpl &&
-            const DeepCollectionEquality().equals(other._products, _products));
+            const DeepCollectionEquality().equals(other._products, _products) &&
+            (identical(other.filter, filter) || other.filter == filter) &&
+            (identical(other.currentPage, currentPage) ||
+                other.currentPage == currentPage) &&
+            (identical(other.totalPages, totalPages) ||
+                other.totalPages == totalPages) &&
+            (identical(other.hasMore, hasMore) || other.hasMore == hasMore) &&
+            (identical(other.totalCount, totalCount) ||
+                other.totalCount == totalCount) &&
+            (identical(other.isLoadingMore, isLoadingMore) ||
+                other.isLoadingMore == isLoadingMore));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_products));
+  int get hashCode => Object.hash(
+    runtimeType,
+    const DeepCollectionEquality().hash(_products),
+    filter,
+    currentPage,
+    totalPages,
+    hasMore,
+    totalCount,
+    isLoadingMore,
+  );
 
   /// Create a copy of ProductState
   /// with the given fields replaced by the non-null parameter values.
@@ -423,11 +583,28 @@ class _$ProductLoadedImpl extends ProductLoaded {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(List<Product> products) loaded,
+    required TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )
+    loaded,
     required TResult Function(Product product) detailLoaded,
     required TResult Function(String message) error,
   }) {
-    return loaded(products);
+    return loaded(
+      products,
+      filter,
+      currentPage,
+      totalPages,
+      hasMore,
+      totalCount,
+      isLoadingMore,
+    );
   }
 
   @override
@@ -435,11 +612,28 @@ class _$ProductLoadedImpl extends ProductLoaded {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(List<Product> products)? loaded,
+    TResult? Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult? Function(Product product)? detailLoaded,
     TResult? Function(String message)? error,
   }) {
-    return loaded?.call(products);
+    return loaded?.call(
+      products,
+      filter,
+      currentPage,
+      totalPages,
+      hasMore,
+      totalCount,
+      isLoadingMore,
+    );
   }
 
   @override
@@ -447,13 +641,30 @@ class _$ProductLoadedImpl extends ProductLoaded {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(List<Product> products)? loaded,
+    TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult Function(Product product)? detailLoaded,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
     if (loaded != null) {
-      return loaded(products);
+      return loaded(
+        products,
+        filter,
+        currentPage,
+        totalPages,
+        hasMore,
+        totalCount,
+        isLoadingMore,
+      );
     }
     return orElse();
   }
@@ -500,11 +711,24 @@ class _$ProductLoadedImpl extends ProductLoaded {
 }
 
 abstract class ProductLoaded extends ProductState {
-  const factory ProductLoaded({required final List<Product> products}) =
-      _$ProductLoadedImpl;
+  const factory ProductLoaded({
+    required final List<Product> products,
+    required final ProductFilter filter,
+    required final int currentPage,
+    required final int totalPages,
+    required final bool hasMore,
+    required final int totalCount,
+    final bool isLoadingMore,
+  }) = _$ProductLoadedImpl;
   const ProductLoaded._() : super._();
 
   List<Product> get products;
+  ProductFilter get filter;
+  int get currentPage;
+  int get totalPages;
+  bool get hasMore;
+  int get totalCount;
+  bool get isLoadingMore;
 
   /// Create a copy of ProductState
   /// with the given fields replaced by the non-null parameter values.
@@ -600,7 +824,16 @@ class _$ProductDetailLoadedImpl extends ProductDetailLoaded {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(List<Product> products) loaded,
+    required TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )
+    loaded,
     required TResult Function(Product product) detailLoaded,
     required TResult Function(String message) error,
   }) {
@@ -612,7 +845,16 @@ class _$ProductDetailLoadedImpl extends ProductDetailLoaded {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(List<Product> products)? loaded,
+    TResult? Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult? Function(Product product)? detailLoaded,
     TResult? Function(String message)? error,
   }) {
@@ -624,7 +866,16 @@ class _$ProductDetailLoadedImpl extends ProductDetailLoaded {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(List<Product> products)? loaded,
+    TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult Function(Product product)? detailLoaded,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -762,7 +1013,16 @@ class _$ProductErrorImpl extends ProductError {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(List<Product> products) loaded,
+    required TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )
+    loaded,
     required TResult Function(Product product) detailLoaded,
     required TResult Function(String message) error,
   }) {
@@ -774,7 +1034,16 @@ class _$ProductErrorImpl extends ProductError {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(List<Product> products)? loaded,
+    TResult? Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult? Function(Product product)? detailLoaded,
     TResult? Function(String message)? error,
   }) {
@@ -786,7 +1055,16 @@ class _$ProductErrorImpl extends ProductError {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(List<Product> products)? loaded,
+    TResult Function(
+      List<Product> products,
+      ProductFilter filter,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+    )?
+    loaded,
     TResult Function(Product product)? detailLoaded,
     TResult Function(String message)? error,
     required TResult orElse(),

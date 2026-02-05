@@ -67,7 +67,7 @@ class Order with _$Order {
     return '${totalAmount.toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
-    )} VND';
+    )} đ';
   }
 
   /// Get formatted creation date

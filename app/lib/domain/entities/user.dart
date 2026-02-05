@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:frontend_otis/core/enums/enums.dart' as enums;
 
-import 'user_role.dart' as entities;
+import 'user_role.dart';
 
 part 'user.freezed.dart';
 
@@ -31,7 +31,7 @@ class User with _$User {
     required String avatarUrl,
 
     /// User's role in the system (nullable for dynamic roles from DB)
-    entities.UserRole? role,
+    UserRole? role,
 
     /// User's current status
     required enums.UserStatus status,

@@ -24,14 +24,14 @@ class Product with _$Product {
     /// URL to product image
     required String imageUrl,
 
-    /// Product brand
-    required Brand brand,
+    /// Product brand (nullable)
+    Brand? brand,
 
-    /// Vehicle make compatibility
-    required VehicleMake vehicleMake,
+    /// Vehicle make compatibility (nullable)
+    VehicleMake? vehicleMake,
 
-    /// Tire specifications
-    required TireSpec tireSpec,
+    /// Tire specifications (nullable)
+    TireSpec? tireSpec,
 
     /// Product price
     required double price,
@@ -52,20 +52,25 @@ class Product with _$Product {
   /// Check if the product is available (active and in stock)
   bool get isAvailable => isActive && isInStock;
 
-  /// Get formatted price with VND currency
+  /// Get formatted price with Vietnamese Dong currency
   String get formattedPrice {
     return '${price.toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
-    )} VND';
+    )} đ';
   }
 
   /// Get the product's display name (includes tire spec)
-  String get displayName => '$name (${tireSpec.display})';
+  String get displayName => tireSpec != null
+      ? '$name (${tireSpec!.display})'
+      : name;
 
   /// Get the product's full specification string
   String get fullSpecification {
-    return '${brand.name} ${tireSpec.display} for ${vehicleMake.name}';
+    final brandName = brand?.name ?? 'Unknown Brand';
+    final vehicleName = vehicleMake?.name ?? 'Unknown Vehicle';
+    final specDisplay = tireSpec?.display ?? '';
+    return '$brandName $specDisplay for $vehicleName'.trim();
   }
 
   /// Check if the product is low on stock (less than 10 units)

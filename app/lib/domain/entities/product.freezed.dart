@@ -29,14 +29,14 @@ mixin _$Product {
   /// URL to product image
   String get imageUrl => throw _privateConstructorUsedError;
 
-  /// Product brand
-  Brand get brand => throw _privateConstructorUsedError;
+  /// Product brand (nullable)
+  Brand? get brand => throw _privateConstructorUsedError;
 
-  /// Vehicle make compatibility
-  VehicleMake get vehicleMake => throw _privateConstructorUsedError;
+  /// Vehicle make compatibility (nullable)
+  VehicleMake? get vehicleMake => throw _privateConstructorUsedError;
 
-  /// Tire specifications
-  TireSpec get tireSpec => throw _privateConstructorUsedError;
+  /// Tire specifications (nullable)
+  TireSpec? get tireSpec => throw _privateConstructorUsedError;
 
   /// Product price
   double get price => throw _privateConstructorUsedError;
@@ -66,18 +66,18 @@ abstract class $ProductCopyWith<$Res> {
     String sku,
     String name,
     String imageUrl,
-    Brand brand,
-    VehicleMake vehicleMake,
-    TireSpec tireSpec,
+    Brand? brand,
+    VehicleMake? vehicleMake,
+    TireSpec? tireSpec,
     double price,
     int stockQuantity,
     bool isActive,
     DateTime createdAt,
   });
 
-  $BrandCopyWith<$Res> get brand;
-  $VehicleMakeCopyWith<$Res> get vehicleMake;
-  $TireSpecCopyWith<$Res> get tireSpec;
+  $BrandCopyWith<$Res>? get brand;
+  $VehicleMakeCopyWith<$Res>? get vehicleMake;
+  $TireSpecCopyWith<$Res>? get tireSpec;
 }
 
 /// @nodoc
@@ -99,9 +99,9 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
     Object? sku = null,
     Object? name = null,
     Object? imageUrl = null,
-    Object? brand = null,
-    Object? vehicleMake = null,
-    Object? tireSpec = null,
+    Object? brand = freezed,
+    Object? vehicleMake = freezed,
+    Object? tireSpec = freezed,
     Object? price = null,
     Object? stockQuantity = null,
     Object? isActive = null,
@@ -125,18 +125,18 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
                 ? _value.imageUrl
                 : imageUrl // ignore: cast_nullable_to_non_nullable
                       as String,
-            brand: null == brand
+            brand: freezed == brand
                 ? _value.brand
                 : brand // ignore: cast_nullable_to_non_nullable
-                      as Brand,
-            vehicleMake: null == vehicleMake
+                      as Brand?,
+            vehicleMake: freezed == vehicleMake
                 ? _value.vehicleMake
                 : vehicleMake // ignore: cast_nullable_to_non_nullable
-                      as VehicleMake,
-            tireSpec: null == tireSpec
+                      as VehicleMake?,
+            tireSpec: freezed == tireSpec
                 ? _value.tireSpec
                 : tireSpec // ignore: cast_nullable_to_non_nullable
-                      as TireSpec,
+                      as TireSpec?,
             price: null == price
                 ? _value.price
                 : price // ignore: cast_nullable_to_non_nullable
@@ -162,8 +162,12 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $BrandCopyWith<$Res> get brand {
-    return $BrandCopyWith<$Res>(_value.brand, (value) {
+  $BrandCopyWith<$Res>? get brand {
+    if (_value.brand == null) {
+      return null;
+    }
+
+    return $BrandCopyWith<$Res>(_value.brand!, (value) {
       return _then(_value.copyWith(brand: value) as $Val);
     });
   }
@@ -172,8 +176,12 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $VehicleMakeCopyWith<$Res> get vehicleMake {
-    return $VehicleMakeCopyWith<$Res>(_value.vehicleMake, (value) {
+  $VehicleMakeCopyWith<$Res>? get vehicleMake {
+    if (_value.vehicleMake == null) {
+      return null;
+    }
+
+    return $VehicleMakeCopyWith<$Res>(_value.vehicleMake!, (value) {
       return _then(_value.copyWith(vehicleMake: value) as $Val);
     });
   }
@@ -182,8 +190,12 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $TireSpecCopyWith<$Res> get tireSpec {
-    return $TireSpecCopyWith<$Res>(_value.tireSpec, (value) {
+  $TireSpecCopyWith<$Res>? get tireSpec {
+    if (_value.tireSpec == null) {
+      return null;
+    }
+
+    return $TireSpecCopyWith<$Res>(_value.tireSpec!, (value) {
       return _then(_value.copyWith(tireSpec: value) as $Val);
     });
   }
@@ -202,9 +214,9 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
     String sku,
     String name,
     String imageUrl,
-    Brand brand,
-    VehicleMake vehicleMake,
-    TireSpec tireSpec,
+    Brand? brand,
+    VehicleMake? vehicleMake,
+    TireSpec? tireSpec,
     double price,
     int stockQuantity,
     bool isActive,
@@ -212,11 +224,11 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
   });
 
   @override
-  $BrandCopyWith<$Res> get brand;
+  $BrandCopyWith<$Res>? get brand;
   @override
-  $VehicleMakeCopyWith<$Res> get vehicleMake;
+  $VehicleMakeCopyWith<$Res>? get vehicleMake;
   @override
-  $TireSpecCopyWith<$Res> get tireSpec;
+  $TireSpecCopyWith<$Res>? get tireSpec;
 }
 
 /// @nodoc
@@ -237,9 +249,9 @@ class __$$ProductImplCopyWithImpl<$Res>
     Object? sku = null,
     Object? name = null,
     Object? imageUrl = null,
-    Object? brand = null,
-    Object? vehicleMake = null,
-    Object? tireSpec = null,
+    Object? brand = freezed,
+    Object? vehicleMake = freezed,
+    Object? tireSpec = freezed,
     Object? price = null,
     Object? stockQuantity = null,
     Object? isActive = null,
@@ -263,18 +275,18 @@ class __$$ProductImplCopyWithImpl<$Res>
             ? _value.imageUrl
             : imageUrl // ignore: cast_nullable_to_non_nullable
                   as String,
-        brand: null == brand
+        brand: freezed == brand
             ? _value.brand
             : brand // ignore: cast_nullable_to_non_nullable
-                  as Brand,
-        vehicleMake: null == vehicleMake
+                  as Brand?,
+        vehicleMake: freezed == vehicleMake
             ? _value.vehicleMake
             : vehicleMake // ignore: cast_nullable_to_non_nullable
-                  as VehicleMake,
-        tireSpec: null == tireSpec
+                  as VehicleMake?,
+        tireSpec: freezed == tireSpec
             ? _value.tireSpec
             : tireSpec // ignore: cast_nullable_to_non_nullable
-                  as TireSpec,
+                  as TireSpec?,
         price: null == price
             ? _value.price
             : price // ignore: cast_nullable_to_non_nullable
@@ -304,9 +316,9 @@ class _$ProductImpl extends _Product {
     required this.sku,
     required this.name,
     required this.imageUrl,
-    required this.brand,
-    required this.vehicleMake,
-    required this.tireSpec,
+    this.brand,
+    this.vehicleMake,
+    this.tireSpec,
     required this.price,
     required this.stockQuantity,
     required this.isActive,
@@ -329,17 +341,17 @@ class _$ProductImpl extends _Product {
   @override
   final String imageUrl;
 
-  /// Product brand
+  /// Product brand (nullable)
   @override
-  final Brand brand;
+  final Brand? brand;
 
-  /// Vehicle make compatibility
+  /// Vehicle make compatibility (nullable)
   @override
-  final VehicleMake vehicleMake;
+  final VehicleMake? vehicleMake;
 
-  /// Tire specifications
+  /// Tire specifications (nullable)
   @override
-  final TireSpec tireSpec;
+  final TireSpec? tireSpec;
 
   /// Product price
   @override
@@ -417,9 +429,9 @@ abstract class _Product extends Product {
     required final String sku,
     required final String name,
     required final String imageUrl,
-    required final Brand brand,
-    required final VehicleMake vehicleMake,
-    required final TireSpec tireSpec,
+    final Brand? brand,
+    final VehicleMake? vehicleMake,
+    final TireSpec? tireSpec,
     required final double price,
     required final int stockQuantity,
     required final bool isActive,
@@ -443,17 +455,17 @@ abstract class _Product extends Product {
   @override
   String get imageUrl;
 
-  /// Product brand
+  /// Product brand (nullable)
   @override
-  Brand get brand;
+  Brand? get brand;
 
-  /// Vehicle make compatibility
+  /// Vehicle make compatibility (nullable)
   @override
-  VehicleMake get vehicleMake;
+  VehicleMake? get vehicleMake;
 
-  /// Tire specifications
+  /// Tire specifications (nullable)
   @override
-  TireSpec get tireSpec;
+  TireSpec? get tireSpec;
 
   /// Product price
   @override

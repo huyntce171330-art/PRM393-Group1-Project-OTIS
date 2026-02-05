@@ -46,6 +46,7 @@ class UserModel {
   final entities.UserRole? role;
 
   /// User's current status
+  @JsonKey(fromJson: _parseUserStatus, toJson: _statusToJson)
   final enums.UserStatus status;
 
   /// When the user was created
@@ -141,17 +142,30 @@ class UserModel {
     if (value == null) return null;
 
     if (value is int) {
-      return const enums.UserRoleConverter().fromJson(value) as entities.UserRole?;
+      final enumRole = const enums.UserRoleConverter().fromJson(value);
+      return _enumUserRoleToEntity(enumRole);
     }
 
     if (value is String) {
       final intValue = int.tryParse(value);
       if (intValue != null) {
-        return const enums.UserRoleConverter().fromJson(intValue) as entities.UserRole?;
+        final enumRole = const enums.UserRoleConverter().fromJson(intValue);
+        return _enumUserRoleToEntity(enumRole);
       }
     }
 
     return null;
+  }
+
+  /// Convert enum UserRole to entity UserRole.
+  static entities.UserRole? _enumUserRoleToEntity(enums.UserRole? enumRole) {
+    if (enumRole == null) return null;
+    switch (enumRole) {
+      case enums.UserRole.admin:
+        return const entities.UserRole(id: '1', name: 'admin');
+      case enums.UserRole.customer:
+        return const entities.UserRole(id: '2', name: 'customer');
+    }
   }
 
   /// Custom fromJson for UserRole? field
@@ -161,14 +175,19 @@ class UserModel {
       final roleModel = UserRoleModel.fromJson(json);
       return roleModel.toDomain();
     }
-    // Handle integer role_id
+    // Handle integer role_id - convert enum to entity
     if (json is int) {
-      return const enums.UserRoleConverter().fromJson(json) as entities.UserRole?;
+      final enumRole = const enums.UserRoleConverter().fromJson(json);
+      return _enumUserRoleToEntity(enumRole);
     }
     return null;
   }
 
-  /// Custom toJson for UserRole? field
+  /// Custom toJson for UserStatus field
+  static String _statusToJson(enums.UserStatus status) {
+    return status.name; // Use enum's built-in name getter
+  }
+
   static dynamic _roleToJson(entities.UserRole? role) {
     if (role == null) return null;
     return UserRoleModel.fromDomain(role).toJson();

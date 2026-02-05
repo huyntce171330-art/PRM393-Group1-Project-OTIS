@@ -56,7 +56,10 @@ void main() async {
   print('📊 Tables: ${verifyResult.stdout}');
 
   // Count products
-  final countResult = await Process.run('sqlite3', [dbPath, 'SELECT COUNT(*) FROM products;']);
+  final countResult = await Process.run('sqlite3', [
+    dbPath,
+    'SELECT COUNT(*) FROM products;',
+  ]);
   print('📊 Products count: ${countResult.stdout.trim()}');
 
   print('\n========================================');

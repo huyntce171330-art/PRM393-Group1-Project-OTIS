@@ -36,7 +36,7 @@ class CartItem with _$CartItem {
     return '${totalPrice.toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
-    )} VND';
+    )} đ';
   }
 
   /// Check if the cart item is valid (has product and positive quantity)

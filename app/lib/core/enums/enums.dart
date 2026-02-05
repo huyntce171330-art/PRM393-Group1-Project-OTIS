@@ -9,6 +9,7 @@ enum UserRole {
 
 /// User status in the system.
 /// Maps to database status: 'active' or 'inactive'
+@JsonEnum()
 enum UserStatus {
   active,
   inactive,

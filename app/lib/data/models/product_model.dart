@@ -106,9 +106,20 @@ class ProductModel {
       sku: product.sku,
       name: product.name,
       imageUrl: product.imageUrl,
-      brand: BrandModel.fromDomain(product.brand),
-      vehicleMake: VehicleMakeModel.fromDomain(product.vehicleMake),
-      tireSpec: TireSpecModel.fromDomain(product.tireSpec),
+      brand: product.brand != null
+          ? BrandModel.fromDomain(product.brand!)
+          : BrandModel(id: '', name: '', logoUrl: ''),
+      vehicleMake: product.vehicleMake != null
+          ? VehicleMakeModel.fromDomain(product.vehicleMake!)
+          : VehicleMakeModel(id: '', name: '', logoUrl: ''),
+      tireSpec: product.tireSpec != null
+          ? TireSpecModel.fromDomain(product.tireSpec!)
+          : const TireSpecModel(
+              id: '',
+              width: 0,
+              aspectRatio: 0,
+              rimDiameter: 0,
+            ),
       price: product.price,
       stockQuantity: product.stockQuantity,
       isActive: product.isActive,
