@@ -4,6 +4,7 @@ import 'package:frontend_otis/data/models/product_list_model.dart';
 import 'package:frontend_otis/data/models/product_model.dart';
 import 'package:frontend_otis/data/models/tire_spec_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
+import 'package:frontend_otis/domain/entities/product_filter.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// Implementation of [ProductRemoteDatasource] using SQLite database.
@@ -17,20 +18,65 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
   Future<ProductListModel> getProducts({
     required int page,
     required int limit,
+    ProductFilter? filter,
   }) async {
     if (page < 1) page = 1;
     if (limit < 1) limit = 10;
 
     final offset = (page - 1) * limit;
 
-    // 1. Get total count of active products
-    final countResult = await database.rawQuery(
-      'SELECT COUNT(*) as total FROM products WHERE is_active = 1',
-    );
+    // Extract search query from filter
+    final searchQuery = filter?.searchQuery;
+
+    // Build dynamic WHERE clause
+    final whereClauses = <String>['p.is_active = 1'];
+    final whereArgs = <dynamic>[];
+
+    // Add search query condition (search by name or SKU, case-insensitive)
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      whereClauses.add('(p.name LIKE ? OR p.sku LIKE ?)');
+      whereArgs.add('%$searchQuery%');
+      whereArgs.add('%$searchQuery%');
+    }
+
+    // Add category filter if provided
+    if (filter?.categoryId != null) {
+      whereClauses.add('p.category_id = ?');
+      whereArgs.add(filter!.categoryId);
+    }
+
+    // Add brand filter if provided
+    if (filter?.brandId != null) {
+      whereClauses.add('p.brand_id = ?');
+      whereArgs.add(filter!.brandId);
+    }
+
+    // Add vehicle make filter if provided
+    if (filter?.vehicleMakeId != null) {
+      whereClauses.add('p.make_id = ?');
+      whereArgs.add(filter!.vehicleMakeId);
+    }
+
+    // Add price range filters if provided
+    if (filter?.minPrice != null) {
+      whereClauses.add('p.price >= ?');
+      whereArgs.add(filter!.minPrice);
+    }
+    if (filter?.maxPrice != null) {
+      whereClauses.add('p.price <= ?');
+      whereArgs.add(filter!.maxPrice);
+    }
+
+    // Join all WHERE clauses
+    final whereString = whereClauses.join(' AND ');
+
+    // 1. Get total count of filtered products
+    final countQuery = 'SELECT COUNT(*) as total FROM products p WHERE $whereString';
+    final countResult = await database.rawQuery(countQuery, whereArgs);
     final total = countResult.first['total'] as int;
 
     // 2. Get paginated products with joined tables
-    // Lưu ý: Cần alias (AS) chính xác để khớp với _rowToProductModel
+    // Note: Need correct alias (AS) to match _rowToProductModel
     final productsResult = await database.rawQuery(
       '''
       SELECT
@@ -42,32 +88,32 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
         p.stock_quantity,
         p.is_active,
         p.created_at,
-        
+
         -- Brand Info
         b.brand_id as brand_id,
         b.name as brand_name,
         b.logo_url as brand_logo_url,
-        
+
         -- Vehicle Make Info
         vm.make_id as vehicle_make_id,
         vm.name as vehicle_make_name,
         vm.logo_url as vehicle_make_logo_url,
-        
+
         -- Tire Spec Info
         ts.tire_spec_id,
         ts.width,
         ts.aspect_ratio,
         ts.rim_diameter
-        
+
       FROM products p
       LEFT JOIN brands b ON p.brand_id = b.brand_id
       LEFT JOIN vehicle_makes vm ON p.make_id = vm.make_id
       LEFT JOIN tire_specs ts ON p.tire_spec_id = ts.tire_spec_id
-      WHERE p.is_active = 1
+      WHERE $whereString
       ORDER BY p.created_at DESC
       LIMIT ? OFFSET ?
     ''',
-      [limit, offset],
+      [...whereArgs, limit, offset],
     );
 
     // Convert SQL rows to ProductModel list

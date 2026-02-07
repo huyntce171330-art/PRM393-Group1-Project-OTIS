@@ -8,6 +8,7 @@
 // 2. Methods: `getProducts`, `getProductDetail`, `createProduct`, `updateProduct`, `deleteProduct`.
 //
 import 'package:frontend_otis/data/models/product_list_model.dart';
+import 'package:frontend_otis/domain/entities/product_filter.dart';
 
 /// Interface for Product data source operations.
 /// Provides methods for CRUD operations with pagination support.
@@ -16,11 +17,13 @@ abstract class ProductRemoteDatasource {
   ///
   /// [page] - The page number (1-indexed)
   /// [limit] - Number of items per page
+  /// [filter] - Optional filter criteria including search query
   ///
   /// Returns [ProductListModel] containing products and pagination metadata.
   Future<ProductListModel> getProducts({
     required int page,
     required int limit,
+    ProductFilter? filter,
   });
 
   /// Retrieves a single product by its ID.

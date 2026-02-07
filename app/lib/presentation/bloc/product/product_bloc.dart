@@ -10,6 +10,7 @@
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
+import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_products_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_event.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
@@ -27,14 +28,20 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   /// Use case for fetching paginated product list
   final GetProductsUsecase getProductsUsecase;
 
+  /// Use case for fetching single product detail
+  final GetProductDetailUsecase getProductDetailUsecase;
+
   /// Current filter state for pagination and search
   ProductFilter _currentFilter = const ProductFilter();
 
   /// Creates a new ProductBloc instance.
   ///
   /// [getProductsUsecase]: Required use case for fetching products
-  ProductBloc({required this.getProductsUsecase})
-    : super(ProductState.initial()) {
+  /// [getProductDetailUsecase]: Required use case for fetching product detail
+  ProductBloc({
+    required this.getProductsUsecase,
+    required this.getProductDetailUsecase,
+  }) : super(ProductState.initial()) {
     // Register event handlers
     _registerEventHandlers();
   }
@@ -180,16 +187,13 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     });
 
     // Handle GetProductDetailEvent - Fetch single product
-    // Note: This requires GetProductDetailUsecase to be implemented
     on<GetProductDetailEvent>((event, emit) async {
       emit(ProductState.loading());
 
-      // TODO: Implement GetProductDetailUsecase and inject it
-      // For now, emit error to indicate missing implementation
-      emit(
-        const ProductState.error(
-          message: 'Product detail feature not yet implemented',
-        ),
+      final result = await getProductDetailUsecase(event.id);
+      result.fold(
+        (failure) => emit(ProductState.error(message: failure.message)),
+        (product) => emit(ProductState.detailLoaded(product: product)),
       );
     });
   }
@@ -275,4 +279,17 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     _currentFilter = clearedFilter;
     add(GetProductsEvent(filter: clearedFilter));
   }
+
+  // #region DEBUG_LOGGING
+  @override
+  Future<void> close() async {
+    print('🔍 DEBUG: ProductBloc.close() called - Stack trace:');
+    try {
+      throw Exception('ProductBloc.close() trace');
+    } catch (e) {
+      print(e.toString().split('\n').take(5).join('\n'));
+    }
+    await super.close();
+  }
+  // #endregion
 }

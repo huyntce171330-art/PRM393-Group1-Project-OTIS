@@ -8,6 +8,7 @@
 // - Bottom navigation bar
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ProductBloc _productBloc = sl<ProductBloc>();
   final PageController _bannerController = PageController();
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   int _currentBannerPage = 0;
 
   // Banner data
@@ -67,7 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _bannerController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _clearAndUnfocus() {
+    _searchController.clear();
+    _onSearchChanged();  // Trigger search with empty query
+    FocusScope.of(context).unfocus();
   }
 
   void _onSearchChanged() {
@@ -77,11 +86,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToProductList() {
-    Navigator.pushNamed(context, '/product-list');
+    context.push('/products');
   }
 
   void _navigateToProductDetail(Product product) {
-    // TODO: Navigate to product detail
+    // Use push() to maintain back stack, allowing user to navigate back
+    context.push('/product/${product.id}');
   }
 
   void _onAddToCart(Product product) {
@@ -101,79 +111,82 @@ class _HomeScreenState extends State<HomeScreen> {
     final serviceIconSize = isSmallScreen ? 48.0 : 52.0;
     final productCardWidth = isSmallScreen ? 140.0 : 155.0;
 
-    return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppColors.backgroundDark
-          : AppColors.backgroundLight,
-      body: BlocProvider<ProductBloc>.value(
-        value: _productBloc,
-        child: BlocBuilder<ProductBloc, ProductState>(
-          builder: (context, state) {
-            return SafeArea(
-              child: Column(
-                children: [
-                  // Header Section
-                  _buildHeader(context, isSmallScreen),
-                  // Main Content
-                  Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: _onRefresh,
-                      color: AppColors.primary,
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.zero,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Promo Banner Carousel
-                            _buildPromoBanner(context, bannerHeight),
-                            const SizedBox(height: 16),
-                            // Services Categories Grid
-                            _buildServicesSection(
-                              context,
-                              serviceIconSize,
-                              isSmallScreen,
-                            ),
-                            const SizedBox(height: 16),
-                            // All Products Section
-                            _buildAllProductsSection(
-                              context,
-                              state,
-                              productCardWidth,
-                              isSmallScreen,
-                            ),
-                            SizedBox(
-                              height:
-                                  kBottomNavigationBarHeight +
-                                  (isSmallScreen ? 8 : 16),
-                            ),
-                          ],
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: isDarkMode
+            ? AppColors.backgroundDark
+            : AppColors.backgroundLight,
+        body: BlocProvider<ProductBloc>.value(
+          value: _productBloc,
+          child: BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, state) {
+              return SafeArea(
+                child: Column(
+                  children: [
+                    // Header Section
+                    _buildHeader(context),
+                    // Main Content
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _onRefresh,
+                        color: AppColors.primary,
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Promo Banner Carousel
+                              _buildPromoBanner(context, bannerHeight),
+                              const SizedBox(height: 16),
+                              // Services Categories Grid
+                              _buildServicesSection(
+                                context,
+                                serviceIconSize,
+                                isSmallScreen,
+                              ),
+                              const SizedBox(height: 16),
+                              // All Products Section
+                              _buildAllProductsSection(
+                                context,
+                                state,
+                                productCardWidth,
+                                isSmallScreen,
+                              ),
+                              SizedBox(
+                                height:
+                                    kBottomNavigationBarHeight +
+                                    (isSmallScreen ? 8 : 16),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         ),
-      ),
-      // Bottom Navigation
-      bottomNavigationBar: _buildBottomNavigation(
-        context,
-        isDarkMode,
-        isSmallScreen,
+        // Bottom Navigation
+        bottomNavigationBar: _buildBottomNavigation(
+          context,
+          isDarkMode,
+          isSmallScreen,
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isSmallScreen) {
+  Widget _buildHeader(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final avatarSize = isSmallScreen ? 36.0 : 40.0;
-    final searchPadding = isSmallScreen ? 12.0 : 16.0;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(searchPadding, 12, searchPadding, 8),
-      color: isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      color: isDarkMode
+          ? AppColors.backgroundDark.withValues(alpha: 0.95)
+          : AppColors.backgroundLight.withValues(alpha: 0.95),
       child: Row(
         children: [
           // Search Bar
@@ -183,9 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: isDarkMode
                     ? AppColors.surfaceDark
                     : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(
-                  isSmallScreen ? 20.0 : 9999,
-                ),
+                borderRadius: BorderRadius.circular(9999),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.06),
@@ -196,13 +207,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: TextField(
                 controller: _searchController,
+                focusNode: _searchFocusNode,
+                textInputAction: TextInputAction.done,
+                onEditingComplete: _clearAndUnfocus,
                 onChanged: (_) => _onSearchChanged(),
-                style: TextStyle(fontSize: isSmallScreen ? 13 : 14),
+                style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Search tires, batteries...',
+                  hintText: 'Search for tires, batteries...',
                   hintStyle: TextStyle(
                     color: Colors.grey[400],
-                    fontSize: isSmallScreen ? 12 : 14,
+                    fontSize: 14,
                   ),
                   prefixIcon: Icon(
                     Icons.search,
@@ -215,35 +229,35 @@ class _HomeScreenState extends State<HomeScreen> {
                     size: 20,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(
-                      isSmallScreen ? 20.0 : 9999,
-                    ),
+                    borderRadius: BorderRadius.circular(9999),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: isSmallScreen ? 12 : 16,
-                    vertical: isSmallScreen ? 10 : 12,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
                 ),
               ),
             ),
           ),
-          SizedBox(width: isSmallScreen ? 8 : 12),
+          const SizedBox(width: 12),
           // Avatar
-          _buildAvatar(context, avatarSize),
+          _buildAvatar(context),
         ],
       ),
     );
   }
 
-  Widget _buildAvatar(BuildContext context, double size) {
+  Widget _buildAvatar(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    const avatarSize = 40.0;
+
     return Container(
-      width: size,
-      height: size,
+      width: avatarSize,
+      height: avatarSize,
       decoration: BoxDecoration(
         color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(size / 2),
+        borderRadius: BorderRadius.circular(avatarSize / 2),
         border: Border.all(
           color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
           width: 2,
@@ -257,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(size / 2),
+        borderRadius: BorderRadius.circular(avatarSize / 2),
         child: Image.network(
           'https://lh3.googleusercontent.com/aida-public/AB6AXuDoMz-m7oRFdmKmL5PET_dO5sHFaZjichh44_wwwVs0PAlFU_gDPh2pCfn8-wMnRVEn4YXj4ItTQPDv__swxN9ylZtQQOFbIj6TbFNDn9zwJ3VV3vTbl_nnCo-_vfPEgtR9P53rP28VZiBJ8zkE02TwgGupNiEf58xm-fuGju55E8qh6KhYsbpejjngMZ9D6baAxvyDZS13XwktZGri0Jlg16X9JOO4FGMduD-jXuaeur1QTVJKbiHQbInfJ6CYEXOrR9jIfxAOgl8',
           fit: BoxFit.cover,
@@ -265,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
             return Icon(
               Icons.person,
               color: Colors.grey[400],
-              size: size * 0.6,
+              size: avatarSize * 0.6,
             );
           },
         ),

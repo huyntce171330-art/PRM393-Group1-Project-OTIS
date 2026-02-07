@@ -40,4 +40,11 @@ abstract class ProductRepository {
     required int page,
     required int limit,
   });
+
+  /// Retrieves a single product by its ID.
+  ///
+  /// [productId] - The unique identifier of the product
+  ///
+  /// Returns [Either<Failure, Product>] - Single product or failure
+  Future<Either<Failure, Product>> getProductDetail({required String productId});
 }

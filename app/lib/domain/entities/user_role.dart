@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:characters/characters.dart';
 
 part 'user_role.freezed.dart';
 
@@ -25,9 +24,8 @@ class UserRole with _$UserRole {
 
   /// Get the display name (capitalized)
   String get displayName {
-    final capitalized =
-        name.characters.first.toUpperCase() + name.substring(1).toLowerCase();
-    return capitalized;
+    if (name.isEmpty) return name;
+    return name[0].toUpperCase() + name.substring(1).toLowerCase();
   }
 
   /// Check if the role is valid (has non-empty name)

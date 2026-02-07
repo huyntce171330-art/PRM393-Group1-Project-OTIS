@@ -3,11 +3,8 @@ import 'package:frontend_otis/core/error/exceptions.dart';
 import 'package:frontend_otis/core/error/failures.dart';
 import 'package:frontend_otis/core/network/network_info.dart';
 import 'package:frontend_otis/data/datasources/product/product_remote_datasource.dart';
-import 'package:frontend_otis/domain/entities/brand.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
-import 'package:frontend_otis/domain/entities/tire_spec.dart';
-import 'package:frontend_otis/domain/entities/vehicle_make.dart';
 import 'package:frontend_otis/domain/repositories/product_repository.dart';
 
 // Implementation of Product Repository.
@@ -38,10 +35,11 @@ class ProductRepositoryImpl implements ProductRepository {
     }
 
     try {
-      // Fetch paginated products from data source
+      // Fetch paginated products from data source with filter
       final productList = await productRemoteDatasource.getProducts(
         page: page,
         limit: limit,
+        filter: filter,
       );
 
       // Convert ProductModel list to Product domain entities
@@ -53,28 +51,9 @@ class ProductRepositoryImpl implements ProductRepository {
           imageUrl: model.imageUrl,
           price: model.price,
           stockQuantity: model.stockQuantity,
-          brand: model.brand != null
-              ? Brand(
-                  id: model.brand!.id,
-                  name: model.brand!.name,
-                  logoUrl: model.brand!.logoUrl,
-                )
-              : null,
-          vehicleMake: model.vehicleMake != null
-              ? VehicleMake(
-                  id: model.vehicleMake!.id,
-                  name: model.vehicleMake!.name,
-                  logoUrl: model.vehicleMake!.logoUrl,
-                )
-              : null,
-          tireSpec: model.tireSpec != null
-              ? TireSpec(
-                  id: model.tireSpec!.id,
-                  width: model.tireSpec!.width,
-                  aspectRatio: model.tireSpec!.aspectRatio,
-                  rimDiameter: model.tireSpec!.rimDiameter,
-                )
-              : null,
+          brand: model.brand.toDomain(),
+          vehicleMake: model.vehicleMake.toDomain(),
+          tireSpec: model.tireSpec.toDomain(),
           isActive: model.isActive,
           createdAt: model.createdAt,
         );
@@ -113,5 +92,45 @@ class ProductRepositoryImpl implements ProductRepository {
       (failure) => Left(failure),
       (metadata) => Right(metadata.products),
     );
+  }
+
+  @override
+  Future<Either<Failure, Product>> getProductDetail({required String productId}) async {
+    // Check network connectivity
+    if (!(await networkInfo.isConnected)) {
+      return Left(NetworkFailure());
+    }
+
+    try {
+      // Fetch product detail from data source
+      final result = await productRemoteDatasource.getProductDetail(productId: productId);
+
+      if (result.products.isEmpty) {
+        return Left(ServerFailure(message: 'Product not found'));
+      }
+
+      final productModel = result.products.first;
+      final product = Product(
+        id: productModel.id,
+        sku: productModel.sku,
+        name: productModel.name,
+        imageUrl: productModel.imageUrl,
+        price: productModel.price,
+        stockQuantity: productModel.stockQuantity,
+        brand: productModel.brand.toDomain(),
+        vehicleMake: productModel.vehicleMake.toDomain(),
+        tireSpec: productModel.tireSpec.toDomain(),
+        isActive: productModel.isActive,
+        createdAt: productModel.createdAt,
+      );
+
+      return Right(product);
+    } on ServerException {
+      return Left(ServerFailure());
+    } on CacheException {
+      return Left(CacheFailure());
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
   }
 }

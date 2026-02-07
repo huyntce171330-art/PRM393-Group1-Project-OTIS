@@ -81,7 +81,6 @@
 * Normal Flow (Luồng chính):
 * User nhấn vào biểu tượng/nút "Filter" (Lọc).
 * Hệ thống hiển thị Bottom Sheet hoặc Dialog các tiêu chí lọc:
-* Danh mục (Category).
 * Khoảng giá (Price Range: Min - Max).
 * User chọn danh mục (VD: Laptop) và nhập khoảng giá (VD: 10tr - 20tr).
 * User nhấn nút "Apply" (Áp dụng).
@@ -96,7 +95,68 @@
 * Hệ thống hiển thị Empty State: "Không có sản phẩm nào thỏa mãn điều kiện lọc".
 * Hiển thị nút "Xóa bộ lọc" (Clear Filter) để quay lại danh sách gốc.
 * Business Rules:
-* Bộ lọc có thể áp dụng đồng thời (vừa lọc theo Category VÀ lọc theo Price).
+* Bộ lọc có thể áp dụng đồng thời (vừa lọc theo lọc theo Price).
 * Nếu không chọn Category, mặc định là "All".
 
 **
+
+#### . UC-09: View Product Details (Xem chi tiết sản phẩm)
+
+* **Actor:** Guest, Customer.
+* **Description:** Hiển thị toàn bộ thông tin chi tiết của một sản phẩm cụ thể, bao gồm hình ảnh, giá bán, thông số kỹ thuật, đánh giá và các tùy chọn mua hàng.
+* **Pre-conditions:**
+  * Người dùng đã chọn một sản phẩm từ danh sách (Home, Search Result, hoặc Cart).
+  * Có `productId` hợp lệ được truyền sang.
+* **Post-conditions:**
+  * Người dùng nhìn thấy đầy đủ thông tin sản phẩm.
+  * Các nút hành động (Add to Cart, Buy Now) ở trạng thái sẵn sàng (nếu còn hàng).
+
+**Normal Flow (Luồng chính):**
+
+1. User nhấn vào một thẻ sản phẩm (Product Card).
+2. Hệ thống chuyển hướng sang màn hình Product Detail.
+3. Hệ thống hiển thị **Skeleton Loading** cho các khối nội dung (Image, Info, Specs, Reviews).
+4. Hệ thống gọi API lấy chi tiết sản phẩm dựa trên `productId`.
+5. Hệ thống tải dữ liệu thành công và hiển thị:
+   * **Header Bar:** Nút Back, Tiêu đề, và Icon Giỏ hàng (kèm badge số lượng).
+   * **Image Gallery:** Carousel ảnh sản phẩm (cho phép vuốt ngang).
+   * **Basic Info:** Tên sản phẩm, Badge "In Stock", Logo thương hiệu, Giá bán (Sale & Gốc), Ghi chú VAT.
+   * **Specs Grid:** Lưới thông số kỹ thuật (Width, Profile, Rim, Speed) với icon tương ứng.
+   * **Services:** Thông tin bảo hành và vận chuyển.
+   * **Reviews:** Tóm tắt đánh giá (Rating trung bình) và list 2-3 review mới nhất.
+   * **Sticky Footer:** Thanh tác vụ cố định chứa nút "Add to Cart" và "Buy Now".
+6. User vuốt xem ảnh hoặc cuộn xuống xem thông tin.
+
+**Alternative Flows (Luồng thay thế):**
+
+* **A1: Xem tất cả đánh giá (View All Reviews)**
+  * User nhấn nút "See All" ở mục Reviews.
+  * Hệ thống điều hướng sang màn hình danh sách đánh giá chi tiết.
+* **A2: Zoom ảnh**
+  * User nhấn vào ảnh trong Carousel.
+  * Hệ thống mở trình xem ảnh Fullscreen (Photo View).
+
+**Exception Flows (Luồng ngoại lệ):**
+
+* **E1: Sản phẩm không tồn tại hoặc bị ẩn (404/Inactive)**
+  * Hệ thống hiển thị thông báo: "Sản phẩm này không còn tồn tại hoặc đã ngừng kinh doanh".
+  * Tự động điều hướng quay lại trang trước sau 2 giây hoặc hiển thị nút "Về trang chủ".
+* **E2: Load thất bại (Network Error)**
+  * Hiển thị màn hình lỗi kết nối + Nút Retry.
+* **E3: Hết hàng (Out of Stock)**
+  * Thay đổi trạng thái Badge "In Stock" (Xanh) thành "Out of Stock" (Xám/Đỏ).
+  * **Disable** (làm mờ) nút "Add to Cart" và "Buy Now".
+  * Hoặc thay bằng nút "Notify Me" (Nhận thông báo khi có hàng).
+
+**Business Rules (Quy tắc nghiệp vụ - Quan trọng cho Dev):**
+
+1. **Price Display:**
+   * Nếu `sale_price < original_price`: Hiển thị `sale_price` màu đỏ/nổi bật, `original_price` gạch ngang màu xám.
+   * Nếu không giảm giá: Chỉ hiện `original_price` màu nổi bật.
+2. **Specs Rendering:**
+   * Hiển thị Dynamic theo `category_id`.
+   * Ví dụ: Lốp xe (Tire) hiện Width/Rim/Profile. Nhớt (Oil) hiện Dung tích/Độ nhớt. Cần map icon tương ứng ở Frontend.
+3. **Sticky Footer:**
+   * Luôn nằm cố định ở đáy màn hình (z-index cao nhất) để user luôn bấm mua được dù đang scroll ở đâu.
+4. **Cart Badge:**
+   * Số lượng trên icon giỏ hàng phải đồng bộ realtime với local storage hoặc server cart.

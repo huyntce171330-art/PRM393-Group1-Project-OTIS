@@ -1,19 +1,21 @@
 // Filter parameters for product list pagination and search.
-// Đóng gói các tham số phân trang, tìm kiếm và lọc khi lấy danh sách sản phẩm.
+// Encapsulates pagination, search, and filter parameters when fetching product list.
 //
-// Tác dụng:
-// - Quản lý số trang (page) và số sản phẩm mỗi trang (limit)
-// - Tìm kiếm theo tên/SKU (searchQuery)
-// - Lọc theo category, brand, khoảng giá (categoryId, brandId, minPrice, maxPrice)
-// - Sắp xếp (sortBy, sortOrder)
+// Features:
+// - Pagination (page, limit)
+// - Search by name/SKU (searchQuery)
+// - Filter by category, brand, price range (categoryId, brandId, minPrice, maxPrice)
+// - Sorting (sortBy, sortOrder)
 //
-// Ví dụ:
-// - page=1, limit=10 → Lấy 10 sản phẩm đầu tiên
-// - page=2, limit=10 → Lấy 10 sản phẩm tiếp theo
-// - searchQuery='Michelin' → Tìm sản phẩm có tên chứa 'Michelin'
-// - categoryId='1', brandId='2' → Lọc theo category và brand
+// Examples:
+// - page=1, limit=10 -> Fetch first 10 products
+// - page=2, limit=10 -> Fetch next 10 products
+// - searchQuery='Michelin' -> Search products containing 'Michelin'
+// - categoryId='1', brandId='2' -> Filter by category and brand
 
-class ProductFilter {
+import 'package:equatable/equatable.dart';
+
+class ProductFilter with EquatableMixin {
   // Pagination parameters
   final int page;
   final int limit;
@@ -34,7 +36,7 @@ class ProductFilter {
 
   const ProductFilter({
     this.page = 1,
-    this.limit = 10, // Changed from 4 to 10 for better pagination
+    this.limit = 10,
     this.searchQuery,
     this.categoryId,
     this.brandId,
@@ -43,9 +45,28 @@ class ProductFilter {
     this.maxPrice,
     this.sortBy,
     this.sortAscending = true,
-  });
+  }) : assert(page >= 1, 'Page must be >= 1'),
+       assert(limit >= 1, 'Limit must be >= 1'),
+       assert(
+         minPrice == null || maxPrice == null || minPrice <= maxPrice,
+         'minPrice must be <= maxPrice',
+       );
 
-  // Check if any filter is active
+  @override
+  List<Object?> get props => [
+        page,
+        limit,
+        searchQuery,
+        categoryId,
+        brandId,
+        vehicleMakeId,
+        minPrice,
+        maxPrice,
+        sortBy,
+        sortAscending,
+      ];
+
+  /// Check if any filter is active
   bool get hasFilters {
     return searchQuery != null ||
         categoryId != null ||
@@ -56,12 +77,12 @@ class ProductFilter {
         sortBy != null;
   }
 
-  // Check if this is a search query (not just pagination)
+  /// Check if this is a search query (not just pagination)
   bool get isSearch => searchQuery != null && searchQuery!.isNotEmpty;
 
-  // Chuyển đổi sang query parameters cho API/SQL request.
-  // VD: ProductFilter(page: 2, limit: 20, searchQuery: 'test') →
-  // {'page': 2, 'limit': 20, 'search_query': 'test'}
+  /// Convert to query parameters for API/SQL request.
+  /// Example: ProductFilter(page: 2, limit: 20, searchQuery: 'test') ->
+  /// {'page': 2, 'limit': 20, 'search_query': 'test'}
   Map<String, dynamic> toQueryParameters() {
     final params = <String, dynamic>{'page': page, 'limit': limit};
 
@@ -91,9 +112,9 @@ class ProductFilter {
     return params;
   }
 
-  // Tạo filter mới với giá trị cập nhật.
-  // Dùng để chuyển trang: copyWith(page: current.page + 1)
-  //hoặc cập nhật search: copyWith(searchQuery: 'new query')
+  /// Create a new filter with updated values.
+  /// Use for pagination: copyWith(page: current.page + 1)
+  /// or update search: copyWith(searchQuery: 'new query')
   ProductFilter copyWith({
     int? page,
     int? limit,
@@ -120,26 +141,42 @@ class ProductFilter {
     );
   }
 
-  // Tạo filter mới cho search - reset về trang 1
+  /// Create a new filter for search - reset to page 1
   ProductFilter withSearch(String query) {
     return copyWith(
       searchQuery: query,
-      page: 1, // Reset về trang 1 khi tìm kiếm mới
+      page: 1, // Reset to page 1 when searching
     );
   }
 
-  // Tạo filter mới cho pagination - giữ nguyên search/filter
+  /// Create a new filter for pagination - preserve search/filter
   ProductFilter withPage(int newPage) {
     return copyWith(page: newPage);
   }
 
-  // Xóa tất cả filters, giữ nguyên pagination
+  /// Clear all filters, preserve pagination
   ProductFilter clearFilters() {
     return ProductFilter(page: page, limit: limit);
   }
 
-  // Xóa search query, giữ nguyên các filter khác
+  /// Clear search query, preserve other filters
   ProductFilter clearSearch() {
     return copyWith(searchQuery: null);
+  }
+
+  @override
+  String toString() {
+    return 'ProductFilter('
+        'page: $page, '
+        'limit: $limit, '
+        'searchQuery: ${searchQuery ?? 'null'}, '
+        'categoryId: ${categoryId ?? 'null'}, '
+        'brandId: ${brandId ?? 'null'}, '
+        'vehicleMakeId: ${vehicleMakeId ?? 'null'}, '
+        'minPrice: ${minPrice ?? 'null'}, '
+        'maxPrice: ${maxPrice ?? 'null'}, '
+        'sortBy: ${sortBy ?? 'null'}, '
+        'sortAscending: $sortAscending'
+        ')';
   }
 }

@@ -7,6 +7,7 @@
 // - Pull to refresh
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
@@ -15,18 +16,6 @@ import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_event.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_card.dart';
-import 'package:frontend_otis/presentation/widgets/search_bar.dart';
-
-// DEBUG LOGGING HELPER - Use debugPrint for Flutter
-const String _kSessionId = 'debug-session';
-
-void _logDebug({
-  required String location,
-  required String message,
-  required Map<String, dynamic> data,
-}) {
-  debugPrint('[$_kSessionId] $location | $message | ${data.toString()}');
-}
 
 /// Product list screen.
 class ProductListScreen extends StatefulWidget {
@@ -40,10 +29,22 @@ class _ProductListScreenState extends State<ProductListScreen> {
   final ProductBloc _productBloc = sl<ProductBloc>();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  // #region DEBUG_LOGGING
+  bool _isBlocClosed = false;
+  // #endregion
 
   @override
   void initState() {
     super.initState();
+    // #region DEBUG_LOGGING
+    _isBlocClosed = _productBloc.isClosed;
+    print('🔍 DEBUG: ProductListScreen initState - isClosed=$_isBlocClosed');
+    if (_isBlocClosed) {
+      print('🚨 ERROR: Trying to add event to closed Bloc!');
+    }
+    // #endregion
     _productBloc.add(const ProductEvent.getProducts(filter: ProductFilter()));
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
@@ -53,38 +54,27 @@ class _ProductListScreenState extends State<ProductListScreen> {
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
+  void _clearAndUnfocus() {
+    _searchController.clear();
+    _onSearchChanged();  // Trigger search with empty query
+    FocusScope.of(context).unfocus();
+  }
+
   void _onScroll() {
-    // DEBUG PAGINATION: Log every scroll event with detailed info
     final pixels = _scrollController.position.pixels;
     final maxExtent = _scrollController.position.maxScrollExtent;
     final triggerThreshold = maxExtent * 0.8;
     final willTrigger = pixels >= triggerThreshold;
     final state = _productBloc.state;
-    final isLoaded = state is ProductLoaded;
-    final hasMore = isLoaded ? state.hasMore : false;
-    final isLoadingMore = isLoaded ? state.isLoadingMore : false;
-    final canLoadMore = isLoaded && hasMore && !isLoadingMore;
 
-    debugPrint('═══════════════════════════════════════════════════════');
-    debugPrint('[$_kSessionId] PAGINATION DEBUG');
-    debugPrint('  Scroll: pixels=${pixels.toStringAsFixed(0)}/${maxExtent.toStringAsFixed(0)} (${maxExtent > 0 ? (pixels/maxExtent*100).toStringAsFixed(1) : 0}%)');
-    debugPrint('  Threshold: >=${(triggerThreshold).toStringAsFixed(0)} (80% of $maxExtent)');
-    debugPrint('  Will Trigger: $willTrigger');
-    debugPrint('  State: ${state.runtimeType}');
-    debugPrint('  hasMore: $hasMore | isLoadingMore: $isLoadingMore');
-    debugPrint('  Can Load More: $canLoadMore');
-    debugPrint('═══════════════════════════════════════════════════════');
-
-    if (willTrigger && canLoadMore) {
+    if (willTrigger && state is ProductLoaded && state.hasMore && !state.isLoadingMore) {
       final currentFilter = state.filter;
       final nextPage = currentFilter.page + 1;
       final nextFilter = currentFilter.copyWith(page: nextPage);
-
-      debugPrint('🚀 TRIGGERING PAGINATION: Page $nextPage');
-
       _productBloc.add(ProductEvent.getProducts(filter: nextFilter));
     }
   }
@@ -96,7 +86,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   Future<void> _onRefresh() async {
-    // Lấy filter từ state, giữ nguyên filter khi refresh
+    // Get filter from state, preserve filter when refreshing
     final state = _productBloc.state;
     final currentFilter = state is ProductLoaded
         ? state.filter
@@ -105,77 +95,68 @@ class _ProductListScreenState extends State<ProductListScreen> {
     _productBloc.add(ProductEvent.getProducts(filter: refreshFilter));
   }
 
-  void _navigateToProductDetail(Product product) {
-    // TODO: Navigate to product detail
-    // Navigator.pushNamed(context, '/product/${product.id}');
-  }
-
-  void _onAddToCart(Product product) {
-    // TODO: Add to cart logic
-    // context.read<CartBloc>().add(AddToCartEvent(product: product));
+  void _navigateToProductDetail(BuildContext context, String productId) {
+    // Navigate to product detail using GoRouter with push to maintain back stack
+    context.push('/product/$productId');
   }
 
   void _navigateBack() {
-    Navigator.pop(context);
+    context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    // HYPOTHESIS B & D: Log build context and layout info
-    _logDebug(
-      location: 'product_list_screen.dart:build',
-      message: 'Building ProductListScreen',
-      data: {
-        'isDarkMode': isDarkMode,
-        'screenSize': 'checking MediaQuery...',
-      },
-    );
-
-    return Scaffold(
-      body: BlocProvider<ProductBloc>.value(
-        value: _productBloc,
-        child: BlocBuilder<ProductBloc, ProductState>(
-          builder: (context, state) {
-            return Container(
-              color: isDarkMode
-                  ? AppColors.backgroundDark
-                  : AppColors.backgroundLight,
-              child: SafeArea(
-                child: Flex(
-                  direction: Axis.vertical,
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Section
-                    _buildHeader(context),
-                    // Main Content - Expanded to take remaining space
-                    Expanded(
-                      flex: 1,
-                      child: RefreshIndicator(
-                        onRefresh: _onRefresh,
-                        color: AppColors.primary,
-                        child: _buildAllProductsGrid(context, state),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: BlocProvider<ProductBloc>.value(
+          value: _productBloc,
+          child: BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, state) {
+              return Container(
+                color: isDarkMode
+                    ? AppColors.backgroundDark
+                    : AppColors.backgroundLight,
+                child: SafeArea(
+                  child: Flex(
+                    direction: Axis.vertical,
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Section
+                      _buildHeader(context),
+                      // Main Content - Expanded to take remaining space
+                      Expanded(
+                        flex: 1,
+                        child: RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          color: AppColors.primary,
+                          child: _buildAllProductsGrid(context, state),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
+        // Bottom Navigation
+        bottomNavigationBar: _buildBottomNavigation(context),
       ),
-      // Bottom Navigation
-      bottomNavigationBar: _buildBottomNavigation(context),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      color: isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight,
+      color: isDarkMode
+          ? AppColors.backgroundDark.withValues(alpha: 0.95)
+          : AppColors.backgroundLight.withValues(alpha: 0.95),
       child: Row(
         children: [
           // Back button
@@ -189,10 +170,53 @@ class _ProductListScreenState extends State<ProductListScreen> {
           const SizedBox(width: 8),
           // Search Bar
           Expanded(
-            child: SearchBarWithFilter(
-              controller: _searchController,
-              hintText: 'Search for tires, batteries...',
-              onChanged: (_) => _onSearchChanged(),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDarkMode
+                    ? AppColors.surfaceDark
+                    : AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(9999),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                textInputAction: TextInputAction.done,
+                onEditingComplete: _clearAndUnfocus,
+                onChanged: (_) => _onSearchChanged(),
+                style: const TextStyle(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Search for tires, batteries...',
+                  hintStyle: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 14,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.grey[400],
+                    size: 20,
+                  ),
+                  suffixIcon: Icon(
+                    Icons.tune,
+                    color: Colors.grey[400],
+                    size: 20,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9999),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -238,35 +262,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   Widget _buildAllProductsGrid(BuildContext context, ProductState state) {
-    // Products từ state (Bloc đã handle append)
+    // Products from state (Bloc handles append)
     final currentProducts = state.products ?? [];
-
-    // HYPOTHESIS B: Check GridView shrinkWrap overflow
-    // HYPOTHESIS C: Check padding accumulation
-    _logDebug(
-      location: 'product_list_screen.dart:_buildAllProductsGrid',
-      message: 'Building products grid',
-      data: {
-        'productsCount': currentProducts.length,
-        'stateType': state.runtimeType.toString(),
-        'stateHasProducts': currentProducts.isNotEmpty,
-      },
-    );
 
     // Handle different states
     if (state is ProductLoading) {
-      _logDebug(
-        location: 'product_list_screen.dart',
-        message: 'STATE: ProductLoading',
-        data: {
-          'currentProductsEmpty': currentProducts.isEmpty,
-        },
-      );
-
       if (currentProducts.isEmpty) {
         return _buildLoadingSkeleton();
       }
-      // Nếu đã có products, hiển thị products + loading indicator ở cuối
+      // If products exist, show products + loading indicator at bottom
       return _buildProductsScrollView(
         context,
         currentProducts,
@@ -275,19 +279,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
 
     if (state is ProductError) {
-      _logDebug(
-        location: 'product_list_screen.dart',
-        message: 'STATE: ProductError',
-        data: {
-          'errorMessage': state.errorMessage,
-          'currentProductsEmpty': currentProducts.isEmpty,
-        },
-      );
-
       if (currentProducts.isEmpty) {
         return _buildErrorState(context, state.errorMessage ?? 'Unknown error');
       }
-      // Nếu đã có products nhưng có lỗi, vẫn hiện products + error message
+      // If products exist but error occurred, still show products + error message
       return _buildProductsScrollView(
         context,
         currentProducts,
@@ -296,37 +291,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
 
     if (state is ProductLoaded && currentProducts.isEmpty) {
-      _logDebug(
-        location: 'product_list_screen.dart',
-        message: 'STATE: ProductLoaded - EMPTY',
-        data: {
-          'totalCount': state.totalCount,
-        },
-      );
       return _buildEmptyState(context);
     }
 
-    // Hiển thị grid với products từ state
-    // Lấy pagination info từ state
+    // Display grid with products from state
+    // Get pagination info from state
     final totalCount = state.totalCount;
     final totalPages = state.totalPages;
     final currentPage = state.currentPage;
 
-    _logDebug(
-      location: 'product_list_screen.dart',
-      message: 'STATE: ProductLoaded - WITH PRODUCTS',
-      data: {
-        'productsCount': currentProducts.length,
-        'totalCount': totalCount,
-        'totalPages': totalPages,
-        'hasMore': state.hasMore,
-      },
-    );
-
-    // FIX: Use CustomScrollView instead of Column + GridView to avoid overflow
-    // FIX: Add scrollController to CustomScrollView for pagination detection
     return CustomScrollView(
-      controller: _scrollController, // CRITICAL: Attach scroll controller for pagination
+      controller: _scrollController,
       slivers: [
         // Section Header - wrapped in SliverToBoxAdapter
         SliverToBoxAdapter(
@@ -363,21 +338,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
-  /// Widget SliverGrid với pagination support - FIX for overflow issue
+  /// Widget SliverGrid with pagination support
   Widget _buildProductsSliverGrid(
     BuildContext context,
     List<Product> products, {
     bool isLoadingMore = false,
   }) {
-    _logDebug(
-      location: 'product_list_screen.dart:_buildProductsSliverGrid',
-      message: 'Building products sliver grid',
-      data: {
-        'productsLength': products.length,
-        'isLoadingMore': isLoadingMore,
-      },
-    );
-
     return SliverGrid(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -393,10 +359,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
           }
 
           final product = products[index];
-          return ProductCard(
+          return _ProductGridItem(
             product: product,
-            onTap: () => _navigateToProductDetail(product),
-            onAddToCart: () => _onAddToCart(product),
+            onTap: () => _navigateToProductDetail(context, product.id),
           );
         },
         childCount: isLoadingMore ? products.length + 1 : products.length,
@@ -410,17 +375,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
     List<Product> products, {
     bool isLoadingMore = false,
   }) {
-    _logDebug(
-      location: 'product_list_screen.dart:_buildProductsScrollView',
-      message: 'Building products scroll view',
-      data: {
-        'productsLength': products.length,
-        'isLoadingMore': isLoadingMore,
-      },
-    );
-
     return CustomScrollView(
-      controller: _scrollController, // CRITICAL: Attach scroll controller for pagination
+      controller: _scrollController,
       slivers: [
         // Section Header
         SliverToBoxAdapter(
@@ -444,24 +400,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
-  /// Helper widget hiển thị page dots indicator
+  /// Helper widget displaying page dots indicator
   Widget _buildPageDotsIndicatorForList({
     required int totalCount,
     required int totalPages,
     required int currentPage,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    // HYPOTHESIS C: Log page indicator dimensions
-    _logDebug(
-      location: 'product_list_screen.dart:_buildPageDotsIndicator',
-      message: 'Building page dots indicator',
-      data: {
-        'totalCount': totalCount,
-        'totalPages': totalPages,
-        'currentPage': currentPage,
-      },
-    );
 
     return Padding(
       padding: const EdgeInsets.only(top: 16, bottom: 8),
@@ -500,13 +445,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   Widget _buildLoadingSkeleton() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    _logDebug(
-      location: 'product_list_screen.dart:_buildLoadingSkeleton',
-      message: 'Building loading skeleton',
-      data: {'isDarkMode': isDarkMode},
-    );
 
-    // FIX: Use CustomScrollView + SliverGrid instead of Column + GridView
     return CustomScrollView(
       slivers: [
         // Section Header
@@ -616,14 +555,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   Widget _buildErrorState(BuildContext context, String message) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    _logDebug(
-      location: 'product_list_screen.dart:_buildErrorState',
-      message: 'Building error state',
-      data: {
-        'message': message,
-        'isDarkMode': isDarkMode,
-      },
-    );
 
     return Center(
       child: Padding(
@@ -672,11 +603,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   Widget _buildEmptyState(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    _logDebug(
-      location: 'product_list_screen.dart:_buildEmptyState',
-      message: 'Building empty state',
-      data: {'isDarkMode': isDarkMode},
-    );
 
     return Center(
       child: Padding(
@@ -857,6 +783,39 @@ class _ProductListScreenState extends State<ProductListScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Grid item widget with Hero animation support for product images.
+///
+/// Wraps [ProductCard] in a [Hero] widget to enable smooth
+/// transition animations when navigating to the product detail screen.
+class _ProductGridItem extends StatelessWidget {
+  final Product product;
+  final VoidCallback onTap;
+
+  const _ProductGridItem({
+    required this.product,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Hero(
+        tag: 'product_image_${product.id}',
+        child: Material(
+          color: Colors.transparent,
+          child: ProductCard(
+            product: product,
+            onAddToCart: () {
+              // TODO: Add to cart logic
+            },
+          ),
+        ),
+      ),
     );
   }
 }

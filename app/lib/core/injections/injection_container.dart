@@ -18,7 +18,9 @@ import 'package:frontend_otis/data/datasources/product/product_remote_datasource
 import 'package:frontend_otis/data/datasources/product/product_remote_datasource_impl.dart';
 import 'package:frontend_otis/data/repositories/product_repository_impl.dart';
 import 'package:frontend_otis/domain/repositories/product_repository.dart';
+import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_products_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/search_products_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 
 final sl = GetIt.instance;
@@ -57,10 +59,23 @@ Future<void> init() async {
     () => GetProductsUsecase(productRepository: sl()),
   );
 
+  // Search Products Use Case
+  sl.registerLazySingleton<SearchProductsUsecase>(
+    () => SearchProductsUsecase(productRepository: sl()),
+  );
+
+  // Get Product Detail Use Case
+  sl.registerLazySingleton<GetProductDetailUsecase>(
+    () => GetProductDetailUsecase(productRepository: sl()),
+  );
+
   // ========== 6. BLOCS ==========
   // Product BLoC
   sl.registerLazySingleton<ProductBloc>(
-    () => ProductBloc(getProductsUsecase: sl()),
+    () => ProductBloc(
+      getProductsUsecase: sl(),
+      getProductDetailUsecase: sl(),
+    ),
   );
 
   print("✅ All dependencies registered successfully");
