@@ -1,44 +1,89 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:frontend_otis/domain/entities/brand.dart';
+import 'package:frontend_otis/domain/entities/vehicle_make.dart';
+import 'package:frontend_otis/domain/entities/tire_spec.dart';
 
-class Product extends Equatable {
-  final int productId;
-  final String sku;
-  final String name;
-  final String? imageUrl;
-  final int brandId;
-  final int? makeId;
-  final int tireSpecId;
-  final double price;
-  final int stockQuantity;
-  final bool isActive;
-  final DateTime createdAt;
+part 'product.freezed.dart';
 
-  const Product({
-    required this.productId,
-    required this.sku,
-    required this.name,
-    this.imageUrl,
-    required this.brandId,
-    this.makeId,
-    required this.tireSpecId,
-    required this.price,
-    required this.stockQuantity,
-    required this.isActive,
-    required this.createdAt,
-  });
+/// Domain entity representing a product in the system.
+/// This entity contains business logic and is immutable.
+@freezed
+class Product with _$Product {
+  const Product._(); // Private constructor for adding custom methods
 
-  @override
-  List<Object?> get props => [
-    productId,
-    sku,
-    name,
-    imageUrl,
-    brandId,
-    makeId,
-    tireSpecId,
-    price,
-    stockQuantity,
-    isActive,
-    createdAt,
-  ];
+  const factory Product({
+    /// Unique identifier for the product
+    required String id,
+
+    /// Product SKU (Stock Keeping Unit)
+    required String sku,
+
+    /// Product name
+    required String name,
+
+    /// URL to product image
+    required String imageUrl,
+
+    /// Product brand (nullable)
+    Brand? brand,
+
+    /// Vehicle make compatibility (nullable)
+    VehicleMake? vehicleMake,
+
+    /// Tire specifications (nullable)
+    TireSpec? tireSpec,
+
+    /// Product price
+    required double price,
+
+    /// Available stock quantity
+    required int stockQuantity,
+
+    /// Whether the product is active/available
+    required bool isActive,
+
+    /// When the product was created
+    required DateTime createdAt,
+  }) = _Product;
+
+  /// Check if the product is in stock
+  bool get isInStock => stockQuantity > 0;
+
+  /// Check if the product is available (active and in stock)
+  bool get isAvailable => isActive && isInStock;
+
+  /// Get formatted price with Vietnamese Dong currency
+  String get formattedPrice {
+    return '${price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
+  }
+
+  /// Get the product's display name (includes tire spec)
+  String get displayName =>
+      tireSpec != null ? '$name (${tireSpec!.display})' : name;
+
+  /// Get the product's full specification string
+  String get fullSpecification {
+    final brandName = brand?.name ?? 'Unknown Brand';
+    final vehicleName = vehicleMake?.name ?? 'Unknown Vehicle';
+    final specDisplay = tireSpec?.display ?? '';
+    return '$brandName $specDisplay for $vehicleName'.trim();
+  }
+
+  /// Check if the product is low on stock (less than 10 units)
+  bool get isLowStock => stockQuantity < 10 && stockQuantity > 0;
+
+  /// Check if the product is out of stock
+  bool get isOutOfStock => stockQuantity == 0;
+
+  /// Get stock status as string
+  String get stockStatus {
+    if (isOutOfStock) return 'Out of Stock';
+    if (isLowStock) return 'Low Stock ($stockQuantity)';
+    return 'In Stock ($stockQuantity)';
+  }
+
+  /// Get formatted creation date
+  String get formattedCreatedAt {
+    return '${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')}';
+  }
 }

@@ -1,33 +1,102 @@
-import '../../domain/entities/tire_spec.dart';
+import 'package:frontend_otis/domain/entities/tire_spec.dart';
+import 'package:json_annotation/json_annotation.dart';
 
-class TireSpecModel extends TireSpec {
+part 'tire_spec_model.g.dart';
+
+/// Data model for TireSpec entity with JSON serialization support.
+/// Handles conversion between JSON API responses and domain entities.
+/// Implements defensive parsing for robustness.
+@JsonSerializable()
+class TireSpecModel {
   const TireSpecModel({
-    required int tireSpecId,
-    required int width,
-    required int aspectRatio,
-    required int rimDiameter,
-  }) : super(
-         tireSpecId: tireSpecId,
-         width: width,
-         aspectRatio: aspectRatio,
-         rimDiameter: rimDiameter,
-       );
+    required this.id,
+    required this.width,
+    required this.aspectRatio,
+    required this.rimDiameter,
+  });
 
+  /// Unique identifier for the tire specification
+  final String id;
+
+  /// Tire width in millimeters
+  final int width;
+
+  /// Tire aspect ratio (height/width percentage)
+  final int aspectRatio;
+
+  /// Rim diameter in inches
+  final int rimDiameter;
+
+  /// Factory constructor to create TireSpecModel from JSON.
+  /// Implements defensive parsing to handle null values and invalid data.
   factory TireSpecModel.fromJson(Map<String, dynamic> json) {
     return TireSpecModel(
-      tireSpecId: json['tire_spec_id'],
-      width: json['width'],
-      aspectRatio: json['aspect_ratio'],
-      rimDiameter: json['rim_diameter'],
+      id: _parseTireSpecId(json['tire_spec_id']),
+      width: _parseInt(json['width'], defaultValue: 0),
+      aspectRatio: _parseInt(json['aspect_ratio'], defaultValue: 0),
+      rimDiameter: _parseInt(json['rim_diameter'], defaultValue: 0),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'tire_spec_id': tireSpecId,
-      'width': width,
-      'aspect_ratio': aspectRatio,
-      'rim_diameter': rimDiameter,
-    };
+  /// Convert TireSpecModel to JSON for API requests.
+  Map<String, dynamic> toJson() => _$TireSpecModelToJson(this);
+
+  /// Convert TireSpecModel to domain TireSpec entity.
+  TireSpec toDomain() {
+    return TireSpec(
+      id: id,
+      width: width,
+      aspectRatio: aspectRatio,
+      rimDiameter: rimDiameter,
+    );
+  }
+
+  /// Create TireSpecModel from domain TireSpec entity.
+  factory TireSpecModel.fromDomain(TireSpec tireSpec) {
+    return TireSpecModel(
+      id: tireSpec.id,
+      width: tireSpec.width,
+      aspectRatio: tireSpec.aspectRatio,
+      rimDiameter: tireSpec.rimDiameter,
+    );
+  }
+
+  /// Parse tire_spec_id from JSON to String with defensive handling.
+  static String _parseTireSpecId(dynamic value) {
+    if (value == null) return '';
+
+    if (value is int) {
+      return value.toString();
+    }
+
+    if (value is String) {
+      return value;
+    }
+
+    // Fallback for unexpected types
+    return value.toString();
+  }
+
+  /// Parse integer values with null safety and default values.
+  static int _parseInt(dynamic value, {int defaultValue = 0}) {
+    if (value == null) return defaultValue;
+
+    if (value is int) {
+      return value;
+    }
+
+    if (value is String) {
+      final parsed = int.tryParse(value.trim());
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    if (value is double) {
+      return value.toInt();
+    }
+
+    // Fallback to default for unexpected types
+    return defaultValue;
   }
 }
