@@ -1,20 +1,23 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'user_role.freezed.dart';
+import 'package:equatable/equatable.dart';
 
 /// Domain entity representing a user role in the system.
 /// This entity contains business logic and is immutable.
-@freezed
-class UserRole with _$UserRole {
-  const UserRole._(); // Private constructor for adding custom methods
+class UserRole extends Equatable {
+  /// Unique identifier for the role
+  final String id;
 
-  const factory UserRole({
-    /// Unique identifier for the role
-    required String id,
+  /// Role name (e.g., 'admin', 'customer')
+  final String name;
 
-    /// Role name (e.g., 'admin', 'customer')
-    required String name,
-  }) = _UserRole;
+  const UserRole({required this.id, required this.name});
+
+  @override
+  List<Object?> get props => [id, name];
+
+  /// Create a copy of UserRole with modified fields
+  UserRole copyWith({String? id, String? name}) {
+    return UserRole(id: id ?? this.id, name: name ?? this.name);
+  }
 
   /// Check if this is an admin role
   bool get isAdmin => name.toLowerCase() == 'admin';

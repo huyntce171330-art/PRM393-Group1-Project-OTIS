@@ -1,32 +1,56 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'notification.freezed.dart';
+import 'package:equatable/equatable.dart';
 
 /// Domain entity representing a notification in the system.
 /// This entity contains business logic and is immutable.
-@freezed
-class Notification with _$Notification {
-  const Notification._(); // Private constructor for adding custom methods
+class Notification extends Equatable {
+  /// Unique identifier for the notification
+  final String id;
 
-  const factory Notification({
-    /// Unique identifier for the notification
-    required String id,
+  /// Notification title
+  final String title;
 
-    /// Notification title
-    required String title,
+  /// Notification body/content
+  final String body;
 
-    /// Notification body/content
-    required String body,
+  /// Whether the notification has been read
+  final bool isRead;
 
-    /// Whether the notification has been read
-    required bool isRead,
+  /// User ID this notification belongs to
+  final String userId;
 
-    /// User ID this notification belongs to
-    required String userId,
+  /// When the notification was created
+  final DateTime createdAt;
 
-    /// When the notification was created
-    required DateTime createdAt,
-  }) = _Notification;
+  const Notification({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.isRead,
+    required this.userId,
+    required this.createdAt,
+  });
+
+  @override
+  List<Object?> get props => [id, title, body, isRead, userId, createdAt];
+
+  /// Create a copy of Notification with modified fields
+  Notification copyWith({
+    String? id,
+    String? title,
+    String? body,
+    bool? isRead,
+    String? userId,
+    DateTime? createdAt,
+  }) {
+    return Notification(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      isRead: isRead ?? this.isRead,
+      userId: userId ?? this.userId,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   /// Check if the notification has content
   bool get hasContent => title.isNotEmpty || body.isNotEmpty;
@@ -47,7 +71,7 @@ class Notification with _$Notification {
 
   /// Get formatted creation time
   String get formattedCreatedAtTime {
-    return '${formattedCreatedAt} ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
+    return '$formattedCreatedAt ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
   }
 
   /// Get relative time description (simplified)

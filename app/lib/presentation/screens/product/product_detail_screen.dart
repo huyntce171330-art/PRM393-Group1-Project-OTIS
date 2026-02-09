@@ -48,14 +48,18 @@ class ProductDetailScreen extends StatelessWidget {
         appBar: _buildAppBar(context),
         body: BlocBuilder<ProductBloc, ProductState>(
           builder: (context, state) {
-            return state.when(
-              initial: () => const Center(child: SizedBox()),
-              loading: () => _buildLoadingState(),
-              loaded: (_, __, ___, ____, _____, ______, _______) =>
-                  const SizedBox(),
-              detailLoaded: (product) => _buildContent(product, context),
-              error: (message) => _buildErrorState(message, context),
-            );
+            if (state is ProductInitial) {
+              return const Center(child: SizedBox());
+            } else if (state is ProductLoading) {
+              return _buildLoadingState();
+            } else if (state is ProductDetailLoaded) {
+              return _buildContent(state.product, context);
+            } else if (state is ProductError) {
+              return _buildErrorState(state.message, context);
+            } else {
+              // Fallback for other states (e.g. ProductLoaded not used here)
+              return const SizedBox();
+            }
           },
         ),
       ),
@@ -265,7 +269,7 @@ class ProductDetailScreen extends StatelessWidget {
               ProductSpecsGrid(tireSpec: product.tireSpec),
 
               // Services section
-              ProductServicesSection(),
+              const ProductServicesSection(),
 
               // Divider
               Divider(

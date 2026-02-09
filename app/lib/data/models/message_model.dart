@@ -1,14 +1,9 @@
 import 'package:frontend_otis/domain/entities/message.dart';
 import 'package:frontend_otis/domain/entities/chat_room.dart';
-import 'package:frontend_otis/core/utils/json_converters.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'message_model.g.dart';
 
 /// Data model for Message entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Includes custom boolean converter and nullable image_url handling.
-@JsonSerializable()
 class MessageModel {
   const MessageModel({
     required this.id,
@@ -36,11 +31,23 @@ class MessageModel {
   final String? imageUrl;
 
   /// Whether the message has been read by the recipient (mapped from 0/1)
-  @BoolFromIntConverter()
   final bool isRead;
 
   /// When the message was created
   final DateTime createdAt;
+
+  /// Convert MessageModel to JSON for API requests.
+  Map<String, dynamic> toJson() {
+    return {
+      'message_id': id,
+      'room_id': roomId,
+      'sender_id': senderId,
+      'content': content,
+      'image_url': imageUrl,
+      'is_read': isRead ? 1 : 0,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 
   /// Factory constructor to create MessageModel from JSON.
   /// Implements defensive parsing to handle null values and invalid data.
@@ -56,9 +63,6 @@ class MessageModel {
       createdAt: _parseDateTime(json['created_at']),
     );
   }
-
-  /// Convert MessageModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$MessageModelToJson(this);
 
   /// Convert MessageModel to domain Message entity.
   Message toDomain() {
@@ -204,7 +208,6 @@ class MessageModel {
 
 /// Data model for ChatRoom entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
-@JsonSerializable()
 class ChatRoomModel {
   const ChatRoomModel({
     required this.id,
@@ -229,6 +232,17 @@ class ChatRoomModel {
   /// When the chat room was last updated
   final DateTime updatedAt;
 
+  /// Convert ChatRoomModel to JSON for API requests.
+  Map<String, dynamic> toJson() {
+    return {
+      'room_id': id,
+      'user_id': userId,
+      'status': status,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
   /// Factory constructor to create ChatRoomModel from JSON.
   /// Implements defensive parsing to handle null values and invalid data.
   factory ChatRoomModel.fromJson(Map<String, dynamic> json) {
@@ -240,9 +254,6 @@ class ChatRoomModel {
       updatedAt: _parseDateTime(json['updated_at']),
     );
   }
-
-  /// Convert ChatRoomModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$ChatRoomModelToJson(this);
 
   /// Convert ChatRoomModel to domain ChatRoom entity.
   ChatRoom toDomain() {

@@ -31,21 +31,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
-  // #region DEBUG_LOGGING
-  bool _isBlocClosed = false;
-  // #endregion
-
   @override
   void initState() {
     super.initState();
-    // #region DEBUG_LOGGING
-    _isBlocClosed = _productBloc.isClosed;
-    print('🔍 DEBUG: ProductListScreen initState - isClosed=$_isBlocClosed');
-    if (_isBlocClosed) {
-      print('🚨 ERROR: Trying to add event to closed Bloc!');
-    }
-    // #endregion
-    _productBloc.add(const ProductEvent.getProducts(filter: ProductFilter()));
+    _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
   }
@@ -60,7 +49,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   void _clearAndUnfocus() {
     _searchController.clear();
-    _onSearchChanged();  // Trigger search with empty query
+    _onSearchChanged(); // Trigger search with empty query
     FocusScope.of(context).unfocus();
   }
 
@@ -71,18 +60,19 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final willTrigger = pixels >= triggerThreshold;
     final state = _productBloc.state;
 
-    if (willTrigger && state is ProductLoaded && state.hasMore && !state.isLoadingMore) {
+    if (willTrigger &&
+        state is ProductLoaded &&
+        state.hasMore &&
+        !state.isLoadingMore) {
       final currentFilter = state.filter;
       final nextPage = currentFilter.page + 1;
       final nextFilter = currentFilter.copyWith(page: nextPage);
-      _productBloc.add(ProductEvent.getProducts(filter: nextFilter));
+      _productBloc.add(GetProductsEvent(filter: nextFilter));
     }
   }
 
   void _onSearchChanged() {
-    _productBloc.add(
-      ProductEvent.searchProducts(query: _searchController.text),
-    );
+    _productBloc.add(SearchProductsEvent(query: _searchController.text));
   }
 
   Future<void> _onRefresh() async {
@@ -92,7 +82,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
         ? state.filter
         : const ProductFilter();
     final refreshFilter = currentFilter.copyWith(page: 1);
-    _productBloc.add(ProductEvent.getProducts(filter: refreshFilter));
+    _productBloc.add(GetProductsEvent(filter: refreshFilter));
   }
 
   void _navigateToProductDetail(BuildContext context, String productId) {
@@ -193,10 +183,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search for tires, batteries...',
-                  hintStyle: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 14,
-                  ),
+                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
                   prefixIcon: Icon(
                     Icons.search,
                     color: Colors.grey[400],
@@ -351,21 +338,18 @@ class _ProductListScreenState extends State<ProductListScreen> {
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          // Show loading indicator at the bottom
-          if (index >= products.length) {
-            return _buildLoadMoreIndicator();
-          }
+      delegate: SliverChildBuilderDelegate((context, index) {
+        // Show loading indicator at the bottom
+        if (index >= products.length) {
+          return _buildLoadMoreIndicator();
+        }
 
-          final product = products[index];
-          return _ProductGridItem(
-            product: product,
-            onTap: () => _navigateToProductDetail(context, product.id),
-          );
-        },
-        childCount: isLoadingMore ? products.length + 1 : products.length,
-      ),
+        final product = products[index];
+        return _ProductGridItem(
+          product: product,
+          onTap: () => _navigateToProductDetail(context, product.id),
+        );
+      }, childCount: isLoadingMore ? products.length + 1 : products.length),
     );
   }
 
@@ -395,7 +379,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
           ),
         ),
         // Products Grid
-        _buildProductsSliverGrid(context, products, isLoadingMore: isLoadingMore),
+        _buildProductsSliverGrid(
+          context,
+          products,
+          isLoadingMore: isLoadingMore,
+        ),
       ],
     );
   }
@@ -795,26 +783,18 @@ class _ProductGridItem extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
 
-  const _ProductGridItem({
-    required this.product,
-    required this.onTap,
-  });
+  const _ProductGridItem({required this.product, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Hero(
-        tag: 'product_image_${product.id}',
-        child: Material(
-          color: Colors.transparent,
-          child: ProductCard(
-            product: product,
-            onAddToCart: () {
-              // TODO: Add to cart logic
-            },
-          ),
-        ),
+    return Hero(
+      tag: 'product_image_${product.id}',
+      child: ProductCard(
+        product: product,
+        onTap: onTap,
+        onAddToCart: () {
+          // TODO: Add to cart
+        },
       ),
     );
   }

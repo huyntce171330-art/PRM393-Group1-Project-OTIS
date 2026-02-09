@@ -12,7 +12,9 @@ import 'package:dartz/dartz.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGetProductsUsecase extends Mock implements GetProductsUsecase {}
-class MockGetProductDetailUsecase extends Mock implements GetProductDetailUsecase {}
+
+class MockGetProductDetailUsecase extends Mock
+    implements GetProductDetailUsecase {}
 
 class FakeProductFilter extends Fake implements ProductFilter {}
 
@@ -46,7 +48,7 @@ void main() {
   setUpAll(() {
     // Register fallback values for mocktail
     registerFallbackValue(const ProductFilter(page: 1, limit: 10));
-    registerFallbackValue(const ProductEvent.getProducts(filter: ProductFilter()));
+    registerFallbackValue(const GetProductsEvent(filter: ProductFilter()));
     registerFallbackValue(FakeProductFilter());
   });
 
@@ -64,13 +66,9 @@ void main() {
   });
 
   group('ProductBloc', () {
-    blocTest<ProductBloc, ProductState>(
-      'initial state should be ProductInitial',
-      build: () => productBloc,
-      verify: (_) {
-        expect(productBloc.state, equals(const ProductState.initial()));
-      },
-    );
+    test('initial state should be ProductInitial', () {
+      expect(productBloc.state, equals(const ProductInitial()));
+    });
 
     blocTest<ProductBloc, ProductState>(
       'should emit loading then loaded when GetProductsEvent succeeds',
@@ -83,13 +81,14 @@ void main() {
           totalPages: 1,
           hasMore: false,
         );
-        when(() => mockGetProductsUsecase(filter))
-            .thenAnswer((_) async => Right(tMetadata));
-        bloc.add(const ProductEvent.getProducts(filter: filter));
+        when(
+          () => mockGetProductsUsecase(filter),
+        ).thenAnswer((_) async => Right(tMetadata));
+        bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1, tProduct2],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -105,13 +104,14 @@ void main() {
       build: () => productBloc,
       act: (bloc) {
         const filter = ProductFilter(page: 1, limit: 10);
-        when(() => mockGetProductsUsecase(filter))
-            .thenAnswer((_) async => const Left(ServerFailure(message: 'Server error')));
-        bloc.add(const ProductEvent.getProducts(filter: filter));
+        when(() => mockGetProductsUsecase(filter)).thenAnswer(
+          (_) async => const Left(ServerFailure(message: 'Server error')),
+        );
+        bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'Server error'),
+        const ProductLoading(),
+        const ProductError(message: 'Server error'),
       ],
     );
 
@@ -125,13 +125,16 @@ void main() {
           totalPages: 1,
           hasMore: false,
         );
-        when(() => mockGetProductsUsecase(const ProductFilter(page: 1, searchQuery: 'Michelin')))
-            .thenAnswer((_) async => Right(tMetadata));
-        bloc.add(const ProductEvent.searchProducts(query: 'Michelin'));
+        when(
+          () => mockGetProductsUsecase(
+            const ProductFilter(page: 1, searchQuery: 'Michelin'),
+          ),
+        ).thenAnswer((_) async => Right(tMetadata));
+        bloc.add(const SearchProductsEvent(query: 'Michelin'));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, searchQuery: 'Michelin'),
           currentPage: 1,
@@ -146,13 +149,16 @@ void main() {
       'should emit loading then error when SearchProductsEvent fails',
       build: () => productBloc,
       act: (bloc) {
-        when(() => mockGetProductsUsecase(const ProductFilter(page: 1, searchQuery: 'Test')))
-            .thenAnswer((_) async => const Left(NetworkFailure()));
-        bloc.add(const ProductEvent.searchProducts(query: 'Test'));
+        when(
+          () => mockGetProductsUsecase(
+            const ProductFilter(page: 1, searchQuery: 'Test'),
+          ),
+        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        bloc.add(const SearchProductsEvent(query: 'Test'));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'No internet connection'),
+        const ProductLoading(),
+        const ProductError(message: 'No internet connection'),
       ],
     );
 
@@ -161,13 +167,14 @@ void main() {
       build: () => productBloc,
       act: (bloc) {
         const productId = '1';
-        when(() => mockGetProductDetailUsecase(productId))
-            .thenAnswer((_) async => Right(tProduct1));
-        bloc.add(const ProductEvent.getProductDetail(id: productId));
+        when(
+          () => mockGetProductDetailUsecase(productId),
+        ).thenAnswer((_) async => Right(tProduct1));
+        bloc.add(const GetProductDetailEvent(id: productId));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.detailLoaded(product: tProduct1),
+        const ProductLoading(),
+        ProductDetailLoaded(product: tProduct1),
       ],
     );
 
@@ -176,13 +183,14 @@ void main() {
       build: () => productBloc,
       act: (bloc) {
         const productId = '1';
-        when(() => mockGetProductDetailUsecase(productId))
-            .thenAnswer((_) async => Left(ServerFailure(message: 'Not found')));
-        bloc.add(const ProductEvent.getProductDetail(id: productId));
+        when(() => mockGetProductDetailUsecase(productId)).thenAnswer(
+          (_) async => const Left(ServerFailure(message: 'Not found')),
+        );
+        bloc.add(const GetProductDetailEvent(id: productId));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'Not found'),
+        const ProductLoading(),
+        const ProductError(message: 'Not found'),
       ],
     );
 
@@ -191,13 +199,14 @@ void main() {
       build: () => productBloc,
       act: (bloc) {
         const productId = '999';
-        when(() => mockGetProductDetailUsecase(productId))
-            .thenAnswer((_) async => Left(ServerFailure(message: 'Product not found')));
-        bloc.add(const ProductEvent.getProductDetail(id: productId));
+        when(() => mockGetProductDetailUsecase(productId)).thenAnswer(
+          (_) async => const Left(ServerFailure(message: 'Product not found')),
+        );
+        bloc.add(const GetProductDetailEvent(id: productId));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'Product not found'),
+        const ProductLoading(),
+        const ProductError(message: 'Product not found'),
       ],
     );
   });

@@ -1,23 +1,30 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'brand.freezed.dart';
+import 'package:equatable/equatable.dart';
 
 /// Domain entity representing a brand in the system.
 /// This entity contains business logic and is immutable.
-@freezed
-class Brand with _$Brand {
-  const Brand._(); // Private constructor for adding custom methods
+class Brand extends Equatable {
+  /// Unique identifier for the brand
+  final String id;
 
-  const factory Brand({
-    /// Unique identifier for the brand
-    required String id,
+  /// Brand name
+  final String name;
 
-    /// Brand name
-    required String name,
+  /// URL to brand logo image
+  final String logoUrl;
 
-    /// URL to brand logo image
-    required String logoUrl,
-  }) = _Brand;
+  const Brand({required this.id, required this.name, required this.logoUrl});
+
+  @override
+  List<Object?> get props => [id, name, logoUrl];
+
+  /// Create a copy of Brand with modified fields
+  Brand copyWith({String? id, String? name, String? logoUrl}) {
+    return Brand(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      logoUrl: logoUrl ?? this.logoUrl,
+    );
+  }
 
   /// Check if the brand has a logo
   bool get hasLogo => logoUrl.isNotEmpty;

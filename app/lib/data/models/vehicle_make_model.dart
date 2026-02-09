@@ -1,12 +1,8 @@
 import 'package:frontend_otis/domain/entities/vehicle_make.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'vehicle_make_model.g.dart';
 
 /// Data model for VehicleMake entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Implements defensive parsing for robustness.
-@JsonSerializable()
 class VehicleMakeModel {
   const VehicleMakeModel({
     required this.id,
@@ -34,7 +30,9 @@ class VehicleMakeModel {
   }
 
   /// Convert VehicleMakeModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$VehicleMakeModelToJson(this);
+  Map<String, dynamic> toJson() {
+    return {'make_id': id, 'name': name, 'logo_url': logoUrl};
+  }
 
   /// Convert VehicleMakeModel to domain VehicleMake entity.
   VehicleMake toDomain() {

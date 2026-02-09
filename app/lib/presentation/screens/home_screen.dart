@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _productBloc.add(const ProductEvent.getProducts(filter: ProductFilter()));
+    _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
   }
 
   @override
@@ -75,14 +75,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _clearAndUnfocus() {
     _searchController.clear();
-    _onSearchChanged();  // Trigger search with empty query
+    _onSearchChanged(); // Trigger search with empty query
     FocusScope.of(context).unfocus();
   }
 
   void _onSearchChanged() {
-    _productBloc.add(
-      ProductEvent.searchProducts(query: _searchController.text),
-    );
+    _productBloc.add(SearchProductsEvent(query: _searchController.text));
   }
 
   void _navigateToProductList() {
@@ -99,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _onRefresh() async {
-    _productBloc.add(const ProductEvent.getProducts(filter: ProductFilter()));
+    _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
   }
 
   @override
@@ -214,10 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search for tires, batteries...',
-                  hintStyle: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 14,
-                  ),
+                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
                   prefixIcon: Icon(
                     Icons.search,
                     color: Colors.grey[400],
@@ -231,6 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(9999),
                     borderSide: BorderSide.none,
+                    gapPadding: 0,
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -804,27 +800,23 @@ class _HomeScreenState extends State<HomeScreen> {
     required IconData icon,
     required String label,
     required bool isSelected,
-    required int badgeCount,
     required double iconSize,
     required double padding,
+    int? badgeCount,
   }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final selectedColor = isSelected ? AppColors.primary : Colors.grey[400];
-    final badgeSize = 14.0;
-    final badgeTop = -2.0;
-    final badgeRight = -2.0;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        InkWell(
-          onTap: () {
-            // TODO: Navigate to cart
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: padding, vertical: 4),
-            child: Column(
+    return InkWell(
+      onTap: () {
+        // TODO: Navigate to tab
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: padding, vertical: 4),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icon, size: iconSize, color: selectedColor),
@@ -839,39 +831,35 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-          ),
-        ),
-        // Badge
-        Positioned(
-          top: badgeTop,
-          right: badgeRight,
-          child: Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(badgeSize / 2),
-              border: Border.all(
-                color: isDarkMode
-                    ? AppColors.surfaceDark
-                    : AppColors.surfaceLight,
-                width: 1.5,
-              ),
-            ),
-            constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
-            child: Center(
-              child: Text(
-                '$badgeCount',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 7,
-                  fontWeight: FontWeight.w700,
+            if (badgeCount != null && badgeCount > 0)
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    badgeCount > 99 ? '99+' : badgeCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -2,15 +2,10 @@ import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/data/models/brand_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/data/models/tire_spec_model.dart';
-import 'package:frontend_otis/core/utils/json_converters.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'product_model.g.dart';
 
 /// Data model for Product entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Implements defensive parsing for robustness.
-@JsonSerializable()
 class ProductModel {
   const ProductModel({
     required this.id,
@@ -55,11 +50,27 @@ class ProductModel {
 
   /// Whether the product is active/available
   /// SQLite stores as INTEGER (0/1) - converter handles the mapping
-  @BoolFromIntConverter()
   final bool isActive;
 
   /// When the product was created
   final DateTime createdAt;
+
+  /// Convert ProductModel to JSON for API requests.
+  Map<String, dynamic> toJson() {
+    return {
+      'product_id': id,
+      'sku': sku,
+      'name': name,
+      'image_url': imageUrl,
+      'brand': brand.toJson(),
+      'vehicle_make': vehicleMake.toJson(),
+      'tire_spec': tireSpec.toJson(),
+      'price': price,
+      'stock_quantity': stockQuantity,
+      'is_active': isActive ? 1 : 0,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 
   /// Factory constructor to create ProductModel from JSON.
   /// Implements defensive parsing to handle null values and invalid data.
@@ -78,9 +89,6 @@ class ProductModel {
       createdAt: _parseDateTime(json['created_at']),
     );
   }
-
-  /// Convert ProductModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$ProductModelToJson(this);
 
   /// Convert ProductModel to domain Product entity.
   Product toDomain() {

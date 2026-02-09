@@ -1,26 +1,37 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:equatable/equatable.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
-
-part 'cart_item.freezed.dart';
 
 /// Domain entity representing a cart item in the system.
 /// This entity contains business logic and is immutable.
 /// Uses composition to hold the Product object after repository lookup.
-@freezed
-class CartItem with _$CartItem {
-  const CartItem._(); // Private constructor for adding custom methods
+class CartItem extends Equatable {
+  /// Unique identifier for the product in cart
+  final String productId;
 
-  const factory CartItem({
-    /// Unique identifier for the product in cart
-    required String productId,
+  /// Quantity of the product in cart
+  final int quantity;
 
-    /// Quantity of the product in cart
-    required int quantity,
+  /// The actual product object (resolved after repository lookup)
+  /// Nullable because it might not be loaded yet
+  final Product? product;
 
-    /// The actual product object (resolved after repository lookup)
-    /// Nullable because it might not be loaded yet
-    Product? product,
-  }) = _CartItem;
+  const CartItem({
+    required this.productId,
+    required this.quantity,
+    this.product,
+  });
+
+  @override
+  List<Object?> get props => [productId, quantity, product];
+
+  /// Create a copy of CartItem with modified fields
+  CartItem copyWith({String? productId, int? quantity, Product? product}) {
+    return CartItem(
+      productId: productId ?? this.productId,
+      quantity: quantity ?? this.quantity,
+      product: product ?? this.product,
+    );
+  }
 
   /// Check if the cart item has a valid product
   bool get hasProduct => product != null;

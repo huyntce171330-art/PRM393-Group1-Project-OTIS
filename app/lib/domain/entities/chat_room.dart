@@ -1,29 +1,50 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'chat_room.freezed.dart';
+import 'package:equatable/equatable.dart';
 
 /// Domain entity representing a chat room in the system.
 /// This entity contains business logic and is immutable.
-@freezed
-class ChatRoom with _$ChatRoom {
-  const ChatRoom._(); // Private constructor for adding custom methods
+class ChatRoom extends Equatable {
+  /// Unique identifier for the chat room
+  final String id;
 
-  const factory ChatRoom({
-    /// Unique identifier for the chat room
-    required String id,
+  /// User ID associated with this chat room
+  final String userId;
 
-    /// User ID associated with this chat room
-    required String userId,
+  /// Current status of the chat room
+  final String status;
 
-    /// Current status of the chat room
-    required String status,
+  /// When the chat room was created
+  final DateTime createdAt;
 
-    /// When the chat room was created
-    required DateTime createdAt,
+  /// When the chat room was last updated
+  final DateTime updatedAt;
 
-    /// When the chat room was last updated
-    required DateTime updatedAt,
-  }) = _ChatRoom;
+  const ChatRoom({
+    required this.id,
+    required this.userId,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  @override
+  List<Object?> get props => [id, userId, status, createdAt, updatedAt];
+
+  /// Create a copy of ChatRoom with modified fields
+  ChatRoom copyWith({
+    String? id,
+    String? userId,
+    String? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ChatRoom(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 
   /// Check if the chat room is active
   bool get isActive => status.toLowerCase() == 'open';

@@ -1,12 +1,8 @@
 import 'package:frontend_otis/domain/entities/brand.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'brand_model.g.dart';
 
 /// Data model for Brand entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Implements defensive parsing for robustness.
-@JsonSerializable()
 class BrandModel {
   const BrandModel({
     required this.id,
@@ -34,7 +30,9 @@ class BrandModel {
   }
 
   /// Convert BrandModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$BrandModelToJson(this);
+  Map<String, dynamic> toJson() {
+    return {'brand_id': id, 'name': name, 'logo_url': logoUrl};
+  }
 
   /// Convert BrandModel to domain Brand entity.
   Brand toDomain() {

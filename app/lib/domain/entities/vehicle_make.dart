@@ -1,23 +1,34 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'vehicle_make.freezed.dart';
+import 'package:equatable/equatable.dart';
 
 /// Domain entity representing a vehicle make in the system.
 /// This entity contains business logic and is immutable.
-@freezed
-class VehicleMake with _$VehicleMake {
-  const VehicleMake._(); // Private constructor for adding custom methods
+class VehicleMake extends Equatable {
+  /// Unique identifier for the vehicle make
+  final String id;
 
-  const factory VehicleMake({
-    /// Unique identifier for the vehicle make
-    required String id,
+  /// Vehicle make name
+  final String name;
 
-    /// Vehicle make name
-    required String name,
+  /// URL to vehicle make logo image
+  final String logoUrl;
 
-    /// URL to vehicle make logo image
-    required String logoUrl,
-  }) = _VehicleMake;
+  const VehicleMake({
+    required this.id,
+    required this.name,
+    required this.logoUrl,
+  });
+
+  @override
+  List<Object?> get props => [id, name, logoUrl];
+
+  /// Create a copy of VehicleMake with modified fields
+  VehicleMake copyWith({String? id, String? name, String? logoUrl}) {
+    return VehicleMake(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      logoUrl: logoUrl ?? this.logoUrl,
+    );
+  }
 
   /// Check if the vehicle make has a logo
   bool get hasLogo => logoUrl.isNotEmpty;

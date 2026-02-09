@@ -47,29 +47,28 @@ void main() {
   });
 
   Widget createWidgetUnderTest() {
-    return MaterialApp(
-      home: ProductDetailScreen(productId: testProductId),
-    );
+    return MaterialApp(home: ProductDetailScreen(productId: testProductId));
   }
 
   testWidgets('should trigger GetProductDetailEvent on init', (tester) async {
     // Arrange
-    when(() => mockBloc.state).thenReturn(ProductState.initial());
+    when(() => mockBloc.state).thenReturn(const ProductInitial());
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
 
     // Assert
-    verify(() => mockBloc.add(const GetProductDetailEvent(id: testProductId)))
-        .called(1);
+    verify(
+      () => mockBloc.add(const GetProductDetailEvent(id: testProductId)),
+    ).called(1);
   });
 
   testWidgets('shows loading indicator when state is loading', (tester) async {
     // Arrange
     whenListen(
       mockBloc,
-      Stream.value(ProductState.loading()),
-      initialState: ProductState.initial(),
+      Stream.value(const ProductLoading()),
+      initialState: const ProductInitial(),
     );
 
     // Act
@@ -85,8 +84,8 @@ void main() {
     // Arrange
     whenListen(
       mockBloc,
-      Stream.value(ProductState.detailLoaded(product: testProduct)),
-      initialState: ProductState.initial(),
+      Stream.value(ProductDetailLoaded(product: testProduct)),
+      initialState: const ProductInitial(),
     );
 
     // Act
@@ -97,30 +96,32 @@ void main() {
     expect(find.text('Michelin Primacy 4'), findsOneWidget);
   });
 
-  testWidgets('shows Add to Cart and Buy Now buttons when state is detailLoaded',
-      (tester) async {
-    // Arrange
-    whenListen(
-      mockBloc,
-      Stream.value(ProductState.detailLoaded(product: testProduct)),
-      initialState: ProductState.initial(),
-    );
+  testWidgets(
+    'shows Add to Cart and Buy Now buttons when state is detailLoaded',
+    (tester) async {
+      // Arrange
+      whenListen(
+        mockBloc,
+        Stream.value(ProductDetailLoaded(product: testProduct)),
+        initialState: const ProductInitial(),
+      );
 
-    // Act
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pump();
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
 
-    // Assert
-    expect(find.text('Add to Cart'), findsOneWidget);
-    expect(find.text('Buy Now'), findsOneWidget);
-  });
+      // Assert
+      expect(find.text('Add to Cart'), findsOneWidget);
+      expect(find.text('Buy Now'), findsOneWidget);
+    },
+  );
 
   testWidgets('shows In Stock badge when product is in stock', (tester) async {
     // Arrange
     whenListen(
       mockBloc,
-      Stream.value(ProductState.detailLoaded(product: testProduct)),
-      initialState: ProductState.initial(),
+      Stream.value(ProductDetailLoaded(product: testProduct)),
+      initialState: const ProductInitial(),
     );
 
     // Act
@@ -131,14 +132,15 @@ void main() {
     expect(find.text('In Stock'), findsOneWidget);
   });
 
-  testWidgets('shows Out of Stock badge when product is out of stock',
-      (tester) async {
+  testWidgets('shows Out of Stock badge when product is out of stock', (
+    tester,
+  ) async {
     // Arrange
     final outOfStockProduct = testProduct.copyWith(stockQuantity: 0);
     whenListen(
       mockBloc,
-      Stream.value(ProductState.detailLoaded(product: outOfStockProduct)),
-      initialState: ProductState.initial(),
+      Stream.value(ProductDetailLoaded(product: outOfStockProduct)),
+      initialState: const ProductInitial(),
     );
 
     // Act
@@ -154,8 +156,8 @@ void main() {
     const errorMessage = 'Product not found';
     whenListen(
       mockBloc,
-      Stream.value(const ProductState.error(message: errorMessage)),
-      initialState: ProductState.initial(),
+      Stream.value(const ProductError(message: errorMessage)),
+      initialState: const ProductInitial(),
     );
 
     // Act
@@ -167,14 +169,15 @@ void main() {
     expect(find.text('Retry'), findsOneWidget);
   });
 
-  testWidgets('retry button triggers GetProductDetailEvent again',
-      (tester) async {
+  testWidgets('retry button triggers GetProductDetailEvent again', (
+    tester,
+  ) async {
     // Arrange
     const errorMessage = 'Product not found';
     whenListen(
       mockBloc,
-      Stream.value(const ProductState.error(message: errorMessage)),
-      initialState: ProductState.initial(),
+      Stream.value(const ProductError(message: errorMessage)),
+      initialState: const ProductInitial(),
     );
 
     // Act
@@ -184,17 +187,19 @@ void main() {
     await tester.pump();
 
     // Assert - Should trigger the event again
-    verify(() => mockBloc.add(const GetProductDetailEvent(id: testProductId)))
-        .called(2);
+    verify(
+      () => mockBloc.add(const GetProductDetailEvent(id: testProductId)),
+    ).called(2);
   });
 
-  testWidgets('displays app bar with back button and cart icon',
-      (tester) async {
+  testWidgets('displays app bar with back button and cart icon', (
+    tester,
+  ) async {
     // Arrange
     whenListen(
       mockBloc,
-      Stream.value(ProductState.loading()),
-      initialState: ProductState.initial(),
+      Stream.value(const ProductLoading()),
+      initialState: const ProductInitial(),
     );
 
     // Act

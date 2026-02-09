@@ -1,50 +1,101 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:equatable/equatable.dart';
 import 'package:frontend_otis/domain/entities/brand.dart';
 import 'package:frontend_otis/domain/entities/vehicle_make.dart';
 import 'package:frontend_otis/domain/entities/tire_spec.dart';
 
-part 'product.freezed.dart';
-
 /// Domain entity representing a product in the system.
 /// This entity contains business logic and is immutable.
-@freezed
-class Product with _$Product {
-  const Product._(); // Private constructor for adding custom methods
+class Product extends Equatable {
+  /// Unique identifier for the product
+  final String id;
 
-  const factory Product({
-    /// Unique identifier for the product
-    required String id,
+  /// Product SKU (Stock Keeping Unit)
+  final String sku;
 
-    /// Product SKU (Stock Keeping Unit)
-    required String sku,
+  /// Product name
+  final String name;
 
-    /// Product name
-    required String name,
+  /// URL to product image
+  final String imageUrl;
 
-    /// URL to product image
-    required String imageUrl,
+  /// Product brand (nullable)
+  final Brand? brand;
 
-    /// Product brand (nullable)
+  /// Vehicle make compatibility (nullable)
+  final VehicleMake? vehicleMake;
+
+  /// Tire specifications (nullable)
+  final TireSpec? tireSpec;
+
+  /// Product price
+  final double price;
+
+  /// Available stock quantity
+  final int stockQuantity;
+
+  /// Whether the product is active/available
+  final bool isActive;
+
+  /// When the product was created
+  final DateTime createdAt;
+
+  const Product({
+    required this.id,
+    required this.sku,
+    required this.name,
+    required this.imageUrl,
+    this.brand,
+    this.vehicleMake,
+    this.tireSpec,
+    required this.price,
+    required this.stockQuantity,
+    required this.isActive,
+    required this.createdAt,
+  });
+
+  @override
+  List<Object?> get props => [
+    id,
+    sku,
+    name,
+    imageUrl,
+    brand,
+    vehicleMake,
+    tireSpec,
+    price,
+    stockQuantity,
+    isActive,
+    createdAt,
+  ];
+
+  /// Create a copy of Product with modified fields
+  Product copyWith({
+    String? id,
+    String? sku,
+    String? name,
+    String? imageUrl,
     Brand? brand,
-
-    /// Vehicle make compatibility (nullable)
     VehicleMake? vehicleMake,
-
-    /// Tire specifications (nullable)
     TireSpec? tireSpec,
-
-    /// Product price
-    required double price,
-
-    /// Available stock quantity
-    required int stockQuantity,
-
-    /// Whether the product is active/available
-    required bool isActive,
-
-    /// When the product was created
-    required DateTime createdAt,
-  }) = _Product;
+    double? price,
+    int? stockQuantity,
+    bool? isActive,
+    DateTime? createdAt,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      sku: sku ?? this.sku,
+      name: name ?? this.name,
+      imageUrl: imageUrl ?? this.imageUrl,
+      brand: brand ?? this.brand,
+      vehicleMake: vehicleMake ?? this.vehicleMake,
+      tireSpec: tireSpec ?? this.tireSpec,
+      price: price ?? this.price,
+      stockQuantity: stockQuantity ?? this.stockQuantity,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   /// Check if the product is in stock
   bool get isInStock => stockQuantity > 0;

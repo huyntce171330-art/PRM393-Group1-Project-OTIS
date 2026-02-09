@@ -1,35 +1,70 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'message.freezed.dart';
+import 'package:equatable/equatable.dart';
 
 /// Domain entity representing a message in a chat room.
 /// This entity contains business logic and is immutable.
-@freezed
-class Message with _$Message {
-  const Message._(); // Private constructor for adding custom methods
+class Message extends Equatable {
+  /// Unique identifier for the message
+  final String id;
 
-  const factory Message({
-    /// Unique identifier for the message
-    required String id,
+  /// Chat room ID this message belongs to
+  final String roomId;
 
-    /// Chat room ID this message belongs to
-    required String roomId,
+  /// User ID of the message sender
+  final String senderId;
 
-    /// User ID of the message sender
-    required String senderId,
+  /// Message content (text)
+  final String content;
 
-    /// Message content (text)
-    required String content,
+  /// Optional image URL for image messages
+  final String? imageUrl;
 
-    /// Optional image URL for image messages
+  /// Whether the message has been read by the recipient
+  final bool isRead;
+
+  /// When the message was created
+  final DateTime createdAt;
+
+  const Message({
+    required this.id,
+    required this.roomId,
+    required this.senderId,
+    required this.content,
+    this.imageUrl,
+    required this.isRead,
+    required this.createdAt,
+  });
+
+  @override
+  List<Object?> get props => [
+    id,
+    roomId,
+    senderId,
+    content,
+    imageUrl,
+    isRead,
+    createdAt,
+  ];
+
+  /// Create a copy of Message with modified fields
+  Message copyWith({
+    String? id,
+    String? roomId,
+    String? senderId,
+    String? content,
     String? imageUrl,
-
-    /// Whether the message has been read by the recipient
-    required bool isRead,
-
-    /// When the message was created
-    required DateTime createdAt,
-  }) = _Message;
+    bool? isRead,
+    DateTime? createdAt,
+  }) {
+    return Message(
+      id: id ?? this.id,
+      roomId: roomId ?? this.roomId,
+      senderId: senderId ?? this.senderId,
+      content: content ?? this.content,
+      imageUrl: imageUrl ?? this.imageUrl,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   /// Check if the message has text content
   bool get hasContent => content.isNotEmpty;
@@ -68,7 +103,7 @@ class Message with _$Message {
 
   /// Get formatted creation date and time
   String get formattedCreatedAt {
-    return '${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')} ${formattedTime}';
+    return '${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')} $formattedTime';
   }
 
   /// Get relative time description

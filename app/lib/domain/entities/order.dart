@@ -1,38 +1,73 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:equatable/equatable.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/order_item.dart';
-
-part 'order.freezed.dart';
 
 /// Domain entity representing an order in the system.
 /// This entity contains business logic and is immutable.
 /// Uses composition with OrderItem entities.
-@freezed
-class Order with _$Order {
-  const Order._(); // Private constructor for adding custom methods
+class Order extends Equatable {
+  /// Unique identifier for the order
+  final String id;
 
-  const factory Order({
-    /// Unique identifier for the order
-    required String id,
+  /// Order code (human-readable identifier)
+  final String code;
 
-    /// Order code (human-readable identifier)
-    required String code,
+  /// Total amount of the order
+  final double totalAmount;
 
-    /// Total amount of the order
-    required double totalAmount,
+  /// Current status of the order
+  final OrderStatus status;
 
-    /// Current status of the order
-    required OrderStatus status,
+  /// Shipping address for the order
+  final String shippingAddress;
 
-    /// Shipping address for the order
-    required String shippingAddress,
+  /// When the order was created
+  final DateTime createdAt;
 
-    /// When the order was created
-    required DateTime createdAt,
+  /// List of order items
+  final List<OrderItem> items;
 
-    /// List of order items
-    required List<OrderItem> items,
-  }) = _Order;
+  const Order({
+    required this.id,
+    required this.code,
+    required this.totalAmount,
+    required this.status,
+    required this.shippingAddress,
+    required this.createdAt,
+    required this.items,
+  });
+
+  @override
+  List<Object?> get props => [
+    id,
+    code,
+    totalAmount,
+    status,
+    shippingAddress,
+    createdAt,
+    items,
+  ];
+
+  /// Create a copy of Order with modified fields
+  Order copyWith({
+    String? id,
+    String? code,
+    double? totalAmount,
+    OrderStatus? status,
+    String? shippingAddress,
+    DateTime? createdAt,
+    List<OrderItem>? items,
+  }) {
+    return Order(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      totalAmount: totalAmount ?? this.totalAmount,
+      status: status ?? this.status,
+      shippingAddress: shippingAddress ?? this.shippingAddress,
+      createdAt: createdAt ?? this.createdAt,
+      items: items ?? this.items,
+    );
+  }
 
   /// Calculate total amount from order items (for validation)
   double get calculatedTotalAmount {
@@ -74,7 +109,7 @@ class Order with _$Order {
 
   /// Get formatted creation date and time
   String get formattedCreatedAtTime {
-    return '${formattedCreatedAt} ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
+    return '$formattedCreatedAt ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
   }
 
   /// Check if the order contains valid items

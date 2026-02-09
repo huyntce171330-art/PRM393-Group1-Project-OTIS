@@ -1,9 +1,6 @@
 import 'dart:math';
 
 import 'package:frontend_otis/data/models/product_model.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'product_list_model.g.dart';
 
 /// Paginated response model for product list.
 /// Wraps a list of products with pagination metadata from API responses.
@@ -30,7 +27,6 @@ part 'product_list_model.g.dart';
 /// print('Page ${productList.page} of ${productList.totalPages}');
 /// print('Has more: ${productList.hasMore}');
 /// ```
-@JsonSerializable()
 class ProductListModel {
   const ProductListModel({
     required this.products,
@@ -43,28 +39,34 @@ class ProductListModel {
 
   /// List of products in this page
   /// JSON key: 'data' (API response wraps products in 'data' field)
-  @JsonKey(name: 'data', fromJson: _productsFromJson)
   final List<ProductModel> products;
 
   /// Current page number (1-indexed)
-  @JsonKey(name: 'page')
   final int page;
 
   /// Number of items per page
-  @JsonKey(name: 'limit')
   final int limit;
 
   /// Total number of products across all pages
-  @JsonKey(name: 'total')
   final int total;
 
   /// Total number of pages available
-  @JsonKey(name: 'total_pages')
   final int totalPages;
 
   /// Whether there are more pages to load
-  @JsonKey(name: 'has_more')
   final bool hasMore;
+
+  /// Factory constructor to create ProductListModel from JSON.
+  factory ProductListModel.fromJson(Map<String, dynamic> json) {
+    return ProductListModel(
+      products: _productsFromJson(json['data']),
+      page: json['page'] as int? ?? 1,
+      limit: json['limit'] as int? ?? 10,
+      total: json['total'] as int? ?? 0,
+      totalPages: json['total_pages'] as int? ?? 0,
+      hasMore: json['has_more'] as bool? ?? false,
+    );
+  }
 
   /// Convert products list from JSON with null safety
   static List<ProductModel> _productsFromJson(dynamic data) {
@@ -74,13 +76,6 @@ class ProductListModel {
         .map((item) => ProductModel.fromJson(item as Map<String, dynamic>))
         .toList();
   }
-
-  /// Factory constructor to create ProductListModel from JSON.
-  factory ProductListModel.fromJson(Map<String, dynamic> json) =>
-      _$ProductListModelFromJson(json);
-
-  /// Convert ProductListModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$ProductListModelToJson(this);
 
   /// Convert ProductListModel to domain ProductList entity.
   /// NOTE: Uncomment when ProductList entity is created

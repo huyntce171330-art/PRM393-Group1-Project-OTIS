@@ -2,14 +2,10 @@ import 'package:frontend_otis/core/enums/enums.dart' as enums;
 import 'package:frontend_otis/domain/entities/user.dart';
 import 'package:frontend_otis/domain/entities/user_role.dart' as entities;
 import 'package:frontend_otis/data/models/user_role_model.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'user_model.g.dart';
 
 /// Data model for User entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Implements defensive parsing for robustness.
-@JsonSerializable()
 class UserModel {
   const UserModel({
     required this.id,
@@ -42,15 +38,28 @@ class UserModel {
   final String avatarUrl;
 
   /// User's role in the system (nullable for dynamic roles from DB)
-  @JsonKey(fromJson: _roleFromJson, toJson: _roleToJson)
   final entities.UserRole? role;
 
   /// User's current status
-  @JsonKey(fromJson: _parseUserStatus, toJson: _statusToJson)
   final enums.UserStatus status;
 
   /// When the user was created
   final DateTime createdAt;
+
+  /// Convert UserModel to JSON for API requests.
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': id,
+      'phone': phone,
+      'full_name': fullName,
+      'address': address,
+      'shop_name': shopName,
+      'avatar_url': avatarUrl,
+      'role': role != null ? UserRoleModel.fromDomain(role!).toJson() : null,
+      'status': status.name,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 
   /// Factory constructor to create UserModel from JSON.
   /// Implements defensive parsing to handle null values and invalid data.
@@ -67,9 +76,6 @@ class UserModel {
       createdAt: _parseDateTime(json['created_at']),
     );
   }
-
-  /// Convert UserModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$UserModelToJson(this);
 
   /// Convert UserModel to domain User entity.
   User toDomain() {
@@ -166,31 +172,6 @@ class UserModel {
       case enums.UserRole.customer:
         return const entities.UserRole(id: '2', name: 'customer');
     }
-  }
-
-  /// Custom fromJson for UserRole? field
-  static entities.UserRole? _roleFromJson(dynamic json) {
-    if (json == null) return null;
-    if (json is Map<String, dynamic>) {
-      final roleModel = UserRoleModel.fromJson(json);
-      return roleModel.toDomain();
-    }
-    // Handle integer role_id - convert enum to entity
-    if (json is int) {
-      final enumRole = const enums.UserRoleConverter().fromJson(json);
-      return _enumUserRoleToEntity(enumRole);
-    }
-    return null;
-  }
-
-  /// Custom toJson for UserStatus field
-  static String _statusToJson(enums.UserStatus status) {
-    return status.name; // Use enum's built-in name getter
-  }
-
-  static dynamic _roleToJson(entities.UserRole? role) {
-    if (role == null) return null;
-    return UserRoleModel.fromDomain(role).toJson();
   }
 
   /// Parse status from JSON to UserStatus enum with defensive handling.

@@ -41,7 +41,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ProductBloc({
     required this.getProductsUsecase,
     required this.getProductDetailUsecase,
-  }) : super(ProductState.initial()) {
+  }) : super(const ProductInitial()) {
     // Register event handlers
     _registerEventHandlers();
   }
@@ -56,7 +56,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       if (isLoadMore && state is ProductLoaded) {
         emit((state as ProductLoaded).copyWith(isLoadingMore: true));
       } else {
-        emit(ProductState.loading());
+        emit(const ProductLoading());
       }
       _currentFilter = event.filter;
 
@@ -67,7 +67,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
           if (isLoadMore && state is ProductLoaded) {
             emit((state as ProductLoaded).copyWith(isLoadingMore: false));
           } else {
-            emit(ProductState.error(message: failure.message));
+            emit(ProductError(message: failure.message));
           }
         },
         (metadata) {
@@ -79,22 +79,25 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
             // APPEND products when loading more pages (FIX: Bug #1)
             final currentState = state as ProductLoaded;
             final existingIds = currentState.products.map((p) => p.id).toSet();
-            final newProducts =
-                products.where((p) => !existingIds.contains(p.id)).toList();
+            final newProducts = products
+                .where((p) => !existingIds.contains(p.id))
+                .toList();
 
-            emit(currentState.copyWith(
-              products: [...currentState.products, ...newProducts],
-              filter: event.filter,
-              currentPage: event.filter.page,
-              totalPages: metadata.totalPages,
-              hasMore: hasMore,
-              totalCount: metadata.totalCount,
-              isLoadingMore: false,
-            ));
+            emit(
+              currentState.copyWith(
+                products: [...currentState.products, ...newProducts],
+                filter: event.filter,
+                currentPage: event.filter.page,
+                totalPages: metadata.totalPages,
+                hasMore: hasMore,
+                totalCount: metadata.totalCount,
+                isLoadingMore: false,
+              ),
+            );
           } else {
             // First page - replace products
             emit(
-              ProductState.loaded(
+              ProductLoaded(
                 products: products,
                 filter: event.filter,
                 currentPage: event.filter.page,
@@ -110,90 +113,87 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
 
     // Handle SearchProductsEvent - Search products by query
     on<SearchProductsEvent>((event, emit) async {
-      emit(ProductState.loading());
+      emit(const ProductLoading());
 
       // Create filter with search query, reset to page 1
       final searchFilter = _currentFilter.withSearch(event.query);
       _currentFilter = searchFilter;
 
       final result = await getProductsUsecase(searchFilter);
-      result.fold(
-        (failure) => emit(ProductState.error(message: failure.message)),
-        (metadata) {
-          emit(
-            ProductState.loaded(
-              products: metadata.products,
-              filter: searchFilter,
-              currentPage: 1,
-              totalPages: metadata.totalPages,
-              hasMore: metadata.hasMore,
-              totalCount: metadata.totalCount,
-            ),
-          );
-        },
-      );
+      result.fold((failure) => emit(ProductError(message: failure.message)), (
+        metadata,
+      ) {
+        emit(
+          ProductLoaded(
+            products: metadata.products,
+            filter: searchFilter,
+            currentPage: 1,
+            totalPages: metadata.totalPages,
+            hasMore: metadata.hasMore,
+            totalCount: metadata.totalCount,
+          ),
+        );
+      });
     });
 
     // Handle ClearSearchEvent - Clear search and reset to default filter
     on<ClearSearchEvent>((event, emit) async {
-      emit(ProductState.loading());
+      emit(const ProductLoading());
 
       // Clear search query but keep other filters if any
       final clearedFilter = _currentFilter.clearSearch();
       _currentFilter = clearedFilter;
 
       final result = await getProductsUsecase(clearedFilter);
-      result.fold(
-        (failure) => emit(ProductState.error(message: failure.message)),
-        (metadata) {
-          emit(
-            ProductState.loaded(
-              products: metadata.products,
-              filter: clearedFilter,
-              currentPage: 1,
-              totalPages: metadata.totalPages,
-              hasMore: metadata.hasMore,
-              totalCount: metadata.totalCount,
-            ),
-          );
-        },
-      );
+      result.fold((failure) => emit(ProductError(message: failure.message)), (
+        metadata,
+      ) {
+        emit(
+          ProductLoaded(
+            products: metadata.products,
+            filter: clearedFilter,
+            currentPage: 1,
+            totalPages: metadata.totalPages,
+            hasMore: metadata.hasMore,
+            totalCount: metadata.totalCount,
+          ),
+        );
+      });
     });
 
     // Handle RefreshProductsEvent - Reset to page 1 and reload
     on<RefreshProductsEvent>((event, emit) async {
-      emit(ProductState.loading());
+      emit(const ProductLoading());
 
       // Reset to page 1, keep other filters
       final refreshFilter = _currentFilter.copyWith(page: 1);
       _currentFilter = refreshFilter;
 
       final result = await getProductsUsecase(refreshFilter);
-      result.fold(
-        (failure) => emit(ProductState.error(message: failure.message)),
-        (metadata) {
-          emit(
-            ProductState.loaded(
-              products: metadata.products,
-              filter: refreshFilter,
-              currentPage: 1,
-              totalPages: metadata.totalPages,
-              hasMore: metadata.hasMore,
-              totalCount: metadata.totalCount,
-            ),
-          );
-        },
-      );
+      result.fold((failure) => emit(ProductError(message: failure.message)), (
+        metadata,
+      ) {
+        emit(
+          ProductLoaded(
+            products: metadata.products,
+            filter: refreshFilter,
+            currentPage: 1,
+            totalPages: metadata.totalPages,
+            hasMore: metadata.hasMore,
+            totalCount: metadata.totalCount,
+          ),
+        );
+      });
     });
 
     // Handle GetProductDetailEvent - Fetch single product
     on<GetProductDetailEvent>((event, emit) async {
-      emit(ProductState.loading());
+      emit(const ProductLoading());
 
       final result = await getProductDetailUsecase(event.id);
       result.fold(
-        (failure) => emit(ProductState.error(message: failure.message)),
-        (product) => emit(ProductState.detailLoaded(product: product)),
+        (failure) => emit(ProductError(message: failure.message)),
+        (product) => emit(ProductDetailLoaded(product: product)),
       );
     });
   }
@@ -291,5 +291,6 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     }
     await super.close();
   }
+
   // #endregion
 }

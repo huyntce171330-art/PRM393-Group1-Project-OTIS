@@ -1,14 +1,10 @@
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/data/models/order_item_model.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'order_model.g.dart';
 
 /// Data model for Order entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Uses explicitToJson: true to properly serialize nested order items.
-@JsonSerializable(explicitToJson: true)
 class OrderModel {
   const OrderModel({
     required this.id,
@@ -30,7 +26,6 @@ class OrderModel {
   final double totalAmount;
 
   /// Current status of the order
-  @OrderStatusConverter()
   final OrderStatus status;
 
   /// Shipping address for the order
@@ -41,6 +36,19 @@ class OrderModel {
 
   /// List of order item models
   final List<OrderItemModel> items;
+
+  /// Convert OrderModel to JSON for API requests.
+  Map<String, dynamic> toJson() {
+    return {
+      'order_id': id,
+      'code': code,
+      'total_amount': totalAmount,
+      'status': const OrderStatusConverter().toJson(status),
+      'shipping_address': shippingAddress,
+      'created_at': createdAt.toIso8601String(),
+      'order_items': items.map((item) => item.toJson()).toList(),
+    };
+  }
 
   /// Factory constructor to create OrderModel from JSON.
   /// Implements defensive parsing to handle null values and invalid data.
@@ -55,10 +63,6 @@ class OrderModel {
       items: _parseOrderItems(json['order_items'] ?? json['items'] ?? []),
     );
   }
-
-  /// Convert OrderModel to JSON for API requests.
-  /// explicitToJson: true ensures nested objects are properly serialized.
-  Map<String, dynamic> toJson() => _$OrderModelToJson(this);
 
   /// Convert OrderModel to domain Order entity.
   Order toDomain() {

@@ -1,13 +1,8 @@
 import 'package:frontend_otis/domain/entities/notification.dart';
-import 'package:frontend_otis/core/utils/json_converters.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'notification_model.g.dart';
 
 /// Data model for Notification entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Includes custom boolean converter for is_read field (0/1 mapping).
-@JsonSerializable()
 class NotificationModel {
   const NotificationModel({
     required this.id,
@@ -28,8 +23,19 @@ class NotificationModel {
   final String body;
 
   /// Whether the notification has been read (mapped from 0/1)
-  @BoolFromIntConverter()
   final bool isRead;
+
+  /// Convert NotificationModel to JSON for API requests.
+  Map<String, dynamic> toJson() {
+    return {
+      'notification_id': id,
+      'title': title,
+      'body': body,
+      'is_read': isRead ? 1 : 0,
+      'user_id': userId,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 
   /// User ID this notification belongs to
   final String userId;
@@ -49,9 +55,6 @@ class NotificationModel {
       createdAt: _parseDateTime(json['created_at']),
     );
   }
-
-  /// Convert NotificationModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$NotificationModelToJson(this);
 
   /// Convert NotificationModel to domain Notification entity.
   Notification toDomain() {

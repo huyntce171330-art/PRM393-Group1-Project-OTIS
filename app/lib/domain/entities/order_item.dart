@@ -1,24 +1,35 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'order_item.freezed.dart';
+import 'package:equatable/equatable.dart';
 
 /// Domain entity representing an order item in an order.
 /// This entity contains business logic and is immutable.
 /// Represents a snapshot of a product at the time of purchase.
-@freezed
-class OrderItem with _$OrderItem {
-  const OrderItem._(); // Private constructor for adding custom methods
+class OrderItem extends Equatable {
+  /// Product ID reference
+  final String productId;
 
-  const factory OrderItem({
-    /// Product ID reference
-    required String productId,
+  /// Quantity ordered
+  final int quantity;
 
-    /// Quantity ordered
-    required int quantity,
+  /// Unit price at the time of purchase (snapshot)
+  final double unitPrice;
 
-    /// Unit price at the time of purchase (snapshot)
-    required double unitPrice,
-  }) = _OrderItem;
+  const OrderItem({
+    required this.productId,
+    required this.quantity,
+    required this.unitPrice,
+  });
+
+  @override
+  List<Object?> get props => [productId, quantity, unitPrice];
+
+  /// Create a copy of OrderItem with modified fields
+  OrderItem copyWith({String? productId, int? quantity, double? unitPrice}) {
+    return OrderItem(
+      productId: productId ?? this.productId,
+      quantity: quantity ?? this.quantity,
+      unitPrice: unitPrice ?? this.unitPrice,
+    );
+  }
 
   /// Calculate total price for this order item
   double get totalPrice => unitPrice * quantity;

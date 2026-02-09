@@ -1,12 +1,8 @@
 import 'package:frontend_otis/domain/entities/tire_spec.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'tire_spec_model.g.dart';
 
 /// Data model for TireSpec entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Implements defensive parsing for robustness.
-@JsonSerializable()
 class TireSpecModel {
   const TireSpecModel({
     required this.id,
@@ -39,7 +35,14 @@ class TireSpecModel {
   }
 
   /// Convert TireSpecModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$TireSpecModelToJson(this);
+  Map<String, dynamic> toJson() {
+    return {
+      'tire_spec_id': id,
+      'width': width,
+      'aspect_ratio': aspectRatio,
+      'rim_diameter': rimDiameter,
+    };
+  }
 
   /// Convert TireSpecModel to domain TireSpec entity.
   TireSpec toDomain() {

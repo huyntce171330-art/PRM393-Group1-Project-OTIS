@@ -1,12 +1,8 @@
 import 'package:frontend_otis/domain/entities/order_item.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'order_item_model.g.dart';
 
 /// Data model for OrderItem entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Represents a snapshot of a product at the time of purchase.
-@JsonSerializable()
 class OrderItemModel {
   const OrderItemModel({
     required this.productId,
@@ -23,6 +19,15 @@ class OrderItemModel {
   /// Unit price at the time of purchase (snapshot)
   final double unitPrice;
 
+  /// Convert OrderItemModel to JSON for API requests.
+  Map<String, dynamic> toJson() {
+    return {
+      'product_id': productId,
+      'quantity': quantity,
+      'unit_price': unitPrice,
+    };
+  }
+
   /// Factory constructor to create OrderItemModel from JSON.
   /// Implements defensive parsing to handle null values and invalid data.
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
@@ -32,9 +37,6 @@ class OrderItemModel {
       unitPrice: _parseDouble(json['unit_price'], defaultValue: 0.0),
     );
   }
-
-  /// Convert OrderItemModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$OrderItemModelToJson(this);
 
   /// Convert OrderItemModel to domain OrderItem entity.
   OrderItem toDomain() {

@@ -1,12 +1,8 @@
 import 'package:frontend_otis/domain/entities/user_role.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'user_role_model.g.dart';
 
 /// Data model for UserRole entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
 /// Implements defensive parsing for robustness.
-@JsonSerializable()
 class UserRoleModel {
   const UserRoleModel({required this.id, required this.name});
 
@@ -26,7 +22,9 @@ class UserRoleModel {
   }
 
   /// Convert UserRoleModel to JSON for API requests.
-  Map<String, dynamic> toJson() => _$UserRoleModelToJson(this);
+  Map<String, dynamic> toJson() {
+    return {'role_id': id, 'role_name': name};
+  }
 
   /// Convert UserRoleModel to domain UserRole entity.
   UserRole toDomain() {

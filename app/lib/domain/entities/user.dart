@@ -1,44 +1,87 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:equatable/equatable.dart';
 import 'package:frontend_otis/core/enums/enums.dart' as enums;
 
 import 'user_role.dart';
 
-part 'user.freezed.dart';
-
 /// Domain entity representing a user in the system.
 /// This entity contains business logic and is immutable.
-@freezed
-class User with _$User {
-  const User._(); // Private constructor for adding custom methods
+class User extends Equatable {
+  /// Unique identifier for the user
+  final String id;
 
-  const factory User({
-    /// Unique identifier for the user
-    required String id,
+  /// User's phone number
+  final String phone;
 
-    /// User's phone number
-    required String phone,
+  /// User's full name
+  final String fullName;
 
-    /// User's full name
-    required String fullName,
+  /// User's address
+  final String address;
 
-    /// User's address
-    required String address,
+  /// User's shop name (if applicable)
+  final String shopName;
 
-    /// User's shop name (if applicable)
-    required String shopName,
+  /// URL to user's avatar image
+  final String avatarUrl;
 
-    /// URL to user's avatar image
-    required String avatarUrl,
+  /// User's role in the system (nullable for dynamic roles from DB)
+  final UserRole? role;
 
-    /// User's role in the system (nullable for dynamic roles from DB)
+  /// User's current status
+  final enums.UserStatus status;
+
+  /// When the user was created
+  final DateTime createdAt;
+
+  const User({
+    required this.id,
+    required this.phone,
+    required this.fullName,
+    required this.address,
+    required this.shopName,
+    required this.avatarUrl,
+    this.role,
+    required this.status,
+    required this.createdAt,
+  });
+
+  @override
+  List<Object?> get props => [
+    id,
+    phone,
+    fullName,
+    address,
+    shopName,
+    avatarUrl,
+    role,
+    status,
+    createdAt,
+  ];
+
+  /// Create a copy of User with modified fields
+  User copyWith({
+    String? id,
+    String? phone,
+    String? fullName,
+    String? address,
+    String? shopName,
+    String? avatarUrl,
     UserRole? role,
-
-    /// User's current status
-    required enums.UserStatus status,
-
-    /// When the user was created
-    required DateTime createdAt,
-  }) = _User;
+    enums.UserStatus? status,
+    DateTime? createdAt,
+  }) {
+    return User(
+      id: id ?? this.id,
+      phone: phone ?? this.phone,
+      fullName: fullName ?? this.fullName,
+      address: address ?? this.address,
+      shopName: shopName ?? this.shopName,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      role: role ?? this.role,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   /// Check if the user has admin privileges
   bool get isAdmin => role?.isAdmin ?? false;
