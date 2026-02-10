@@ -7,7 +7,9 @@
 // 1. Define `ProductRemoteDatasource`.
 // 2. Methods: `getProducts`, `getProductDetail`, `createProduct`, `updateProduct`, `deleteProduct`.
 //
+
 import 'package:frontend_otis/data/models/product_list_model.dart';
+import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
 
 /// Interface for Product data source operations.
@@ -57,4 +59,19 @@ abstract class ProductRemoteDatasource {
   ///
   /// Returns true if deletion was successful.
   Future<bool> deleteProduct({required String productId});
+
+  /// Retrieves a paginated list of products for admin inventory management.
+  ///
+  /// Supports additional filtering by brand name and stock status.
+  ///
+  /// [page] - The page number (1-indexed)
+  /// [limit] - Number of items per page
+  /// [filter] - Admin filter containing brand name and stock status
+  ///
+  /// Returns [ProductListModel] containing products and pagination metadata.
+  Future<ProductListModel> getAdminProducts({
+    required int page,
+    required int limit,
+    AdminProductFilter? filter,
+  });
 }

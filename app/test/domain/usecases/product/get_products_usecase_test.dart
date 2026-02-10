@@ -230,5 +230,310 @@ void main() {
         expect(metadata.products.length, equals(15));
       });
     });
+
+    // ========== EDGE CASES AND ADDITIONAL TESTS ==========
+
+    test('should handle filter with price range', () async {
+      // Arrange
+      const priceFilter = ProductFilter(
+        page: 1,
+        limit: 10,
+        minPrice: 1000000,
+        maxPrice: 3000000,
+      );
+      final tMetadata = (
+        products: [tProduct1],
+        totalCount: 1,
+        totalPages: 1,
+        hasMore: false,
+      );
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) async => Right(tMetadata));
+
+      // Act
+      final result = await usecase(priceFilter);
+
+      // Assert
+      expect(result.isRight(), true);
+      result.fold(
+        (failure) => fail('Should not return failure'),
+        (metadata) {
+          expect(metadata.products, hasLength(1));
+          expect(metadata.totalCount, equals(1));
+        },
+      );
+      verify(
+        () => mockRepository.getProductsWithMetadata(
+          filter: priceFilter,
+          page: priceFilter.page,
+          limit: priceFilter.limit,
+        ),
+      ).called(1);
+    });
+
+    test('should handle filter with vehicle make id', () async {
+      // Arrange
+      const vehicleFilter = ProductFilter(
+        page: 1,
+        limit: 10,
+        vehicleMakeId: 'toyota',
+      );
+      final tMetadata = (
+        products: [tProduct1],
+        totalCount: 1,
+        totalPages: 1,
+        hasMore: false,
+      );
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) async => Right(tMetadata));
+
+      // Act
+      final result = await usecase(vehicleFilter);
+
+      // Assert
+      expect(result.isRight(), true);
+      verify(
+        () => mockRepository.getProductsWithMetadata(
+          filter: vehicleFilter,
+          page: vehicleFilter.page,
+          limit: vehicleFilter.limit,
+        ),
+      ).called(1);
+    });
+
+    test('should handle filter with sort parameters', () async {
+      // Arrange
+      const sortFilter = ProductFilter(
+        page: 1,
+        limit: 10,
+        sortBy: 'price',
+        sortAscending: false,
+      );
+      final tMetadata = (
+        products: [tProduct2, tProduct1], // Sorted by price descending
+        totalCount: 2,
+        totalPages: 1,
+        hasMore: false,
+      );
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) async => Right(tMetadata));
+
+      // Act
+      final result = await usecase(sortFilter);
+
+      // Assert
+      expect(result.isRight(), true);
+      result.fold(
+        (failure) => fail('Should not return failure'),
+        (metadata) {
+          expect(metadata.products.length, equals(2));
+        },
+      );
+    });
+
+    test('should handle large dataset with many products', () async {
+      // Arrange
+      final largeProductList = List.generate(
+        100,
+        (index) => tProduct1.copyWith(id: 'product_$index'),
+      );
+      final tMetadata = (
+        products: largeProductList,
+        totalCount: 1000,
+        totalPages: 10,
+        hasMore: true,
+      );
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) async => Right(tMetadata));
+
+      // Act
+      final result = await usecase(tFilter);
+
+      // Assert
+      expect(result.isRight(), true);
+      result.fold(
+        (failure) => fail('Should not return failure'),
+        (metadata) {
+          expect(metadata.products, hasLength(100));
+          expect(metadata.totalCount, equals(1000));
+          expect(metadata.totalPages, equals(10));
+          expect(metadata.hasMore, isTrue);
+        },
+      );
+    });
+
+    test('should handle zero products on subsequent pages', () async {
+      // Arrange
+      const filterPage2 = ProductFilter(page: 2, limit: 10);
+      final tMetadata = (
+        products: <Product>[],
+        totalCount: 10,
+        totalPages: 1,
+        hasMore: false,
+      );
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) async => Right(tMetadata));
+
+      // Act
+      final result = await usecase(filterPage2);
+
+      // Assert
+      expect(result.isRight(), true);
+      result.fold(
+        (failure) => fail('Should not return failure'),
+        (metadata) {
+          expect(metadata.products, isEmpty);
+          expect(metadata.totalCount, equals(10));
+          expect(metadata.hasMore, isFalse);
+        },
+      );
+    });
+
+    test('should return NetworkFailure when no internet', () async {
+      // Arrange
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer(
+        (_) async => const Left(NetworkFailure()),
+      );
+
+      // Act
+      final result = await usecase(tFilter);
+
+      // Assert
+      expect(result.isLeft(), true);
+      result.fold(
+        (failure) {
+          expect(failure, isA<NetworkFailure>());
+          expect(failure.message, equals('No internet connection'));
+        },
+        (_) => fail('Should not return products'),
+      );
+    });
+
+    test('should return CacheFailure when cache error occurs', () async {
+      // Arrange
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer(
+        (_) async => const Left(CacheFailure()),
+      );
+
+      // Act
+      final result = await usecase(tFilter);
+
+      // Assert
+      expect(result.isLeft(), true);
+      result.fold(
+        (failure) {
+          expect(failure, isA<CacheFailure>());
+        },
+        (_) => fail('Should not return products'),
+      );
+    });
+
+    test('should call repository only once per request', () async {
+      // Arrange
+      final tMetadata = (
+        products: tProducts,
+        totalCount: 2,
+        totalPages: 1,
+        hasMore: false,
+      );
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) async => Right(tMetadata));
+
+      // Act
+      await usecase(tFilter);
+
+      // Assert
+      verify(
+        () => mockRepository.getProductsWithMetadata(
+          filter: tFilter,
+          page: tFilter.page,
+          limit: tFilter.limit,
+        ),
+      ).called(1);
+    });
+
+    test('should preserve filter parameters from input to repository', () async {
+      // Arrange
+      const complexFilter = ProductFilter(
+        page: 3,
+        limit: 25,
+        searchQuery: 'winter',
+        categoryId: 'tires',
+        brandId: 'michelin',
+        vehicleMakeId: 'honda',
+        minPrice: 1500000,
+        maxPrice: 4000000,
+        sortBy: 'price',
+        sortAscending: true,
+      );
+      final tMetadata = (
+        products: [tProduct1],
+        totalCount: 1,
+        totalPages: 1,
+        hasMore: false,
+      );
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) async => Right(tMetadata));
+
+      // Act
+      final result = await usecase(complexFilter);
+
+      // Assert
+      expect(result.isRight(), true);
+      verify(
+        () => mockRepository.getProductsWithMetadata(
+          filter: complexFilter,
+          page: complexFilter.page,
+          limit: complexFilter.limit,
+        ),
+      ).called(1);
+    });
   });
 }

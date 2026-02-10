@@ -15,6 +15,14 @@
 
 import 'package:equatable/equatable.dart';
 
+// Sentinel value to distinguish between "not provided" and "explicitly null"
+class _Unset<T> {
+  const _Unset();
+  const _Unset._();
+}
+
+const _Unset<dynamic> _unset = _Unset<dynamic>._();
+
 class ProductFilter with EquatableMixin {
   // Pagination parameters
   final int page;
@@ -118,24 +126,29 @@ class ProductFilter with EquatableMixin {
   ProductFilter copyWith({
     int? page,
     int? limit,
-    String? searchQuery,
-    String? categoryId,
-    String? brandId,
-    String? vehicleMakeId,
-    double? minPrice,
-    double? maxPrice,
+    Object? searchQuery = _unset,
+    Object? categoryId = _unset,
+    Object? brandId = _unset,
+    Object? vehicleMakeId = _unset,
+    Object? minPrice = _unset,
+    Object? maxPrice = _unset,
     String? sortBy,
     bool? sortAscending,
   }) {
     return ProductFilter(
       page: page ?? this.page,
       limit: limit ?? this.limit,
-      searchQuery: searchQuery ?? this.searchQuery,
-      categoryId: categoryId ?? this.categoryId,
-      brandId: brandId ?? this.brandId,
-      vehicleMakeId: vehicleMakeId ?? this.vehicleMakeId,
-      minPrice: minPrice ?? this.minPrice,
-      maxPrice: maxPrice ?? this.maxPrice,
+      searchQuery: searchQuery == _unset
+          ? this.searchQuery
+          : searchQuery as String?,
+      categoryId:
+          categoryId == _unset ? this.categoryId : categoryId as String?,
+      brandId: brandId == _unset ? this.brandId : brandId as String?,
+      vehicleMakeId: vehicleMakeId == _unset
+          ? this.vehicleMakeId
+          : vehicleMakeId as String?,
+      minPrice: minPrice == _unset ? this.minPrice : minPrice as double?,
+      maxPrice: maxPrice == _unset ? this.maxPrice : maxPrice as double?,
       sortBy: sortBy ?? this.sortBy,
       sortAscending: sortAscending ?? this.sortAscending,
     );

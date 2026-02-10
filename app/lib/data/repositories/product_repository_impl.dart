@@ -3,6 +3,7 @@ import 'package:frontend_otis/core/error/exceptions.dart';
 import 'package:frontend_otis/core/error/failures.dart';
 import 'package:frontend_otis/core/network/network_info.dart';
 import 'package:frontend_otis/data/datasources/product/product_remote_datasource.dart';
+import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
 import 'package:frontend_otis/domain/repositories/product_repository.dart';
@@ -130,6 +131,86 @@ class ProductRepositoryImpl implements ProductRepository {
     } on CacheException {
       return Left(CacheFailure());
     } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ({List<Product> products, int totalCount, int totalPages, bool hasMore})>>
+      getAdminProducts({
+    required AdminProductFilter filter,
+    required int page,
+    required int limit,
+  }) async {
+    print('=== DEBUG REPO: getAdminProducts ===');
+    print('DEBUG: filter.brandName: ${filter.brandName}');
+    print('DEBUG: filter.stockStatus: ${filter.stockStatus}');
+    print('DEBUG: filter.baseFilter.searchQuery: ${filter.baseFilter.searchQuery}');
+    print('DEBUG: page: $page, limit: $limit');
+    // Check network connectivity
+    if (!(await networkInfo.isConnected)) {
+      return Left(NetworkFailure());
+    }
+
+    try {
+      // Fetch paginated products from data source with admin filter
+      final productList = await productRemoteDatasource.getAdminProducts(
+        page: page,
+        limit: limit,
+        filter: filter,
+      );
+
+      print('DEBUG: DataSource returned ${productList.products.length} products, total: ${productList.total}');
+
+      // Convert ProductModel list to Product domain entities
+      final products = productList.products.map((model) {
+        return Product(
+          id: model.id,
+          sku: model.sku,
+          name: model.name,
+          imageUrl: model.imageUrl,
+          price: model.price,
+          stockQuantity: model.stockQuantity,
+          brand: model.brand.toDomain(),
+          vehicleMake: model.vehicleMake.toDomain(),
+          tireSpec: model.tireSpec.toDomain(),
+          isActive: model.isActive,
+          createdAt: model.createdAt,
+        );
+      }).toList();
+
+      // Return products WITH pagination metadata
+      return Right((
+        products: products,
+        totalCount: productList.total,
+        totalPages: productList.totalPages,
+        hasMore: productList.hasMore,
+      ));
+    } on ServerException {
+      return Left(ServerFailure());
+    } on CacheException {
+      return Left(CacheFailure());
+    } on Exception catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> deleteProduct({required String productId}) async {
+    // Check network connectivity
+    if (!(await networkInfo.isConnected)) {
+      return Left(NetworkFailure());
+    }
+
+    try {
+      // Delete product from data source
+      final result = await productRemoteDatasource.deleteProduct(productId: productId);
+      return Right(result);
+    } on ServerException {
+      return Left(ServerFailure());
+    } on CacheException {
+      return Left(CacheFailure());
+    } on Exception catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
   }

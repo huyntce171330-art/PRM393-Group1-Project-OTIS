@@ -271,8 +271,315 @@ void main() {
       final result = await usecase('');
 
       // Assert - Empty query should set null searchQuery
+      expect(result.isRight(), isTrue);
       expect(capturedFilter, isNotNull);
       expect(capturedFilter!.searchQuery, isNull);
+    });
+
+    // ========== EDGE CASES - SPECIAL CHARACTERS AND UNICODE ==========
+
+    test('should handle Vietnamese characters in search query', () async {
+      // Arrange
+      final tMetadata = (
+        products: [tProduct1],
+        totalCount: 1,
+        totalPages: 1,
+        hasMore: false,
+      );
+      
+      ProductFilter? capturedFilter;
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedFilter = invocation.namedArguments[#filter];
+        return Right(tMetadata);
+      });
+
+      // Act - Vietnamese query
+      final result = await usecase('lốp xe Michelin');
+
+      // Assert
+      expect(result.isRight(), true);
+      expect(capturedFilter, isNotNull);
+      expect(capturedFilter!.searchQuery, equals('lốp xe Michelin'));
+    });
+
+    test('should handle tire size format in search query', () async {
+      // Arrange
+      final tMetadata = (
+        products: [tProduct2],
+        totalCount: 1,
+        totalPages: 1,
+        hasMore: false,
+      );
+      
+      ProductFilter? capturedFilter;
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedFilter = invocation.namedArguments[#filter];
+        return Right(tMetadata);
+      });
+
+      // Act - Search with tire size format
+      final result = await usecase('205/55R16');
+
+      // Assert
+      expect(result.isRight(), true);
+      expect(capturedFilter, isNotNull);
+      expect(capturedFilter!.searchQuery, equals('205/55R16'));
+    });
+
+    test('should handle special characters in search query', () async {
+      // Arrange
+      final tMetadata = (
+        products: <Product>[],
+        totalCount: 0,
+        totalPages: 0,
+        hasMore: false,
+      );
+      
+      ProductFilter? capturedFilter;
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedFilter = invocation.namedArguments[#filter];
+        return Right(tMetadata);
+      });
+
+      // Act - Special characters (should be sanitized by backend)
+      final result = await usecase('test@domain.com');
+
+      // Assert
+      expect(result.isRight(), true);
+      expect(capturedFilter, isNotNull);
+      // The query should be passed as-is, backend handles sanitization
+      expect(capturedFilter!.searchQuery, equals('test@domain.com'));
+    });
+
+    test('should handle SQL injection attempt in search query', () async {
+      // Arrange
+      final tMetadata = (
+        products: <Product>[],
+        totalCount: 0,
+        totalPages: 0,
+        hasMore: false,
+      );
+      
+      ProductFilter? capturedFilter;
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedFilter = invocation.namedArguments[#filter];
+        return Right(tMetadata);
+      });
+
+      // Act - SQL injection attempt
+      final result = await usecase("' OR '1'='1");
+
+      // Assert
+      expect(result.isRight(), true);
+      expect(capturedFilter, isNotNull);
+      // Query should be passed to repository, backend should handle sanitization
+      expect(capturedFilter!.searchQuery, equals("' OR '1'='1"));
+    });
+
+    test('should handle very long search query', () async {
+      // Arrange
+      final longQuery = 'michelin ' * 100;
+      final tMetadata = (
+        products: <Product>[],
+        totalCount: 0,
+        totalPages: 0,
+        hasMore: false,
+      );
+      
+      ProductFilter? capturedFilter;
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedFilter = invocation.namedArguments[#filter];
+        return Right(tMetadata);
+      });
+
+      // Act - Very long query
+      final result = await usecase(longQuery);
+
+      // Assert
+      expect(result.isRight(), true);
+      expect(capturedFilter, isNotNull);
+      expect(capturedFilter!.searchQuery, equals(longQuery.trim()));
+    });
+
+    test('should handle case variations in search query', () async {
+      // Arrange
+      final tMetadata = (
+        products: [tProduct1],
+        totalCount: 1,
+        totalPages: 1,
+        hasMore: false,
+      );
+      
+      ProductFilter? capturedFilter;
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedFilter = invocation.namedArguments[#filter];
+        return Right(tMetadata);
+      });
+
+      // Act - Case variation
+      final result = await usecase('MICHELIN');
+
+      // Assert
+      expect(result.isRight(), true);
+      expect(capturedFilter, isNotNull);
+      // Query should preserve case, backend handles case-insensitive search
+      expect(capturedFilter!.searchQuery, equals('MICHELIN'));
+    });
+
+    test('should handle tab and newline characters in query', () async {
+      // Arrange
+      final tMetadata = (
+        products: <Product>[],
+        totalCount: 0,
+        totalPages: 0,
+        hasMore: false,
+      );
+      
+      ProductFilter? capturedFilter;
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedFilter = invocation.namedArguments[#filter];
+        return Right(tMetadata);
+      });
+
+      // Act - Query with tab and newline
+      final result = await usecase('michelin\tprimacy\n4');
+
+      // Assert
+      expect(result.isRight(), true);
+      expect(capturedFilter, isNotNull);
+      // Note: Only leading/trailing whitespace is trimmed, internal whitespace is preserved
+      expect(capturedFilter!.searchQuery, equals('michelin\tprimacy\n4'));
+    });
+
+    test('should handle NetworkFailure gracefully', () async {
+      // Arrange
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer(
+        (_) async => const Left(NetworkFailure()),
+      );
+
+      // Act
+      final result = await usecase('test');
+
+      // Assert
+      expect(result.isLeft(), true);
+      result.fold(
+        (failure) {
+          expect(failure, isA<NetworkFailure>());
+          expect(failure.message, equals('No internet connection'));
+        },
+        (_) => fail('Should not return products'),
+      );
+    });
+
+    test('should handle whitespace-only query as empty', () async {
+      // Arrange
+      final tMetadata = (
+        products: <Product>[],
+        totalCount: 0,
+        totalPages: 0,
+        hasMore: false,
+      );
+      
+      ProductFilter? capturedFilter;
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedFilter = invocation.namedArguments[#filter];
+        return Right(tMetadata);
+      });
+
+      // Act - Whitespace only
+      final result = await usecase('   \t\n  ');
+
+      // Assert
+      expect(result.isRight(), true);
+      expect(capturedFilter, isNotNull);
+      expect(capturedFilter!.searchQuery, isNull);
+    });
+
+    test('should handle query with leading zeros', () async {
+      // Arrange
+      final tMetadata = (
+        products: [tProduct1],
+        totalCount: 1,
+        totalPages: 1,
+        hasMore: false,
+      );
+      
+      ProductFilter? capturedFilter;
+      when(
+        () => mockRepository.getProductsWithMetadata(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedFilter = invocation.namedArguments[#filter];
+        return Right(tMetadata);
+      });
+
+      // Act - Query with leading zeros
+      final result = await usecase('001');
+
+      // Assert
+      expect(result.isRight(), isTrue);
+
+      // Assert
+      expect(result.isRight(), true);
+      expect(capturedFilter, isNotNull);
+      expect(capturedFilter!.searchQuery, equals('001'));
     });
   });
 }

@@ -21,6 +21,9 @@ import 'package:frontend_otis/domain/repositories/product_repository.dart';
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_products_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/search_products_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase.dart';
+import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 
 final sl = GetIt.instance;
@@ -69,12 +72,31 @@ Future<void> init() async {
     () => GetProductDetailUsecase(productRepository: sl()),
   );
 
+  // Delete Product Use Case
+  sl.registerLazySingleton<DeleteProductUsecase>(
+    () => DeleteProductUsecase(productRepository: sl()),
+  );
+
+  // Get Admin Products Use Case
+  sl.registerLazySingleton<GetAdminProductsUsecase>(
+    () => GetAdminProductsUsecase(productRepository: sl()),
+  );
+
   // ========== 6. BLOCS ==========
   // Product BLoC
   sl.registerLazySingleton<ProductBloc>(
     () => ProductBloc(
       getProductsUsecase: sl(),
       getProductDetailUsecase: sl(),
+    ),
+  );
+
+  // Admin Product BLoC
+  sl.registerLazySingleton<AdminProductBloc>(
+    () => AdminProductBloc(
+      getAdminProductsUsecase: sl(),
+      getProductDetailUsecase: sl(),
+      deleteProductUsecase: sl(),
     ),
   );
 

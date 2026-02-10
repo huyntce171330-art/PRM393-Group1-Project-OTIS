@@ -4,6 +4,7 @@ import 'package:frontend_otis/data/models/product_list_model.dart';
 import 'package:frontend_otis/data/models/product_model.dart';
 import 'package:frontend_otis/data/models/tire_spec_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
+import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -197,6 +198,151 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
       total: 1,
       totalPages: 1,
       hasMore: false,
+    );
+  }
+
+  @override
+  Future<ProductListModel> getAdminProducts({
+    required int page,
+    required int limit,
+    AdminProductFilter? filter,
+  }) async {
+    if (page < 1) page = 1;
+    if (limit < 1) limit = 20;
+
+    final offset = (page - 1) * limit;
+
+    // Get base filter for search query
+    final baseFilter = filter?.baseFilter;
+    final searchQuery = baseFilter?.searchQuery;
+
+    // Build dynamic WHERE clause
+    // NOTE: Admin products do NOT filter by is_active = 1
+    // Admins need to see ALL products including inactive ones for inventory management
+    final whereClauses = <String>[];
+    final whereArgs = <dynamic>[];
+
+    // Add search query condition (search by name or SKU, case-insensitive)
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      whereClauses.add('(p.name LIKE ? OR p.sku LIKE ?)');
+      whereArgs.add('%$searchQuery%');
+      whereArgs.add('%$searchQuery%');
+    }
+
+    // Add category filter from base filter
+    if (baseFilter?.categoryId != null) {
+      whereClauses.add('p.category_id = ?');
+      whereArgs.add(baseFilter!.categoryId);
+    }
+
+    // Add brand filter from base filter
+    if (baseFilter?.brandId != null) {
+      whereClauses.add('p.brand_id = ?');
+      whereArgs.add(baseFilter!.brandId);
+    }
+
+    // Add vehicle make filter from base filter
+    if (baseFilter?.vehicleMakeId != null) {
+      whereClauses.add('p.make_id = ?');
+      whereArgs.add(baseFilter!.vehicleMakeId);
+    }
+
+    // Add price range filters from base filter
+    if (baseFilter?.minPrice != null) {
+      whereClauses.add('p.price >= ?');
+      whereArgs.add(baseFilter!.minPrice);
+    }
+    if (baseFilter?.maxPrice != null) {
+      whereClauses.add('p.price <= ?');
+      whereArgs.add(baseFilter!.maxPrice);
+    }
+
+    // Add admin-specific brand name filter (AdminProductFilter.brandName)
+    if (filter is AdminProductFilter && filter.brandName != null) {
+      print('DEBUG DS: Adding brand filter - brandName: ${filter.brandName}');
+      whereClauses.add('b.name = ?');
+      whereArgs.add(filter.brandName);
+    } else {
+      print('DEBUG DS: No brand filter - filter.brandName is null');
+    }
+
+    // Add admin-specific stock status filter (AdminProductFilter.stockStatus)
+    if (filter is AdminProductFilter && filter.stockStatus != StockStatus.all) {
+      if (filter.stockStatus == StockStatus.lowStock) {
+        whereClauses.add('p.stock_quantity BETWEEN 1 AND 10');
+      } else if (filter.stockStatus == StockStatus.outOfStock) {
+        whereClauses.add('p.stock_quantity = 0');
+      }
+    }
+
+    // Join all WHERE clauses
+    final whereString = whereClauses.isNotEmpty ? whereClauses.join(' AND ') : '1=1';
+    print('DEBUG DS: Final WHERE clause: $whereString');
+
+    // 1. Get total count of filtered products
+    // Only add WHERE clause if there are conditions
+    final countQuery = whereClauses.isNotEmpty
+        ? 'SELECT COUNT(*) as total FROM products p LEFT JOIN brands b ON p.brand_id = b.brand_id WHERE $whereString'
+        : 'SELECT COUNT(*) as total FROM products p LEFT JOIN brands b ON p.brand_id = b.brand_id';
+    final countResult = await database.rawQuery(countQuery, whereArgs);
+    final total = countResult.first['total'] as int;
+
+    // 2. Get paginated products with joined tables
+    final productsResult = await database.rawQuery(
+      '''
+      SELECT
+        p.product_id as id,
+        p.sku,
+        p.name,
+        p.image_url,
+        p.price,
+        p.stock_quantity,
+        p.is_active,
+        p.created_at,
+
+        -- Brand Info
+        b.brand_id as brand_id,
+        b.name as brand_name,
+        b.logo_url as brand_logo_url,
+
+        -- Vehicle Make Info
+        vm.make_id as vehicle_make_id,
+        vm.name as vehicle_make_name,
+        vm.logo_url as vehicle_make_logo_url,
+
+        -- Tire Spec Info
+        ts.tire_spec_id,
+        ts.width,
+        ts.aspect_ratio,
+        ts.rim_diameter
+
+      FROM products p
+      LEFT JOIN brands b ON p.brand_id = b.brand_id
+      LEFT JOIN vehicle_makes vm ON p.make_id = vm.make_id
+      LEFT JOIN tire_specs ts ON p.tire_spec_id = ts.tire_spec_id
+      ${whereClauses.isNotEmpty ? 'WHERE $whereString' : ''}
+      ORDER BY p.created_at DESC
+      LIMIT ? OFFSET ?
+    ''',
+      [...whereArgs, limit, offset],
+    );
+
+    // Convert SQL rows to ProductModel list
+    final products = productsResult
+        .map((row) => _rowToProductModel(row))
+        .toList();
+
+    // Calculate pagination metadata
+    final totalPages = (total / limit).ceil();
+    final hasMore = page < totalPages;
+
+    return ProductListModel(
+      products: products,
+      page: page,
+      limit: limit,
+      total: total,
+      totalPages: totalPages,
+      hasMore: hasMore,
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend_otis/core/error/exceptions.dart';
 import 'package:frontend_otis/core/error/failures.dart';
@@ -236,6 +237,183 @@ void main() {
           );
         },
       );
+
+      // ========== EDGE CASES AND ADDITIONAL TESTS ==========
+
+      test(
+        'should handle empty product list',
+        () async {
+          // Arrange
+          final emptyModel = ProductListModel(
+            products: [],
+            total: 0,
+            page: 1,
+            limit: 10,
+            totalPages: 1,
+            hasMore: false,
+          );
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+          when(() => mockDatasource.getProducts(page: 1, limit: 10, filter: any(named: 'filter')))
+              .thenAnswer((_) async => emptyModel);
+
+          // Act
+          final result = await repository.getProductsWithMetadata(
+            filter: tFilter,
+            page: 1,
+            limit: 10,
+          );
+
+          // Assert
+          expect(result.isRight(), true);
+          result.fold(
+            (failure) => fail('Should not return failure'),
+            (metadata) {
+              expect(metadata.products, isEmpty);
+              expect(metadata.totalCount, equals(0));
+              expect(metadata.hasMore, isFalse);
+            },
+          );
+        },
+      );
+
+      test(
+        'should handle datasource returning null response',
+        () async {
+          // Arrange
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+          when(() => mockDatasource.getProducts(page: 1, limit: 10, filter: any(named: 'filter')))
+              .thenThrow(Exception('Datasource returned null'));
+
+          // Act
+          final result = await repository.getProductsWithMetadata(
+            filter: tFilter,
+            page: 1,
+            limit: 10,
+          );
+
+          // Assert
+          expect(result.isLeft(), true);
+          result.fold(
+            (failure) {
+              expect(failure, isA<ServerFailure>());
+            },
+            (_) => fail('Should not return products'),
+          );
+        },
+      );
+
+      test(
+        'should handle unexpected exception from datasource',
+        () async {
+          // Arrange
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+          when(() => mockDatasource.getProducts(page: 1, limit: 10, filter: any(named: 'filter')))
+              .thenThrow(Exception('Unexpected error'));
+
+          // Act
+          final result = await repository.getProductsWithMetadata(
+            filter: tFilter,
+            page: 1,
+            limit: 10,
+          );
+
+          // Assert
+          expect(result.isLeft(), true);
+          result.fold(
+            (failure) {
+              expect(failure, isA<ServerFailure>());
+            },
+            (_) => fail('Should not return products'),
+          );
+        },
+      );
+
+      test(
+        'should handle timeout exception',
+        () async {
+          // Arrange
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+          when(() => mockDatasource.getProducts(page: 1, limit: 10, filter: any(named: 'filter')))
+              .thenThrow(Exception('Connection timeout'));
+
+          // Act
+          final result = await repository.getProductsWithMetadata(
+            filter: tFilter,
+            page: 1,
+            limit: 10,
+          );
+
+          // Assert
+          expect(result.isLeft(), true);
+          result.fold(
+            (failure) {
+              expect(failure, isA<ServerFailure>());
+            },
+            (_) => fail('Should not return products'),
+          );
+        },
+      );
+
+      test(
+        'should pass correct pagination parameters to datasource',
+        () async {
+          // Arrange
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+          when(() => mockDatasource.getProducts(
+            page: 3,
+            limit: 25,
+            filter: any(named: 'filter'),
+          )).thenAnswer((_) async => tProductListModel);
+
+          // Act
+          final result = await repository.getProductsWithMetadata(
+            filter: const ProductFilter(page: 3, limit: 25),
+            page: 3,
+            limit: 25,
+          );
+
+          // Assert
+          expect(result.isRight(), true);
+          verify(() => mockDatasource.getProducts(
+            page: 3,
+            limit: 25,
+            filter: const ProductFilter(page: 3, limit: 25),
+          )).called(1);
+        },
+      );
+
+      test(
+        'should forward filter to datasource',
+        () async {
+          // Arrange
+          const filterWithSearch = ProductFilter(
+            page: 1,
+            limit: 10,
+            searchQuery: 'michelin',
+          );
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+          when(() => mockDatasource.getProducts(
+            page: 1,
+            limit: 10,
+            filter: any(named: 'filter'),
+          )).thenAnswer((_) async => tProductListModel);
+
+          // Act
+          final result = await repository.getProductsWithMetadata(
+            filter: filterWithSearch,
+            page: 1,
+            limit: 10,
+          );
+
+          // Assert
+          expect(result.isRight(), true);
+          verify(() => mockDatasource.getProducts(
+            page: 1,
+            limit: 10,
+            filter: filterWithSearch,
+          )).called(1);
+        },
+      );
     });
 
     group('getProducts', () {
@@ -270,6 +448,60 @@ void main() {
         () async {
           // Arrange
           when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => false);
+
+          // Act
+          final result = await repository.getProducts(
+            filter: tFilter,
+            page: tFilter.page,
+            limit: tFilter.limit,
+          );
+
+          // Assert
+          expect(result.isLeft(), true);
+        },
+      );
+
+      test(
+        'should handle empty product list',
+        () async {
+          // Arrange
+          final emptyModel = ProductListModel(
+            products: [],
+            total: 0,
+            page: 1,
+            limit: 10,
+            totalPages: 1,
+            hasMore: false,
+          );
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+          when(() => mockDatasource.getProducts(page: 1, limit: 10, filter: any(named: 'filter')))
+              .thenAnswer((_) async => emptyModel);
+
+          // Act
+          final result = await repository.getProducts(
+            filter: tFilter,
+            page: tFilter.page,
+            limit: tFilter.limit,
+          );
+
+          // Assert
+          expect(result.isRight(), true);
+          result.fold(
+            (failure) => fail('Should not return failure'),
+            (products) {
+              expect(products, isEmpty);
+            },
+          );
+        },
+      );
+
+      test(
+        'should forward network failure to caller',
+        () async {
+          // Arrange
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+          when(() => mockDatasource.getProducts(page: 1, limit: 10, filter: any(named: 'filter')))
+              .thenThrow(const SocketException('No internet'));
 
           // Act
           final result = await repository.getProducts(
