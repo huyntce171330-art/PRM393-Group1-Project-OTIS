@@ -21,6 +21,9 @@ import 'package:frontend_otis/presentation/widgets/product/product_action_bar.da
 import 'package:frontend_otis/presentation/widgets/product/product_image_carousel.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_specs_grid.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_services_section.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 
 /// Screen to display full product details.
 ///
@@ -73,7 +76,7 @@ class ProductDetailScreen extends StatelessWidget {
     return AppBar(
       backgroundColor: isDarkMode
           ? AppColors.backgroundDark
-          : Colors.white.withOpacity(0.9),
+          : Colors.white.withValues(alpha: 0.9),
       elevation: 0,
       leading: IconButton(
         onPressed: () => context.pop(),
@@ -100,43 +103,57 @@ class ProductDetailScreen extends StatelessWidget {
   /// Builds the cart icon with badge showing item count.
   Widget _buildCartBadge(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    // TODO: Replace with CartBloc state when Cart feature is implemented
-    const cartItemCount = 0;
 
-    return Stack(
-      children: [
-        IconButton(
-          onPressed: () => context.push('/cart'),
-          icon: Icon(
-            Icons.shopping_cart,
-            color: isDarkMode ? Colors.white : AppColors.textPrimary,
-          ),
-        ),
-        if (cartItemCount > 0)
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isDarkMode ? AppColors.backgroundDark : Colors.white,
-                  width: 2,
-                ),
-              ),
-              child: Text(
-                '$cartItemCount',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        int cartItemCount = 0;
+        if (state is CartLoaded) {
+          cartItemCount = state.itemCount;
+        }
+
+        return Stack(
+          children: [
+            IconButton(
+              onPressed: () => context.push('/cart'),
+              icon: Icon(
+                Icons.shopping_cart,
+                color: isDarkMode ? Colors.white : AppColors.textPrimary,
               ),
             ),
-          ),
-      ],
+            if (cartItemCount > 0)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDarkMode
+                          ? AppColors.backgroundDark
+                          : Colors.white,
+                      width: 2,
+                    ),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    cartItemCount > 99 ? '99+' : '$cartItemCount',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -258,7 +275,7 @@ class ProductDetailScreen extends StatelessWidget {
               // Divider
               Divider(
                 color: isDarkMode
-                    ? Colors.white.withOpacity(0.1)
+                    ? Colors.white.withValues(alpha: 0.1)
                     : Colors.grey[200],
                 thickness: 1,
                 indent: 16,
@@ -274,7 +291,7 @@ class ProductDetailScreen extends StatelessWidget {
               // Divider
               Divider(
                 color: isDarkMode
-                    ? Colors.white.withOpacity(0.1)
+                    ? Colors.white.withValues(alpha: 0.1)
                     : Colors.grey[200],
                 thickness: 1,
                 indent: 16,
@@ -290,10 +307,25 @@ class ProductDetailScreen extends StatelessWidget {
         // Sticky action bar
         ProductActionBar(
           onAddToCart: () {
-            // Add to cart logic
+            context.read<CartBloc>().add(
+              AddProductToCartEvent(product: product, quantity: 1),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${product.name} added to cart'),
+                action: SnackBarAction(
+                  label: 'View Cart',
+                  onPressed: () => context.push('/cart'),
+                ),
+                duration: const Duration(seconds: 2),
+              ),
+            );
           },
           onBuyNow: () {
-            // Buy now logic
+            context.read<CartBloc>().add(
+              AddProductToCartEvent(product: product, quantity: 1),
+            );
+            context.push('/cart');
           },
           isDisabled: product.stockQuantity <= 0,
         ),
@@ -309,8 +341,8 @@ class ProductDetailScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isInStock
-            ? AppColors.success.withOpacity(0.1)
-            : AppColors.error.withOpacity(0.1),
+            ? AppColors.success.withValues(alpha: 0.1)
+            : AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

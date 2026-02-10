@@ -12,7 +12,6 @@ import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
 import 'package:frontend_otis/presentation/screens/product/product_detail_screen.dart';
 import 'package:get_it/get_it.dart' as get_it;
 import 'package:mocktail/mocktail.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bloc_test/bloc_test.dart';
 
 class MockProductBloc extends MockBloc<ProductEvent, ProductState>

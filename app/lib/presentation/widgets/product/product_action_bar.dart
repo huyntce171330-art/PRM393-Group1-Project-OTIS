@@ -13,9 +13,11 @@ import 'package:frontend_otis/core/constants/app_colors.dart';
 /// Follows the Thai Phung design system with primary brand color.
 class ProductActionBar extends StatelessWidget {
   /// Callback when Add to Cart button is pressed
-  final VoidCallback onAddToCart;
+  final VoidCallback? onAddToCart;
+
   /// Callback when Buy Now button is pressed
-  final VoidCallback onBuyNow;
+  final VoidCallback? onBuyNow;
+
   /// Whether the buttons should be disabled (out of stock)
   final bool isDisabled;
 
@@ -26,8 +28,8 @@ class ProductActionBar extends StatelessWidget {
   /// [isDisabled]: Whether buttons should be disabled (default: false)
   const ProductActionBar({
     super.key,
-    required this.onAddToCart,
-    required this.onBuyNow,
+    this.onAddToCart,
+    this.onBuyNow,
     this.isDisabled = false,
   });
 
@@ -46,13 +48,13 @@ class ProductActionBar extends StatelessWidget {
           border: Border(
             top: BorderSide(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withOpacity(0.1)
+                  ? Colors.white.withValues(alpha: 0.1)
                   : AppColors.outline,
             ),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -62,33 +64,25 @@ class ProductActionBar extends StatelessWidget {
           top: false,
           child: Row(
             children: [
-              // Add to Cart button
               Expanded(
                 child: OutlinedButton(
                   onPressed: isDisabled ? null : onAddToCart,
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(
-                      color: AppColors.primary,
-                      width: 2,
-                    ),
+                    side: const BorderSide(color: AppColors.primary, width: 2),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     foregroundColor: AppColors.primary,
                     backgroundColor: Colors.transparent,
                   ),
-                  child: Text(
+                  child: const Text(
                     'Add to Cart',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              // Buy Now button
               Expanded(
                 child: ElevatedButton(
                   onPressed: isDisabled ? null : onBuyNow,
@@ -102,12 +96,9 @@ class ProductActionBar extends StatelessWidget {
                     elevation: 0,
                     shadowColor: Colors.transparent,
                   ),
-                  child: Text(
+                  child: const Text(
                     'Buy Now',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

@@ -6,6 +6,9 @@ import 'package:frontend_otis/domain/entities/product_filter.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_event.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/presentation/screens/home_screen.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_card.dart';
 import 'package:get_it/get_it.dart';
@@ -16,8 +19,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class MockProductBloc extends MockBloc<ProductEvent, ProductState>
     implements ProductBloc {}
 
+class MockCartBloc extends MockBloc<CartEvent, CartState> implements CartBloc {}
+
 void main() {
   late MockProductBloc mockProductBloc;
+  late MockCartBloc mockCartBloc;
 
   final tProduct = Product(
     id: '1',
@@ -36,16 +42,22 @@ void main() {
 
   setUp(() {
     mockProductBloc = MockProductBloc();
+    mockCartBloc = MockCartBloc();
+
     // Stub the initial state
     when(() => mockProductBloc.state).thenReturn(const ProductInitial());
+    when(() => mockCartBloc.state).thenReturn(CartInitial());
+
     // Register mock ProductBloc in GetIt
     sl.sl.registerFactory<ProductBloc>(() => mockProductBloc);
+    sl.sl.registerFactory<CartBloc>(() => mockCartBloc);
   });
 
   tearDown(() {
     mockProductBloc.close();
     // Unregister the mock from GetIt
     sl.sl.unregister<ProductBloc>();
+    sl.sl.unregister<CartBloc>();
   });
 
   Widget makeTestableWidget({required Widget child}) {
@@ -62,7 +74,10 @@ void main() {
         makeTestableWidget(
           child: BlocProvider<ProductBloc>.value(
             value: mockProductBloc,
-            child: const HomeScreen(),
+            child: BlocProvider<CartBloc>.value(
+              value: mockCartBloc,
+              child: const HomeScreen(),
+            ),
           ),
         ),
       );
@@ -81,7 +96,10 @@ void main() {
         makeTestableWidget(
           child: BlocProvider<ProductBloc>.value(
             value: mockProductBloc,
-            child: const HomeScreen(),
+            child: BlocProvider<CartBloc>.value(
+              value: mockCartBloc,
+              child: const HomeScreen(),
+            ),
           ),
         ),
       );
@@ -111,7 +129,10 @@ void main() {
         makeTestableWidget(
           child: BlocProvider<ProductBloc>.value(
             value: mockProductBloc,
-            child: const HomeScreen(),
+            child: BlocProvider<CartBloc>.value(
+              value: mockCartBloc,
+              child: const HomeScreen(),
+            ),
           ),
         ),
       );
@@ -140,7 +161,10 @@ void main() {
         makeTestableWidget(
           child: BlocProvider<ProductBloc>.value(
             value: mockProductBloc,
-            child: const HomeScreen(),
+            child: BlocProvider<CartBloc>.value(
+              value: mockCartBloc,
+              child: const HomeScreen(),
+            ),
           ),
         ),
       );
@@ -172,7 +196,10 @@ void main() {
         makeTestableWidget(
           child: BlocProvider<ProductBloc>.value(
             value: mockProductBloc,
-            child: const HomeScreen(),
+            child: BlocProvider<CartBloc>.value(
+              value: mockCartBloc,
+              child: const HomeScreen(),
+            ),
           ),
         ),
       );
@@ -193,7 +220,10 @@ void main() {
         makeTestableWidget(
           child: BlocProvider<ProductBloc>.value(
             value: mockProductBloc,
-            child: const HomeScreen(),
+            child: BlocProvider<CartBloc>.value(
+              value: mockCartBloc,
+              child: const HomeScreen(),
+            ),
           ),
         ),
       );
@@ -213,7 +243,10 @@ void main() {
         makeTestableWidget(
           child: BlocProvider<ProductBloc>.value(
             value: mockProductBloc,
-            child: const HomeScreen(),
+            child: BlocProvider<CartBloc>.value(
+              value: mockCartBloc,
+              child: const HomeScreen(),
+            ),
           ),
         ),
       );
@@ -245,7 +278,10 @@ void main() {
         makeTestableWidget(
           child: BlocProvider<ProductBloc>.value(
             value: mockProductBloc,
-            child: const HomeScreen(),
+            child: BlocProvider<CartBloc>.value(
+              value: mockCartBloc,
+              child: const HomeScreen(),
+            ),
           ),
         ),
       );
@@ -264,7 +300,10 @@ void main() {
         makeTestableWidget(
           child: BlocProvider<ProductBloc>.value(
             value: mockProductBloc,
-            child: const HomeScreen(),
+            child: BlocProvider<CartBloc>.value(
+              value: mockCartBloc,
+              child: const HomeScreen(),
+            ),
           ),
         ),
       );

@@ -17,6 +17,9 @@ import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_event.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_card.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 
 /// Home screen - Main landing page.
 class HomeScreen extends StatefulWidget {
@@ -93,7 +96,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onAddToCart(Product product) {
-    // TODO: Add to cart logic
+    context.read<CartBloc>().add(
+      AddProductToCartEvent(product: product, quantity: 1),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${product.name} added to cart'),
+        action: SnackBarAction(
+          label: 'View Cart',
+          onPressed: () => context.push('/cart'),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _onRefresh() async {
@@ -269,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(avatarSize / 2),
         child: Image.network(
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuDoMz-m7oRFdmKmL5PET_dO5sHFaZjichh44_wwwVs0PAlFU_gDPh2pCfn8-wMnRVEn4YXj4ItTQPDv__swxN9ylZtQQOFbIj6TbFNDn9zwJ3VV3vTbl_nnCo-_vfPEgtR9P53rP28VZiBJ8zkE02TwgGupNiEf58xm-fuGju55E8qh6KhYsbpejjngMZ9D6baAxvyDZS13XwktZGri0Jlg16X9JOO4FGMduD-jXuaeur1QTVJKbiHQbInfJ6CYEXOrR9jIfxAOgl8',
+          'https://lh3.googleusercontent.com/aida-public/AB6AXuDoMz-m7oRFdmKmL5PET_dO5sHFaZjichh44_wwwVs0PAlFU_gDPh2pCfn8-wMnRVEn4YXj4ItTQPDv__swxN9ylZtQQOFbIj6TbFNDn9zwJ3VV3vTbl_nnCo-_vfPEgtR9P53rP28VZiBJ8zkE02TwgGupNiEf58xm-fuGju55E8qh6KhYsbpejjngMZ9D6baAxvyDZS13XwktZGri0Jlg16X9JOO4FGMduD-jXuaeur1QTVJKbiHQbInfJ6CYEXOrR9jIfjAOgl8',
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Icon(
@@ -700,63 +715,76 @@ class _HomeScreenState extends State<HomeScreen> {
     final iconSize = isSmallScreen ? 20.0 : 24.0;
     final itemPadding = isSmallScreen ? 8.0 : 10.0;
 
-    return Container(
-      padding: EdgeInsets.only(
-        left: isSmallScreen ? 12 : 16,
-        right: isSmallScreen ? 12 : 16,
-        bottom: isSmallScreen ? 4 : 8,
-        top: isSmallScreen ? 4 : 8,
-      ),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
-        border: Border(
-          top: BorderSide(
-            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        int cartItemCount = 0;
+        if (state is CartLoaded) {
+          cartItemCount = state.itemCount;
+        }
+
+        return Container(
+          padding: EdgeInsets.only(
+            left: isSmallScreen ? 12 : 16,
+            right: isSmallScreen ? 12 : 16,
+            bottom: isSmallScreen ? 4 : 8,
+            top: isSmallScreen ? 4 : 8,
           ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Home
-          _buildNavItem(
-            context,
-            icon: Icons.home,
-            label: 'Home',
-            isSelected: true,
-            iconSize: iconSize,
-            padding: itemPadding,
+          decoration: BoxDecoration(
+            color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
+            border: Border(
+              top: BorderSide(
+                color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+              ),
+            ),
           ),
-          // Service
-          _buildNavItem(
-            context,
-            icon: Icons.build,
-            label: 'Service',
-            isSelected: false,
-            iconSize: iconSize,
-            padding: itemPadding,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Home
+              _buildNavItem(
+                context,
+                icon: Icons.home,
+                label: 'Home',
+                isSelected: true,
+                iconSize: iconSize,
+                padding: itemPadding,
+                onTap: () {},
+              ),
+              // Service
+              _buildNavItem(
+                context,
+                icon: Icons.build,
+                label: 'Service',
+                isSelected: false,
+                iconSize: iconSize,
+                padding: itemPadding,
+                onTap: () {},
+              ),
+              // Cart with badge
+              _buildNavItemWithBadge(
+                context,
+                icon: Icons.shopping_cart,
+                label: 'Cart',
+                isSelected: false,
+                badgeCount: cartItemCount,
+                iconSize: iconSize,
+                padding: itemPadding,
+                onTap: () => context.push('/cart'),
+              ),
+              // Account
+              _buildNavItem(
+                context,
+                icon: Icons.person,
+                label: 'Account',
+                isSelected: false,
+                iconSize: iconSize,
+                padding: itemPadding,
+                onTap: () {},
+              ),
+            ],
           ),
-          // Cart with badge
-          _buildNavItemWithBadge(
-            context,
-            icon: Icons.shopping_cart,
-            label: 'Cart',
-            isSelected: false,
-            badgeCount: 2,
-            iconSize: iconSize,
-            padding: itemPadding,
-          ),
-          // Account
-          _buildNavItem(
-            context,
-            icon: Icons.person,
-            label: 'Account',
-            isSelected: false,
-            iconSize: iconSize,
-            padding: itemPadding,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -767,12 +795,11 @@ class _HomeScreenState extends State<HomeScreen> {
     required bool isSelected,
     required double iconSize,
     required double padding,
+    required VoidCallback onTap,
   }) {
     final selectedColor = isSelected ? AppColors.primary : Colors.grey[400];
     return InkWell(
-      onTap: () {
-        // TODO: Navigate to tab
-      },
+      onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: padding, vertical: 4),
@@ -800,23 +827,21 @@ class _HomeScreenState extends State<HomeScreen> {
     required IconData icon,
     required String label,
     required bool isSelected,
+    required int badgeCount,
     required double iconSize,
     required double padding,
-    int? badgeCount,
+    required VoidCallback onTap,
   }) {
     final selectedColor = isSelected ? AppColors.primary : Colors.grey[400];
-
-    return InkWell(
-      onTap: () {
-        // TODO: Navigate to tab
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: padding, vertical: 4),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Column(
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: padding, vertical: 4),
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icon, size: iconSize, color: selectedColor),
@@ -831,35 +856,38 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            if (badgeCount != null && badgeCount > 0)
-              Positioned(
-                top: -4,
-                right: -4,
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1.5),
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    badgeCount > 99 ? '99+' : badgeCount.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+          ),
+        ),
+        // Badge
+        if (badgeCount > 0)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(9999),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.surfaceDark
+                      : AppColors.surfaceLight,
+                  width: 1.5,
                 ),
               ),
-          ],
-        ),
-      ),
+              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+              child: Text(
+                badgeCount > 99 ? '99+' : '$badgeCount',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -16,6 +16,9 @@ import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_event.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_card.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 
 /// Product list screen.
 class ProductListScreen extends StatefulWidget {
@@ -628,51 +631,67 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   Widget _buildBottomNavigation(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 8, top: 8),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
-        border: Border(
-          top: BorderSide(
-            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        int cartItemCount = 0;
+        if (state is CartLoaded) {
+          cartItemCount = state.itemCount;
+        }
+
+        return Container(
+          padding: const EdgeInsets.only(
+            left: 24,
+            right: 24,
+            bottom: 8,
+            top: 8,
           ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Home
-          _buildNavItem(
-            context,
-            icon: Icons.home,
-            label: 'Home',
-            isSelected: false,
-            onTap: _navigateBack,
+          decoration: BoxDecoration(
+            color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
+            border: Border(
+              top: BorderSide(
+                color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+              ),
+            ),
           ),
-          // Service
-          _buildNavItem(
-            context,
-            icon: Icons.build,
-            label: 'Service',
-            isSelected: false,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Home
+              _buildNavItem(
+                context,
+                icon: Icons.home,
+                label: 'Home',
+                isSelected: false,
+                onTap: _navigateBack,
+              ),
+              // Service
+              _buildNavItem(
+                context,
+                icon: Icons.build,
+                label: 'Service',
+                isSelected: false,
+              ),
+              // Cart with badge
+              _buildNavItemWithBadge(
+                context,
+                icon: Icons.shopping_cart,
+                label: 'Cart',
+                isSelected: false,
+                badgeCount: cartItemCount,
+                onTap: () => context.push('/cart'),
+              ),
+              // Account
+              _buildNavItem(
+                context,
+                icon: Icons.person,
+                label: 'Account',
+                isSelected: false,
+              ),
+            ],
           ),
-          // Cart with badge
-          _buildNavItemWithBadge(
-            context,
-            icon: Icons.shopping_cart,
-            label: 'Cart',
-            isSelected: false,
-            badgeCount: 2,
-          ),
-          // Account
-          _buildNavItem(
-            context,
-            icon: Icons.person,
-            label: 'Account',
-            isSelected: false,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -714,6 +733,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     required String label,
     required bool isSelected,
     required int badgeCount,
+    required VoidCallback onTap,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final selectedColor = isSelected ? AppColors.primary : Colors.grey[400];
@@ -721,9 +741,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       clipBehavior: Clip.none,
       children: [
         InkWell(
-          onTap: () {
-            // TODO: Navigate to cart
-          },
+          onTap: onTap,
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -745,31 +763,34 @@ class _ProductListScreenState extends State<ProductListScreen> {
           ),
         ),
         // Badge
-        Positioned(
-          top: 0,
-          right: 0,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(9999),
-              border: Border.all(
-                color: isDarkMode
-                    ? AppColors.surfaceDark
-                    : AppColors.surfaceLight,
-                width: 2,
+        if (badgeCount > 0)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(9999),
+                border: Border.all(
+                  color: isDarkMode
+                      ? AppColors.surfaceDark
+                      : AppColors.surfaceLight,
+                  width: 2,
+                ),
               ),
-            ),
-            child: Text(
-              '$badgeCount',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                badgeCount > 99 ? '99+' : '$badgeCount',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -793,7 +814,19 @@ class _ProductGridItem extends StatelessWidget {
         product: product,
         onTap: onTap,
         onAddToCart: () {
-          // TODO: Add to cart
+          context.read<CartBloc>().add(
+            AddProductToCartEvent(product: product, quantity: 1),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${product.name} added to cart'),
+              action: SnackBarAction(
+                label: 'View Cart',
+                onPressed: () => context.push('/cart'),
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
         },
       ),
     );
