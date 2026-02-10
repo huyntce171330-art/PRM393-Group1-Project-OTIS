@@ -125,5 +125,5 @@ Future<void> init() async {
     ),
   );
 
-  print("✅ All dependencies registered successfully");
+  print("All dependencies registered successfully");
 }
