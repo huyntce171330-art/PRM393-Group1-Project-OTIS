@@ -157,7 +157,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
           IconButton(
             onPressed: _navigateBack,
             icon: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_new,
               color: isDarkMode ? Colors.white : AppColors.textPrimary,
             ),
           ),
