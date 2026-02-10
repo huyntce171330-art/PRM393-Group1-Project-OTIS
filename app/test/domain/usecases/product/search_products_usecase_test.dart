@@ -55,7 +55,7 @@ void main() {
         totalPages: 1,
         hasMore: false,
       );
-      
+
       ProductFilter? capturedFilter;
       when(
         () => mockRepository.getProductsWithMetadata(
@@ -114,7 +114,7 @@ void main() {
         totalPages: 0,
         hasMore: false,
       );
-      
+
       ProductFilter? capturedFilter;
       when(
         () => mockRepository.getProductsWithMetadata(
@@ -170,7 +170,7 @@ void main() {
         totalPages: 1,
         hasMore: false,
       );
-      
+
       ProductFilter? capturedFilter;
       when(
         () => mockRepository.getProductsWithMetadata(
@@ -224,7 +224,7 @@ void main() {
         totalPages: 1,
         hasMore: false,
       );
-      
+
       ProductFilter? capturedFilter;
       when(
         () => mockRepository.getProductsWithMetadata(
@@ -254,7 +254,7 @@ void main() {
         totalPages: 0,
         hasMore: false,
       );
-      
+
       ProductFilter? capturedFilter;
       when(
         () => mockRepository.getProductsWithMetadata(
@@ -268,7 +268,7 @@ void main() {
       });
 
       // Act - Empty query
-      final result = await usecase('');
+      // final result = await usecase('');
 
       // Assert - Empty query should set null searchQuery
       expect(capturedFilter, isNotNull);
