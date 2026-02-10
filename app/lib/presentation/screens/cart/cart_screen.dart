@@ -6,6 +6,7 @@ import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
+import 'package:frontend_otis/presentation/widgets/confirmation_dialog.dart';
 import 'package:frontend_otis/presentation/widgets/cart/cart_item_card.dart';
 import 'package:frontend_otis/presentation/widgets/header_bar.dart';
 
@@ -20,7 +21,6 @@ class _CartScreenState extends State<CartScreen> {
   // Check if CartBloc is already provided by parent context or needs injection
   // In a real app, CartBloc is often global. Assuming it's a singleton in DI.
   late CartBloc _cartBloc;
-  bool _isEditing = false;
   final Set<String> _selectedItemIds = {};
 
   bool _hasInitializedSelection = false;
@@ -57,7 +57,6 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     // If context doesn't have CartBloc, wrap with BlocProvider.value
     // But usually routes are wrapped or global.
-    // But usually routes are wrapped or global.
     // For safety, let's wrap just in case this is a pushed route without provider.
     return BlocProvider.value(
       value: _cartBloc,
@@ -73,69 +72,9 @@ class _CartScreenState extends State<CartScreen> {
                 ? AppColors.backgroundDark
                 : const Color(0xFFF8F6F6), // background-light
             appBar: HeaderBar(
-              title: _isEditing
-                  ? 'Selected ${_selectedItemIds.length}'
-                  : 'My Cart ($count)',
-              onBack: () {
-                if (_isEditing) {
-                  setState(() {
-                    _isEditing = false;
-                    _selectedItemIds.clear();
-                  });
-                } else {
-                  context.pop();
-                }
-              },
-              actions: [
-                if (_isEditing)
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        if (state is CartLoaded) {
-                          if (_selectedItemIds.length ==
-                              state.cartItems.length) {
-                            _selectedItemIds.clear();
-                          } else {
-                            _selectedItemIds.clear();
-                            _selectedItemIds.addAll(
-                              state.cartItems.map((e) => e.productId),
-                            );
-                          }
-                        }
-                      });
-                    },
-                    child: Text(
-                      (state is CartLoaded &&
-                              _selectedItemIds.length == state.cartItems.length)
-                          ? 'Deselect All'
-                          : 'Select All',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                if (state is CartLoaded && state.cartItems.isNotEmpty)
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _isEditing = !_isEditing;
-                        // User interaction: "When I click edit button then add more option is select all"
-                        // Does not imply clearing selection.
-                        // We keep selection as is.
-                      });
-                    },
-                    child: Text(
-                      _isEditing ? 'Done' : 'Edit',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-              ],
+              title: 'My Cart ($count)',
+              onBack: () => context.pop(),
+              actions: const [],
             ),
             body: SafeArea(
               child: Column(
@@ -151,11 +90,6 @@ class _CartScreenState extends State<CartScreen> {
                           if (state.cartItems.isEmpty) {
                             return _buildEmptyCart(context);
                           }
-                          // Initialize selection on first load or update
-                          // Using addPostFrameCallback to avoid state modification during build?
-                          // No, it's local state sync. better to do it here or in listener.
-                          // But build is safe for local var calc, not setState.
-                          // We can do it via a flag check.
                           _initializeSelection(state);
                           return _buildCartContent(context, state);
                         } else if (state is CartError) {
@@ -187,274 +121,281 @@ class _CartScreenState extends State<CartScreen> {
     final selectedVat = selectedSubtotal * 0.00; // 0%
     final selectedTotal = selectedSubtotal + selectedVat;
 
-    return Stack(
+    return Column(
       children: [
-        // List of items
-        SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            16,
-            16,
-            16,
-            200,
-          ), // Padding for footer
-          child: Column(
+        // Select All / Remove Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          color: isDarkMode ? Colors.black26 : Colors.grey[50],
+          child: Row(
             children: [
-              ...state.cartItems.map(
-                (item) => CartItemCard(
-                  cartItem: item,
-                  isSelectionMode: true, // Always show checkbox
-                  isSelected: _selectedItemIds.contains(item.productId),
-                  onSelectionChanged: (value) {
-                    setState(() {
-                      if (value == true) {
-                        _selectedItemIds.add(item.productId);
-                      } else {
-                        _selectedItemIds.remove(item.productId);
-                      }
-                    });
-                  },
+              // Select All Checkbox
+              Checkbox(
+                value:
+                    _selectedItemIds.length == state.cartItems.length &&
+                    state.cartItems.isNotEmpty,
+                onChanged: (bool? value) {
+                  setState(() {
+                    if (value == true) {
+                      _selectedItemIds.addAll(
+                        state.cartItems.map((item) => item.productId),
+                      );
+                    } else {
+                      _selectedItemIds.clear();
+                    }
+                  });
+                },
+                activeColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
-              // Order Notes Removed as per request
+              const Text(
+                'Select All',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              const Spacer(),
+              // Remove Selected Button
+              if (_selectedItemIds.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ConfirmationDialog(
+                        title: 'Remove Items',
+                        message:
+                            'Are you sure you want to remove selected items from your cart?',
+                        confirmLabel: 'Remove',
+                        cancelLabel: 'Cancel',
+                        isDestructive: true,
+                        icon: Icons.delete_outline,
+                        onConfirm: () {
+                          for (var id in _selectedItemIds) {
+                            context.read<CartBloc>().add(
+                              RemoveFromCartEvent(productId: id),
+                            );
+                          }
+                          setState(() {
+                            _selectedItemIds.clear();
+                          });
+                          Navigator.of(context).pop(); // Close the dialog
+                        },
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    size: 20,
+                    color: AppColors.error,
+                  ),
+                  label: const Text(
+                    'Remove All',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
             ],
+          ),
+        ),
+        // List of items
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                ...state.cartItems.map(
+                  (item) => CartItemCard(
+                    cartItem: item,
+                    isSelectionMode: true, // Always show checkbox
+                    isSelected: _selectedItemIds.contains(item.productId),
+                    onSelectionChanged: (value) {
+                      setState(() {
+                        if (value == true) {
+                          _selectedItemIds.add(item.productId);
+                        } else {
+                          _selectedItemIds.remove(item.productId);
+                        }
+                      });
+                    },
+                  ),
+                ),
+                // Order Notes Removed as per request
+              ],
+            ),
           ),
         ),
 
         // Summary Footer
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF2A1A1B) : Colors.white,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
+        Container(
+          decoration: BoxDecoration(
+            color: isDarkMode ? const Color(0xFF2A1A1B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4),
-                ),
-              ],
-              border: Border(
-                top: BorderSide(
-                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[100]!,
-                ),
+            ],
+            border: Border(
+              top: BorderSide(
+                color: isDarkMode ? Colors.grey[800]! : Colors.grey[100]!,
               ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Drag handle indicator
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    width: 48,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[700] : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-                  child: Column(
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Subtotal
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Subtotal
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Subtotal',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[500],
-                            ),
-                          ),
-                          Text(
-                            state.formatCurrency(selectedSubtotal),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : Colors.grey[900],
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Subtotal',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: isDarkMode
+                              ? Colors.grey[400]
+                              : Colors.grey[500],
+                        ),
                       ),
-                      const SizedBox(height: 8),
-
-                      // VAT
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Tax (0% VAT)',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[500],
-                            ),
-                          ),
-                          Text(
-                            state.formatCurrency(selectedVat),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : Colors.grey[900],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      Divider(
-                        height: 24,
-                        color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
-                      ),
-
-                      // Total
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            'Total',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : Colors.grey[900],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                state.formatCurrency(selectedTotal),
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                  height: 1,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Include VAT',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey[400],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Checkout or Remove Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: _isEditing
-                            ? ElevatedButton(
-                                onPressed: _selectedItemIds.isEmpty
-                                    ? null
-                                    : () {
-                                        for (var id in _selectedItemIds) {
-                                          context.read<CartBloc>().add(
-                                            RemoveFromCartEvent(productId: id),
-                                          );
-                                        }
-                                        setState(() {
-                                          _selectedItemIds.clear();
-                                          _isEditing = false;
-                                        });
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: Text(
-                                  'Remove (${_selectedItemIds.length})',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              )
-                            : ElevatedButton(
-                                onPressed: _selectedItemIds.isEmpty
-                                    ? null // Disable if nothing selected
-                                    : () {
-                                        // Checkout logic for _selectedItemIds
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Proceeding to Checkout...',
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
-                                  disabledBackgroundColor: Colors.grey[300],
-                                  disabledForegroundColor: Colors.grey[500],
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 4,
-                                  shadowColor: AppColors.primary.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Checkout (${_selectedItemIds.length})',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    const Icon(Icons.arrow_forward, size: 20),
-                                  ],
-                                ),
-                              ),
+                      Text(
+                        state.formatCurrency(selectedSubtotal),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.grey[900],
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+
+                  // VAT
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Tax (0% VAT)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: isDarkMode
+                              ? Colors.grey[400]
+                              : Colors.grey[500],
+                        ),
+                      ),
+                      Text(
+                        state.formatCurrency(selectedVat),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.grey[900],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  Divider(
+                    height: 24,
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                  ),
+
+                  // Total
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Total',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.grey[900],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            state.formatCurrency(selectedTotal),
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                              height: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Include VAT',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Checkout Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _selectedItemIds.isEmpty
+                          ? null // Disable if nothing selected
+                          : () {
+                              // Checkout logic for _selectedItemIds
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Proceeding to Checkout...'),
+                                ),
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey[300],
+                        disabledForegroundColor: Colors.grey[500],
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
+                        shadowColor: AppColors.primary.withOpacity(0.3),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Checkout (${_selectedItemIds.length})',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
