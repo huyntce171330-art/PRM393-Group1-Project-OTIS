@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:frontend_otis/domain/entities/cart_item.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 
 abstract class CartEvent extends Equatable {
