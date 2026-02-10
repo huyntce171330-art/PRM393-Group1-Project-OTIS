@@ -24,6 +24,8 @@ import 'package:frontend_otis/presentation/widgets/product/product_services_sect
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
+import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 /// Screen to display full product details.
 ///
@@ -70,29 +72,9 @@ class ProductDetailScreen extends StatelessWidget {
   }
 
   /// Builds the app bar with back button and cart icon.
-  AppBar _buildAppBar(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      backgroundColor: isDarkMode
-          ? AppColors.backgroundDark
-          : Colors.white.withValues(alpha: 0.9),
-      elevation: 0,
-      leading: IconButton(
-        onPressed: () => context.pop(),
-        icon: Icon(
-          Icons.arrow_back,
-          color: isDarkMode ? Colors.white : AppColors.textPrimary,
-        ),
-      ),
-      title: Text(
-        AppStrings.productDetails,
-        style: TextStyle(
-          color: isDarkMode ? Colors.white : AppColors.textPrimary,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return HeaderBar(
+      title: AppStrings.productDetails,
       actions: [
         // Cart icon with badge
         _buildCartBadge(context),
@@ -305,29 +287,38 @@ class ProductDetailScreen extends StatelessWidget {
         ),
 
         // Sticky action bar
-        ProductActionBar(
-          onAddToCart: () {
-            context.read<CartBloc>().add(
-              AddProductToCartEvent(product: product, quantity: 1),
-            );
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('${product.name} added to cart'),
-                action: SnackBarAction(
-                  label: 'View Cart',
-                  onPressed: () => context.push('/cart'),
-                ),
-                duration: const Duration(seconds: 2),
-              ),
+        // Sticky action bar
+        BlocBuilder<CartBloc, CartState>(
+          builder: (context, state) {
+            bool isInCart = false;
+            if (state is CartLoaded) {
+              isInCart = state.cartItems.any(
+                (item) => item.productId == product.id,
+              );
+            }
+            return ProductActionBar(
+              isInCart: isInCart,
+              onViewCart: () => context.push('/cart'),
+              onAddToCart: () {
+                context.read<CartBloc>().add(
+                  AddProductToCartEvent(product: product, quantity: 1),
+                );
+                UiUtils.showSuccessPopup(
+                  context,
+                  '${product.name} added to cart',
+                );
+              },
+              onBuyNow: () {
+                if (!isInCart) {
+                  context.read<CartBloc>().add(
+                    AddProductToCartEvent(product: product, quantity: 1),
+                  );
+                }
+                context.push('/cart');
+              },
+              isDisabled: product.stockQuantity <= 0,
             );
           },
-          onBuyNow: () {
-            context.read<CartBloc>().add(
-              AddProductToCartEvent(product: product, quantity: 1),
-            );
-            context.push('/cart');
-          },
-          isDisabled: product.stockQuantity <= 0,
         ),
       ],
     );

@@ -18,8 +18,14 @@ class ProductActionBar extends StatelessWidget {
   /// Callback when Buy Now button is pressed
   final VoidCallback? onBuyNow;
 
+  /// Whether item is already in cart
+  final bool isInCart;
+
   /// Whether the buttons should be disabled (out of stock)
   final bool isDisabled;
+
+  /// Callback when View Cart button is pressed
+  final VoidCallback? onViewCart;
 
   /// Creates a new ProductActionBar instance.
   ///
@@ -31,6 +37,8 @@ class ProductActionBar extends StatelessWidget {
     this.onAddToCart,
     this.onBuyNow,
     this.isDisabled = false,
+    this.isInCart = false,
+    this.onViewCart,
   });
 
   @override
@@ -66,19 +74,40 @@ class ProductActionBar extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: isDisabled ? null : onAddToCart,
+                  onPressed: isDisabled
+                      ? null
+                      : (isInCart ? onViewCart : onAddToCart),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(color: AppColors.primary, width: 2),
+                    side: BorderSide(
+                      color: isInCart ? Colors.green : AppColors.primary,
+                      width: 2,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    foregroundColor: AppColors.primary,
-                    backgroundColor: Colors.transparent,
+                    foregroundColor: isInCart
+                        ? Colors.green
+                        : AppColors.primary,
+                    backgroundColor: isInCart
+                        ? Colors.green.withValues(alpha: 0.05)
+                        : Colors.transparent,
                   ),
-                  child: const Text(
-                    'Add to Cart',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isInCart) ...[
+                        const Icon(Icons.check, size: 18),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        isInCart ? 'View Cart' : 'Add to Cart',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

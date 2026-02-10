@@ -19,6 +19,7 @@ import 'package:frontend_otis/presentation/widgets/product/product_card.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 /// Product list screen.
 class ProductListScreen extends StatefulWidget {
@@ -808,27 +809,34 @@ class _ProductGridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Hero(
-      tag: 'product_image_${product.id}',
-      child: ProductCard(
-        product: product,
-        onTap: onTap,
-        onAddToCart: () {
-          context.read<CartBloc>().add(
-            AddProductToCartEvent(product: product, quantity: 1),
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        bool isInCart = false;
+        if (state is CartLoaded) {
+          isInCart = state.cartItems.any(
+            (item) => item.productId == product.id,
           );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${product.name} added to cart'),
-              action: SnackBarAction(
-                label: 'View Cart',
-                onPressed: () => context.push('/cart'),
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        },
-      ),
+        }
+        return Hero(
+          tag: 'product_image_${product.id}',
+          child: ProductCard(
+            product: product,
+            onTap: onTap,
+            isInCart: isInCart,
+            onViewCart: () => context.push('/cart'),
+            onAddToCart: () {
+              context.read<CartBloc>().add(
+                AddProductToCartEvent(product: product, quantity: 1),
+              );
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              UiUtils.showSuccessPopup(
+                context,
+                '${product.name} added to cart',
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

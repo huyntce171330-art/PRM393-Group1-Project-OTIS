@@ -8,12 +8,16 @@ class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback? onTap;
   final VoidCallback? onAddToCart;
+  final VoidCallback? onViewCart;
+  final bool isInCart;
 
   const ProductCard({
     super.key,
     required this.product,
     this.onTap,
     this.onAddToCart,
+    this.onViewCart,
+    this.isInCart = false,
   });
 
   @override
@@ -135,7 +139,7 @@ class ProductCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       // Price and Add Button
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Flexible(
                             child: Text(
@@ -145,6 +149,30 @@ class ProductCard extends StatelessWidget {
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          // Add/View Cart Button
+                          InkWell(
+                            onTap: isInCart ? onViewCart : onAddToCart,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: isInCart
+                                    ? Colors.green.withValues(alpha: 0.1)
+                                    : AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                isInCart
+                                    ? Icons.shopping_cart_checkout
+                                    : Icons.add_shopping_cart,
+                                size: 18,
+                                color: isInCart
+                                    ? Colors.green
+                                    : AppColors.primary,
                               ),
                             ),
                           ),

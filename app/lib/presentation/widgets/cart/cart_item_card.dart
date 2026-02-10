@@ -8,7 +8,17 @@ import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 class CartItemCard extends StatelessWidget {
   final CartItem cartItem;
 
-  const CartItemCard({super.key, required this.cartItem});
+  final bool isSelectionMode;
+  final bool isSelected;
+  final ValueChanged<bool?>? onSelectionChanged;
+
+  const CartItemCard({
+    super.key,
+    required this.cartItem,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+    this.onSelectionChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +29,7 @@ class CartItemCard extends StatelessWidget {
       return const SizedBox(); // Or loading/error state for item
     }
 
-    return Container(
+    Widget content = Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -186,6 +196,25 @@ class CartItemCard extends StatelessWidget {
         ],
       ),
     );
+
+    if (isSelectionMode) {
+      return Row(
+        children: [
+          Checkbox(
+            value: isSelected,
+            onChanged: onSelectionChanged,
+            activeColor: AppColors.primary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: content),
+        ],
+      );
+    }
+
+    return content;
   }
 
   Widget _buildQtyButton(

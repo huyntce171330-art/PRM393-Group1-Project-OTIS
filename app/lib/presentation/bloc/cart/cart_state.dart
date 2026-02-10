@@ -30,7 +30,7 @@ class CartLoaded extends CartState {
     for (var item in items) {
       subtotal += item.totalPrice;
     }
-    final vat = subtotal * 0.07;
+    final vat = subtotal * 0.00; // Tax is default 0%
     final total = subtotal + vat;
     return CartLoaded(
       cartItems: items,

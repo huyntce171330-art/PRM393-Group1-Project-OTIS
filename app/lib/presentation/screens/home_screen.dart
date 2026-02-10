@@ -20,6 +20,7 @@ import 'package:frontend_otis/presentation/widgets/product/product_card.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 /// Home screen - Main landing page.
 class HomeScreen extends StatefulWidget {
@@ -99,16 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<CartBloc>().add(
       AddProductToCartEvent(product: product, quantity: 1),
     );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} added to cart'),
-        action: SnackBarAction(
-          label: 'View Cart',
-          onPressed: () => context.push('/cart'),
-        ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    UiUtils.showSuccessPopup(context, '${product.name} added to cart');
   }
 
   Future<void> _onRefresh() async {
@@ -654,10 +647,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 final product = allProducts[index];
                 return SizedBox(
                   width: cardWidth,
-                  child: ProductCard(
-                    product: product,
-                    onTap: () => _navigateToProductDetail(product),
-                    onAddToCart: () => _onAddToCart(product),
+                  child: BlocBuilder<CartBloc, CartState>(
+                    builder: (context, cartState) {
+                      bool isInCart = false;
+                      if (cartState is CartLoaded) {
+                        isInCart = cartState.cartItems.any(
+                          (item) => item.productId == product.id,
+                        );
+                      }
+                      return ProductCard(
+                        product: product,
+                        onTap: () => _navigateToProductDetail(product),
+                        isInCart: isInCart,
+                        onViewCart: () => context.push('/cart'),
+                        onAddToCart: () => _onAddToCart(product),
+                      );
+                    },
                   ),
                 );
               },
