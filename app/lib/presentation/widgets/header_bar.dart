@@ -30,7 +30,15 @@ class HeaderBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       leading: showBack
           ? IconButton(
-              onPressed: onBack ?? () => context.pop(),
+              onPressed:
+                  onBack ??
+                  () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/');
+                    }
+                  },
               icon: Icon(
                 Icons.arrow_back_ios_new,
                 size: 20,

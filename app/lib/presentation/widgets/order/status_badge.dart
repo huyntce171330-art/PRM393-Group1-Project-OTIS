@@ -29,7 +29,7 @@ class StatusBadge extends StatelessWidget {
         textColor = Colors.green[800]!;
         icon = Icons.check_circle_outline;
         break;
-      case OrderStatus.cancelled:
+      case OrderStatus.canceled:
         backgroundColor = Colors.red[100]!;
         textColor = Colors.red[800]!;
         icon = Icons.cancel_outlined;

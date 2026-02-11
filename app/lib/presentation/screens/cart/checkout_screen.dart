@@ -293,7 +293,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 context.go('/booking-success', extra: order);
               } else {
                 // Bank Transfer: Go to payment screen to show QR
-                context.go(
+                context.push(
                   '/payment',
                   extra: {'order': order, 'method': _paymentMethod},
                 );

@@ -5,6 +5,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_event.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_state.dart';
@@ -123,25 +125,47 @@ class _PaymentScreenState extends State<PaymentScreen> {
           if (isLoading)
             const Center(child: CircularProgressIndicator())
           else
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  context.read<PaymentBloc>().add(
-                    SelectPaymentMethodEvent(
-                      orderId: widget.order.id,
-                      method: _selectedMethod,
-                      amount: widget.order.totalAmount,
+            Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.read<PaymentBloc>().add(
+                        SelectPaymentMethodEvent(
+                          orderId: widget.order.id,
+                          method: _selectedMethod,
+                          amount: widget.order.totalAmount,
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                    child: const Text("Confirm Payment Method"),
+                  ),
                 ),
-                child: const Text("Confirm Payment Method"),
-              ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => _showReorderConfirmation(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.grey[300]!),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "Cancel & Re-order",
+                      style: TextStyle(color: Colors.black87),
+                    ),
+                  ),
+                ),
+              ],
             ),
         ],
       ),
@@ -326,27 +350,49 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
           const SizedBox(height: 32),
 
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                context.read<PaymentBloc>().add(
-                  ProcessPaymentEvent(widget.order.id),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.read<PaymentBloc>().add(
+                      ProcessPaymentEvent(widget.order.id),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    "I Have Paid",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
-              child: const Text(
-                "I Have Paid",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => _showReorderConfirmation(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey[300]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    "Cancel & Re-order",
+                    style: TextStyle(color: Colors.black87),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -393,6 +439,52 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReorderConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Cancel Order?"),
+        content: const Text(
+          "Are you sure you want to cancel this order and re-order? All current progress will be lost.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Keep Order"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // 1. Cancel current order (inform server/DB)
+              context.read<OrderBloc>().add(
+                UpdateOrderStatusEvent(
+                  widget.order.id,
+                  const OrderStatusConverter().toJson(OrderStatus.canceled),
+                ),
+              );
+
+              // 2. Clear dialog
+              Navigator.pop(context);
+
+              // 3. Return to previous screen (Checkout)
+              // Since we used push() in CheckoutScreen, we can just pop()
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                // Fallback if somehow stack is lost
+                context.go('/products');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text("Yes, Cancel & Re-order"),
           ),
         ],
       ),

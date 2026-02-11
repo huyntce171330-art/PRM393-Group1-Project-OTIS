@@ -1,8 +1,8 @@
 import 'package:json_annotation/json_annotation.dart';
 
 /// Order status in the system.
-/// Maps to database status: 'pending', 'shipping', 'delivered', 'cancelled'
-enum OrderStatus { pendingPayment, paid, processing, completed, cancelled }
+/// Maps to database status: 'pending_payment', 'shipping', 'completed', 'canceled'
+enum OrderStatus { pendingPayment, paid, processing, completed, canceled }
 
 /// Payment method for orders.
 /// Maps to database payment_method: 'cash', 'transfer'
@@ -28,8 +28,8 @@ class OrderStatusConverter implements JsonConverter<OrderStatus, String> {
         return OrderStatus.processing;
       case 'completed':
         return OrderStatus.completed;
-      case 'cancelled':
-        return OrderStatus.cancelled;
+      case 'canceled':
+        return OrderStatus.canceled;
       default:
         return OrderStatus.pendingPayment;
     }
@@ -46,8 +46,8 @@ class OrderStatusConverter implements JsonConverter<OrderStatus, String> {
         return 'processing';
       case OrderStatus.completed:
         return 'completed';
-      case OrderStatus.cancelled:
-        return 'cancelled';
+      case OrderStatus.canceled:
+        return 'canceled';
     }
   }
 }
@@ -125,7 +125,7 @@ extension OrderStatusExtension on OrderStatus {
         return 'Processing';
       case OrderStatus.completed:
         return 'Completed';
-      case OrderStatus.cancelled:
+      case OrderStatus.canceled:
         return 'Cancelled';
     }
   }
