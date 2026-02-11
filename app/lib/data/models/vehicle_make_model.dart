@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+import 'package:frontend_otis/core/utils/json_converters.dart';
 import 'package:frontend_otis/domain/entities/vehicle_make.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -5,9 +7,8 @@ part 'vehicle_make_model.g.dart';
 
 /// Data model for VehicleMake entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
-/// Implements defensive parsing for robustness.
-@JsonSerializable()
-class VehicleMakeModel {
+@JsonSerializable(includeIfNull: false)
+class VehicleMakeModel extends Equatable {
   const VehicleMakeModel({
     required this.id,
     required this.name,
@@ -15,23 +16,23 @@ class VehicleMakeModel {
   });
 
   /// Unique identifier for the vehicle make
+  @JsonKey(name: 'make_id', fromJson: safeStringFromJson, toJson: safeStringToJson)
   final String id;
 
   /// Vehicle make name
+  @JsonKey(fromJson: safeStringFromJson, toJson: safeStringToJson)
   final String name;
 
   /// URL to vehicle make logo image
+  @JsonKey(name: 'logo_url', fromJson: safeStringFromJson, toJson: safeStringToJson)
   final String logoUrl;
 
-  /// Factory constructor to create VehicleMakeModel from JSON.
-  /// Implements defensive parsing to handle null values and invalid data.
-  factory VehicleMakeModel.fromJson(Map<String, dynamic> json) {
-    return VehicleMakeModel(
-      id: _parseMakeId(json['make_id']),
-      name: _parseString(json['name'], defaultValue: ''),
-      logoUrl: _parseString(json['logo_url'], defaultValue: ''),
-    );
-  }
+  @override
+  List<Object?> get props => [id, name, logoUrl];
+
+  /// Factory constructor using generated code from json_annotation
+  factory VehicleMakeModel.fromJson(Map<String, dynamic> json) =>
+      _$VehicleMakeModelFromJson(json);
 
   /// Convert VehicleMakeModel to JSON for API requests.
   Map<String, dynamic> toJson() => _$VehicleMakeModelToJson(this);
@@ -52,33 +53,5 @@ class VehicleMakeModel {
       name: vehicleMake.name,
       logoUrl: vehicleMake.logoUrl,
     );
-  }
-
-  /// Parse make_id from JSON to String with defensive handling.
-  static String _parseMakeId(dynamic value) {
-    if (value == null) return '';
-
-    if (value is int) {
-      return value.toString();
-    }
-
-    if (value is String) {
-      return value;
-    }
-
-    // Fallback for unexpected types
-    return value.toString();
-  }
-
-  /// Parse string values with null safety and default values.
-  static String _parseString(dynamic value, {String defaultValue = ''}) {
-    if (value == null) return defaultValue;
-
-    if (value is String) {
-      return value.trim();
-    }
-
-    // Convert other types to string
-    return value.toString().trim();
   }
 }

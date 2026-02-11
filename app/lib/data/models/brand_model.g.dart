@@ -7,14 +7,14 @@ part of 'brand_model.dart';
 // **************************************************************************
 
 BrandModel _$BrandModelFromJson(Map<String, dynamic> json) => BrandModel(
-  id: json['id'] as String,
-  name: json['name'] as String,
-  logoUrl: json['logoUrl'] as String,
+  id: safeStringFromJson(json['brand_id']),
+  name: safeStringFromJson(json['name']),
+  logoUrl: safeStringFromJson(json['logo_url']),
 );
 
 Map<String, dynamic> _$BrandModelToJson(BrandModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'logoUrl': instance.logoUrl,
+      'brand_id': safeStringToJson(instance.id),
+      'name': safeStringToJson(instance.name),
+      'logo_url': safeStringToJson(instance.logoUrl),
     };

@@ -8,22 +8,20 @@ part of 'notification_model.dart';
 
 NotificationModel _$NotificationModelFromJson(Map<String, dynamic> json) =>
     NotificationModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      body: json['body'] as String,
-      isRead: const BoolFromIntConverter().fromJson(
-        (json['isRead'] as num).toInt(),
-      ),
-      userId: json['userId'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: safeStringFromJson(json['notification_id']),
+      title: safeStringFromJson(json['title']),
+      body: safeStringFromJson(json['body']),
+      isRead: safeBoolFromJson(json['is_read']),
+      userId: safeStringFromJson(json['user_id']),
+      createdAt: safeDateTimeFromJson(json['created_at']),
     );
 
 Map<String, dynamic> _$NotificationModelToJson(NotificationModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'title': instance.title,
-      'body': instance.body,
-      'isRead': const BoolFromIntConverter().toJson(instance.isRead),
-      'userId': instance.userId,
-      'createdAt': instance.createdAt.toIso8601String(),
+      'notification_id': safeStringToJson(instance.id),
+      'title': safeStringToJson(instance.title),
+      'body': safeStringToJson(instance.body),
+      'is_read': safeBoolToJson(instance.isRead),
+      'user_id': safeStringToJson(instance.userId),
+      'created_at': safeDateTimeToJson(instance.createdAt),
     };

@@ -9,19 +9,19 @@ part of 'product_list_model.dart';
 ProductListModel _$ProductListModelFromJson(Map<String, dynamic> json) =>
     ProductListModel(
       products: ProductListModel._productsFromJson(json['data']),
-      page: (json['page'] as num).toInt(),
-      limit: (json['limit'] as num).toInt(),
-      total: (json['total'] as num).toInt(),
-      totalPages: (json['total_pages'] as num).toInt(),
-      hasMore: json['has_more'] as bool,
+      page: safeIntFromJson(json['page']),
+      limit: safeIntFromJson(json['limit']),
+      total: safeIntFromJson(json['total']),
+      totalPages: safeIntFromJson(json['totalPages']),
+      hasMore: safeBoolFromJson(json['hasMore']),
     );
 
 Map<String, dynamic> _$ProductListModelToJson(ProductListModel instance) =>
     <String, dynamic>{
       'data': instance.products,
-      'page': instance.page,
-      'limit': instance.limit,
-      'total': instance.total,
-      'total_pages': instance.totalPages,
-      'has_more': instance.hasMore,
+      'page': safeIntToJson(instance.page),
+      'limit': safeIntToJson(instance.limit),
+      'total': safeIntToJson(instance.total),
+      'totalPages': safeIntToJson(instance.totalPages),
+      'hasMore': safeBoolToJson(instance.hasMore),
     };

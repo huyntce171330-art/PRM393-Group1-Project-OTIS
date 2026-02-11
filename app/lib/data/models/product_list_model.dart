@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:equatable/equatable.dart';
+import 'package:frontend_otis/core/utils/json_converters.dart';
 import 'package:frontend_otis/data/models/product_model.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -31,7 +33,7 @@ part 'product_list_model.g.dart';
 /// print('Has more: ${productList.hasMore}');
 /// ```
 @JsonSerializable()
-class ProductListModel {
+class ProductListModel extends Equatable {
   const ProductListModel({
     required this.products,
     required this.page,
@@ -47,24 +49,27 @@ class ProductListModel {
   final List<ProductModel> products;
 
   /// Current page number (1-indexed)
-  @JsonKey(name: 'page')
+  @JsonKey(fromJson: safeIntFromJson, toJson: safeIntToJson)
   final int page;
 
   /// Number of items per page
-  @JsonKey(name: 'limit')
+  @JsonKey(fromJson: safeIntFromJson, toJson: safeIntToJson)
   final int limit;
 
   /// Total number of products across all pages
-  @JsonKey(name: 'total')
+  @JsonKey(fromJson: safeIntFromJson, toJson: safeIntToJson)
   final int total;
 
   /// Total number of pages available
-  @JsonKey(name: 'total_pages')
+  @JsonKey(fromJson: safeIntFromJson, toJson: safeIntToJson)
   final int totalPages;
 
   /// Whether there are more pages to load
-  @JsonKey(name: 'has_more')
+  @JsonKey(fromJson: safeBoolFromJson, toJson: safeBoolToJson)
   final bool hasMore;
+
+  @override
+  List<Object?> get props => [products, page, limit, total, totalPages, hasMore];
 
   /// Convert products list from JSON with null safety
   static List<ProductModel> _productsFromJson(dynamic data) {
@@ -75,7 +80,7 @@ class ProductListModel {
         .toList();
   }
 
-  /// Factory constructor to create ProductListModel from JSON.
+  /// Factory constructor using generated code from json_annotation
   factory ProductListModel.fromJson(Map<String, dynamic> json) =>
       _$ProductListModelFromJson(json);
 

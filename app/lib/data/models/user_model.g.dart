@@ -7,25 +7,25 @@ part of 'user_model.dart';
 // **************************************************************************
 
 UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
-  id: json['id'] as String,
-  phone: json['phone'] as String,
-  fullName: json['fullName'] as String,
-  address: json['address'] as String,
-  shopName: json['shopName'] as String,
-  avatarUrl: json['avatarUrl'] as String,
-  role: UserModel._roleFromJson(json['role']),
-  status: UserModel._parseUserStatus(json['status']),
-  createdAt: DateTime.parse(json['createdAt'] as String),
+  id: safeStringFromJson(json['user_id']),
+  phone: safeStringFromJson(json['phone']),
+  fullName: safeStringFromJson(json['full_name']),
+  address: safeStringFromJson(json['address']),
+  shopName: safeStringFromJson(json['shop_name']),
+  avatarUrl: safeStringFromJson(json['avatar_url']),
+  role: json['role'],
+  status: userStatusFromJson(json['status']),
+  createdAt: safeDateTimeFromJson(json['created_at']),
 );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
-  'id': instance.id,
-  'phone': instance.phone,
-  'fullName': instance.fullName,
-  'address': instance.address,
-  'shopName': instance.shopName,
-  'avatarUrl': instance.avatarUrl,
-  'role': UserModel._roleToJson(instance.role),
-  'status': UserModel._statusToJson(instance.status),
-  'createdAt': instance.createdAt.toIso8601String(),
+  'user_id': safeStringToJson(instance.id),
+  'phone': safeStringToJson(instance.phone),
+  'full_name': safeStringToJson(instance.fullName),
+  'address': safeStringToJson(instance.address),
+  'shop_name': safeStringToJson(instance.shopName),
+  'avatar_url': safeStringToJson(instance.avatarUrl),
+  if (instance.role case final value?) 'role': value,
+  'status': userStatusToJson(instance.status),
+  'created_at': safeDateTimeToJson(instance.createdAt),
 };

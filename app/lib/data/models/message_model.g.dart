@@ -7,42 +7,41 @@ part of 'message_model.dart';
 // **************************************************************************
 
 MessageModel _$MessageModelFromJson(Map<String, dynamic> json) => MessageModel(
-  id: json['id'] as String,
-  roomId: json['roomId'] as String,
-  senderId: json['senderId'] as String,
-  content: json['content'] as String,
-  imageUrl: json['imageUrl'] as String?,
-  isRead: const BoolFromIntConverter().fromJson(
-    (json['isRead'] as num).toInt(),
-  ),
-  createdAt: DateTime.parse(json['createdAt'] as String),
+  id: safeStringFromJson(json['message_id']),
+  roomId: safeStringFromJson(json['room_id']),
+  senderId: safeStringFromJson(json['sender_id']),
+  content: safeStringFromJson(json['content']),
+  imageUrl: nullableSafeStringFromJson(json['image_url']),
+  isRead: safeBoolFromJson(json['is_read']),
+  createdAt: safeDateTimeFromJson(json['created_at']),
 );
 
 Map<String, dynamic> _$MessageModelToJson(MessageModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'roomId': instance.roomId,
-      'senderId': instance.senderId,
-      'content': instance.content,
-      'imageUrl': instance.imageUrl,
-      'isRead': const BoolFromIntConverter().toJson(instance.isRead),
-      'createdAt': instance.createdAt.toIso8601String(),
+      'message_id': safeStringToJson(instance.id),
+      'room_id': safeStringToJson(instance.roomId),
+      'sender_id': safeStringToJson(instance.senderId),
+      'content': safeStringToJson(instance.content),
+      if (nullableSafeStringToJson(instance.imageUrl) case final value?)
+        'image_url': value,
+      'is_read': safeBoolToJson(instance.isRead),
+      'created_at': safeDateTimeToJson(instance.createdAt),
     };
 
 ChatRoomModel _$ChatRoomModelFromJson(Map<String, dynamic> json) =>
     ChatRoomModel(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      status: json['status'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      id: safeStringFromJson(json['room_id']),
+      userId: safeStringFromJson(json['user_id']),
+      status: safeStringFromJson(json['status']),
+      createdAt: safeDateTimeFromJson(json['created_at']),
+      updatedAt: safeDateTimeFromJson(json['updated_at']),
     );
 
 Map<String, dynamic> _$ChatRoomModelToJson(ChatRoomModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'userId': instance.userId,
-      'status': instance.status,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'room_id': safeStringToJson(instance.id),
+      'user_id': safeStringToJson(instance.userId),
+      'status': safeStringToJson(instance.status),
+      'created_at': safeDateTimeToJson(instance.createdAt),
+      'updated_at': safeDateTimeToJson(instance.updatedAt),
     };

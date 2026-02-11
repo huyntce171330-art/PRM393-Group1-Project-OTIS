@@ -7,24 +7,27 @@ part of 'order_model.dart';
 // **************************************************************************
 
 OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
-  id: json['id'] as String,
-  code: json['code'] as String,
-  totalAmount: (json['totalAmount'] as num).toDouble(),
-  status: const OrderStatusConverter().fromJson(json['status'] as String),
-  shippingAddress: json['shippingAddress'] as String,
-  createdAt: DateTime.parse(json['createdAt'] as String),
+  id: safeStringFromJson(json['order_id']),
+  code: safeStringFromJson(json['code']),
+  totalAmount: safeDoubleFromJson(json['total_amount']),
+  status: orderStatusFromJson(json['status']),
+  shippingAddress: safeStringFromJson(json['shipping_address']),
+  createdAt: safeDateTimeFromJson(json['created_at']),
   items: (json['items'] as List<dynamic>)
       .map((e) => OrderItemModel.fromJson(e as Map<String, dynamic>))
       .toList(),
+  userId: nullableSafeStringFromJson(json['user_id']),
 );
 
 Map<String, dynamic> _$OrderModelToJson(OrderModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'code': instance.code,
-      'totalAmount': instance.totalAmount,
-      'status': const OrderStatusConverter().toJson(instance.status),
-      'shippingAddress': instance.shippingAddress,
-      'createdAt': instance.createdAt.toIso8601String(),
+      'order_id': safeStringToJson(instance.id),
+      'code': safeStringToJson(instance.code),
+      'total_amount': safeDoubleToJson(instance.totalAmount),
+      'status': orderStatusToJson(instance.status),
+      'shipping_address': safeStringToJson(instance.shippingAddress),
+      'created_at': safeDateTimeToJson(instance.createdAt),
       'items': instance.items.map((e) => e.toJson()).toList(),
+      if (nullableSafeStringToJson(instance.userId) case final value?)
+        'user_id': value,
     };

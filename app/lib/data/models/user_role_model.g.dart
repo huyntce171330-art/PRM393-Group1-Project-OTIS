@@ -7,7 +7,13 @@ part of 'user_role_model.dart';
 // **************************************************************************
 
 UserRoleModel _$UserRoleModelFromJson(Map<String, dynamic> json) =>
-    UserRoleModel(id: json['id'] as String, name: json['name'] as String);
+    UserRoleModel(
+      id: safeStringFromJson(json['role_id']),
+      name: safeStringFromJson(json['name']),
+    );
 
 Map<String, dynamic> _$UserRoleModelToJson(UserRoleModel instance) =>
-    <String, dynamic>{'id': instance.id, 'name': instance.name};
+    <String, dynamic>{
+      'role_id': safeStringToJson(instance.id),
+      'name': safeStringToJson(instance.name),
+    };

@@ -8,14 +8,14 @@ part of 'vehicle_make_model.dart';
 
 VehicleMakeModel _$VehicleMakeModelFromJson(Map<String, dynamic> json) =>
     VehicleMakeModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      logoUrl: json['logoUrl'] as String,
+      id: safeStringFromJson(json['make_id']),
+      name: safeStringFromJson(json['name']),
+      logoUrl: safeStringFromJson(json['logo_url']),
     );
 
 Map<String, dynamic> _$VehicleMakeModelToJson(VehicleMakeModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'logoUrl': instance.logoUrl,
+      'make_id': safeStringToJson(instance.id),
+      'name': safeStringToJson(instance.name),
+      'logo_url': safeStringToJson(instance.logoUrl),
     };

@@ -7,34 +7,32 @@ part of 'product_model.dart';
 // **************************************************************************
 
 ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
-  id: json['id'] as String,
-  sku: json['sku'] as String,
-  name: json['name'] as String,
-  imageUrl: json['imageUrl'] as String,
+  id: safeStringFromJson(json['product_id']),
+  sku: safeStringFromJson(json['sku']),
+  name: safeStringFromJson(json['name']),
+  imageUrl: safeStringFromJson(json['image_url']),
   brand: BrandModel.fromJson(json['brand'] as Map<String, dynamic>),
   vehicleMake: VehicleMakeModel.fromJson(
     json['vehicleMake'] as Map<String, dynamic>,
   ),
   tireSpec: TireSpecModel.fromJson(json['tireSpec'] as Map<String, dynamic>),
-  price: (json['price'] as num).toDouble(),
-  stockQuantity: (json['stockQuantity'] as num).toInt(),
-  isActive: const BoolFromIntConverter().fromJson(
-    (json['isActive'] as num).toInt(),
-  ),
-  createdAt: DateTime.parse(json['createdAt'] as String),
+  price: safeDoubleFromJson(json['price']),
+  stockQuantity: safeIntFromJson(json['stock_quantity']),
+  isActive: safeBoolFromJson(json['is_active']),
+  createdAt: safeDateTimeFromJson(json['created_at']),
 );
 
 Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'sku': instance.sku,
-      'name': instance.name,
-      'imageUrl': instance.imageUrl,
+      'product_id': safeStringToJson(instance.id),
+      'sku': safeStringToJson(instance.sku),
+      'name': safeStringToJson(instance.name),
+      'image_url': safeStringToJson(instance.imageUrl),
       'brand': instance.brand,
       'vehicleMake': instance.vehicleMake,
       'tireSpec': instance.tireSpec,
-      'price': instance.price,
-      'stockQuantity': instance.stockQuantity,
-      'isActive': const BoolFromIntConverter().toJson(instance.isActive),
-      'createdAt': instance.createdAt.toIso8601String(),
+      'price': safeDoubleToJson(instance.price),
+      'stock_quantity': safeIntToJson(instance.stockQuantity),
+      'is_active': safeBoolToJson(instance.isActive),
+      'created_at': safeDateTimeToJson(instance.createdAt),
     };

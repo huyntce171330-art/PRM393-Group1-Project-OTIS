@@ -8,14 +8,14 @@ part of 'order_item_model.dart';
 
 OrderItemModel _$OrderItemModelFromJson(Map<String, dynamic> json) =>
     OrderItemModel(
-      productId: json['productId'] as String,
-      quantity: (json['quantity'] as num).toInt(),
-      unitPrice: (json['unitPrice'] as num).toDouble(),
+      productId: safeStringFromJson(json['product_id']),
+      quantity: safeIntFromJson(json['quantity']),
+      unitPrice: safeDoubleFromJson(json['unit_price']),
     );
 
 Map<String, dynamic> _$OrderItemModelToJson(OrderItemModel instance) =>
     <String, dynamic>{
-      'productId': instance.productId,
-      'quantity': instance.quantity,
-      'unitPrice': instance.unitPrice,
+      'product_id': safeStringToJson(instance.productId),
+      'quantity': safeIntToJson(instance.quantity),
+      'unit_price': safeDoubleToJson(instance.unitPrice),
     };

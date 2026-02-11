@@ -128,9 +128,20 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
     );
   }
 
-  void _onAddProduct() {
-    // Navigate to create product screen
-    context.push('/admin/products/create');
+  void _onAddProduct() async {
+    // Navigate to create product screen and wait for result
+    final result = await context.push('/admin/products/create');
+
+    // If product was created, silently refresh to get new data
+    if (result == true) {
+      _adminProductBloc.silentRefresh();
+      return;
+    }
+
+    // Restore list state from cache when just viewing
+    _adminProductBloc.add(
+      GetAdminProductsEvent(filter: _adminProductBloc.currentFilter),
+    );
   }
 
   void _onProductTap(String productId) async {

@@ -8,16 +8,16 @@ part of 'tire_spec_model.dart';
 
 TireSpecModel _$TireSpecModelFromJson(Map<String, dynamic> json) =>
     TireSpecModel(
-      id: json['id'] as String,
-      width: (json['width'] as num).toInt(),
-      aspectRatio: (json['aspectRatio'] as num).toInt(),
-      rimDiameter: (json['rimDiameter'] as num).toInt(),
+      id: safeStringFromJson(json['tire_spec_id']),
+      width: safeIntFromJson(json['width']),
+      aspectRatio: safeIntFromJson(json['aspect_ratio']),
+      rimDiameter: safeIntFromJson(json['rim_diameter']),
     );
 
 Map<String, dynamic> _$TireSpecModelToJson(TireSpecModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'width': instance.width,
-      'aspectRatio': instance.aspectRatio,
-      'rimDiameter': instance.rimDiameter,
+      'tire_spec_id': safeStringToJson(instance.id),
+      'width': safeIntToJson(instance.width),
+      'aspect_ratio': safeIntToJson(instance.aspectRatio),
+      'rim_diameter': safeIntToJson(instance.rimDiameter),
     };

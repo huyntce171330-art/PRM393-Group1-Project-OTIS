@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+import 'package:frontend_otis/core/utils/json_converters.dart';
 import 'package:frontend_otis/domain/entities/brand.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -5,9 +7,8 @@ part 'brand_model.g.dart';
 
 /// Data model for Brand entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
-/// Implements defensive parsing for robustness.
-@JsonSerializable()
-class BrandModel {
+@JsonSerializable(includeIfNull: false)
+class BrandModel extends Equatable {
   const BrandModel({
     required this.id,
     required this.name,
@@ -15,23 +16,23 @@ class BrandModel {
   });
 
   /// Unique identifier for the brand
+  @JsonKey(name: 'brand_id', fromJson: safeStringFromJson, toJson: safeStringToJson)
   final String id;
 
   /// Brand name
+  @JsonKey(fromJson: safeStringFromJson, toJson: safeStringToJson)
   final String name;
 
   /// URL to brand logo image
+  @JsonKey(name: 'logo_url', fromJson: safeStringFromJson, toJson: safeStringToJson)
   final String logoUrl;
 
-  /// Factory constructor to create BrandModel from JSON.
-  /// Implements defensive parsing to handle null values and invalid data.
-  factory BrandModel.fromJson(Map<String, dynamic> json) {
-    return BrandModel(
-      id: _parseBrandId(json['brand_id']),
-      name: _parseString(json['name'], defaultValue: ''),
-      logoUrl: _parseString(json['logo_url'], defaultValue: ''),
-    );
-  }
+  @override
+  List<Object?> get props => [id, name, logoUrl];
+
+  /// Factory constructor using generated code from json_annotation
+  factory BrandModel.fromJson(Map<String, dynamic> json) =>
+      _$BrandModelFromJson(json);
 
   /// Convert BrandModel to JSON for API requests.
   Map<String, dynamic> toJson() => _$BrandModelToJson(this);
@@ -52,33 +53,5 @@ class BrandModel {
       name: brand.name,
       logoUrl: brand.logoUrl,
     );
-  }
-
-  /// Parse brand_id from JSON to String with defensive handling.
-  static String _parseBrandId(dynamic value) {
-    if (value == null) return '';
-
-    if (value is int) {
-      return value.toString();
-    }
-
-    if (value is String) {
-      return value;
-    }
-
-    // Fallback for unexpected types
-    return value.toString();
-  }
-
-  /// Parse string values with null safety and default values.
-  static String _parseString(dynamic value, {String defaultValue = ''}) {
-    if (value == null) return defaultValue;
-
-    if (value is String) {
-      return value.trim();
-    }
-
-    // Convert other types to string
-    return value.toString().trim();
   }
 }
