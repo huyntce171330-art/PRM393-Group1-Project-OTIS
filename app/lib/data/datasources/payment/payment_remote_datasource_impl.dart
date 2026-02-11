@@ -1,7 +1,6 @@
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/data/models/payment_model.dart';
-import 'package:sqflite/sqflite.dart';
 
 abstract class PaymentRemoteDataSource {
   Future<PaymentModel> createPayment(PaymentModel payment);
