@@ -17,6 +17,7 @@ import 'package:frontend_otis/presentation/screens/cart/cart_screen.dart';
 import 'package:frontend_otis/presentation/screens/cart/checkout_screen.dart';
 import 'package:frontend_otis/presentation/screens/home_screen.dart';
 import 'package:frontend_otis/presentation/screens/payment/payment_screen.dart';
+import 'package:frontend_otis/presentation/screens/order/booking_success_screen.dart';
 import 'package:frontend_otis/presentation/screens/order/order_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/order/order_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/product/product_list_screen.dart';
@@ -71,11 +72,14 @@ final GoRouter router = GoRouter(
       name: 'checkout',
       builder: (context, state) {
         final extras = state.extra as Map<String, dynamic>;
-        return CheckoutScreen(
-          checkoutSource: extras['source'] as String,
-          items: (extras['items'] as List<CartItem>?) ?? [],
-          product: extras['product'] as Product?,
-          quantity: extras['quantity'] as int?,
+        return BlocProvider(
+          create: (context) => di.sl<PaymentBloc>(),
+          child: CheckoutScreen(
+            checkoutSource: extras['source'] as String,
+            items: (extras['items'] as List<CartItem>?) ?? [],
+            product: extras['product'] as Product?,
+            quantity: extras['quantity'] as int?,
+          ),
         );
       },
     ),
@@ -90,6 +94,14 @@ final GoRouter router = GoRouter(
           create: (context) => di.sl<PaymentBloc>(),
           child: PaymentScreen(order: order, initialMethod: method),
         );
+      },
+    ),
+    GoRoute(
+      path: '/booking-success',
+      name: 'booking-success',
+      builder: (context, state) {
+        final order = state.extra as Order;
+        return BookingSuccessScreen(order: order);
       },
     ),
     GoRoute(

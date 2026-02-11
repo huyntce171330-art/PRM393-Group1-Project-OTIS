@@ -91,11 +91,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _showSuccess(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.success),
-    );
-    // Navigate to Order List and clear history stack to prevent back nav to payment
-    context.go('/orders');
+    // Navigate to Booking Success Screen with order details
+    context.go('/booking-success', extra: widget.order);
   }
 
   Widget _buildSelectionView(BuildContext context, bool isLoading) {

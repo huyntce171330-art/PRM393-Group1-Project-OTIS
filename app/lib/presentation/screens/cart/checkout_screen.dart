@@ -13,6 +13,9 @@ import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/payment/payment_event.dart';
+import 'package:frontend_otis/presentation/bloc/payment/payment_state.dart';
 
 // --- Types ---
 enum DeliveryType { HOME, SHOP }
@@ -247,7 +250,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           )
           .toList(),
       totalAmount: _grandTotal,
-      status: OrderStatus.pendingPayment,
+      status: _paymentMethod == PaymentMethod.cash
+          ? OrderStatus.processing
+          : OrderStatus.pendingPayment,
       createdAt: DateTime.now(),
       shippingAddress: shippingAddress,
       source: widget.checkoutSource == 'buyNow' ? 'buy_now' : 'cart',
@@ -258,30 +263,58 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<OrderBloc, OrderState>(
-      listener: (context, state) {
-        if (state is OrderDetailLoaded) {
-          // IMPORTANT: Only clear cart if source is 'cart'
-          if (widget.checkoutSource == 'cart') {
-            for (var item in widget.items) {
-              context.read<CartBloc>().add(
-                RemoveFromCartEvent(productId: item.productId),
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<OrderBloc, OrderState>(
+          listener: (context, state) {
+            if (state is OrderCreated) {
+              // IMPORTANT: Only clear cart if source is 'cart'
+              if (widget.checkoutSource == 'cart') {
+                for (var item in widget.items) {
+                  context.read<CartBloc>().add(
+                    RemoveFromCartEvent(productId: item.productId),
+                  );
+                }
+              }
+
+              final order = state.order;
+
+              // Navigate based on payment method
+              if (_paymentMethod == PaymentMethod.cash) {
+                // COD: Create payment record in background for bookkeeping
+                context.read<PaymentBloc>().add(
+                  SelectPaymentMethodEvent(
+                    orderId: order.id,
+                    method: PaymentMethod.cash,
+                    amount: order.totalAmount,
+                  ),
+                );
+                // Go directly to success
+                context.go('/booking-success', extra: order);
+              } else {
+                // Bank Transfer: Go to payment screen to show QR
+                context.go(
+                  '/payment',
+                  extra: {'order': order, 'method': _paymentMethod},
+                );
+              }
+            } else if (state is OrderError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Order Failed: ${state.message}')),
               );
             }
-          }
-
-          final order = state.order;
-
-          context.push(
-            '/payment',
-            extra: {'order': order, 'method': _paymentMethod},
-          );
-        } else if (state is OrderError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Order Failed: ${state.message}')),
-          );
-        }
-      },
+          },
+        ),
+        BlocListener<PaymentBloc, PaymentState>(
+          listener: (context, state) {
+            if (state is PaymentFailure) {
+              print(
+                "Background Payment Record Creation Failed: ${state.message}",
+              );
+            }
+          },
+        ),
+      ],
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: const HeaderBar(title: 'Checkout'),
