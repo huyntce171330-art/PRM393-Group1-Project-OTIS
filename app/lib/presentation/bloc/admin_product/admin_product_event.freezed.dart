@@ -27,6 +27,7 @@ mixin _$AdminProductEvent {
     required TResult Function(bool silent) refreshProducts,
     required TResult Function(String productId) deleteProduct,
     required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
@@ -38,6 +39,7 @@ mixin _$AdminProductEvent {
     TResult? Function(bool silent)? refreshProducts,
     TResult? Function(String productId)? deleteProduct,
     TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
@@ -49,6 +51,7 @@ mixin _$AdminProductEvent {
     TResult Function(bool silent)? refreshProducts,
     TResult Function(String productId)? deleteProduct,
     TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -62,6 +65,7 @@ mixin _$AdminProductEvent {
     required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
     required TResult Function(DeleteProductEvent value) deleteProduct,
     required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
@@ -73,6 +77,7 @@ mixin _$AdminProductEvent {
     TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult? Function(DeleteProductEvent value)? deleteProduct,
     TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
@@ -84,6 +89,7 @@ mixin _$AdminProductEvent {
     TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult Function(DeleteProductEvent value)? deleteProduct,
     TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
 }
@@ -192,6 +198,7 @@ class _$GetAdminProductsEventImpl implements GetAdminProductsEvent {
     required TResult Function(bool silent) refreshProducts,
     required TResult Function(String productId) deleteProduct,
     required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
   }) {
     return getProducts(filter);
   }
@@ -207,6 +214,7 @@ class _$GetAdminProductsEventImpl implements GetAdminProductsEvent {
     TResult? Function(bool silent)? refreshProducts,
     TResult? Function(String productId)? deleteProduct,
     TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
   }) {
     return getProducts?.call(filter);
   }
@@ -222,6 +230,7 @@ class _$GetAdminProductsEventImpl implements GetAdminProductsEvent {
     TResult Function(bool silent)? refreshProducts,
     TResult Function(String productId)? deleteProduct,
     TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
     required TResult orElse(),
   }) {
     if (getProducts != null) {
@@ -242,6 +251,7 @@ class _$GetAdminProductsEventImpl implements GetAdminProductsEvent {
     required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
     required TResult Function(DeleteProductEvent value) deleteProduct,
     required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
   }) {
     return getProducts(this);
   }
@@ -257,6 +267,7 @@ class _$GetAdminProductsEventImpl implements GetAdminProductsEvent {
     TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult? Function(DeleteProductEvent value)? deleteProduct,
     TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
   }) {
     return getProducts?.call(this);
   }
@@ -272,6 +283,7 @@ class _$GetAdminProductsEventImpl implements GetAdminProductsEvent {
     TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult Function(DeleteProductEvent value)? deleteProduct,
     TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
     required TResult orElse(),
   }) {
     if (getProducts != null) {
@@ -376,6 +388,7 @@ class _$FilterByBrandEventImpl implements FilterByBrandEvent {
     required TResult Function(bool silent) refreshProducts,
     required TResult Function(String productId) deleteProduct,
     required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
   }) {
     return filterByBrand(brandName);
   }
@@ -391,6 +404,7 @@ class _$FilterByBrandEventImpl implements FilterByBrandEvent {
     TResult? Function(bool silent)? refreshProducts,
     TResult? Function(String productId)? deleteProduct,
     TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
   }) {
     return filterByBrand?.call(brandName);
   }
@@ -406,6 +420,7 @@ class _$FilterByBrandEventImpl implements FilterByBrandEvent {
     TResult Function(bool silent)? refreshProducts,
     TResult Function(String productId)? deleteProduct,
     TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
     required TResult orElse(),
   }) {
     if (filterByBrand != null) {
@@ -426,6 +441,7 @@ class _$FilterByBrandEventImpl implements FilterByBrandEvent {
     required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
     required TResult Function(DeleteProductEvent value) deleteProduct,
     required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
   }) {
     return filterByBrand(this);
   }
@@ -441,6 +457,7 @@ class _$FilterByBrandEventImpl implements FilterByBrandEvent {
     TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult? Function(DeleteProductEvent value)? deleteProduct,
     TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
   }) {
     return filterByBrand?.call(this);
   }
@@ -456,6 +473,7 @@ class _$FilterByBrandEventImpl implements FilterByBrandEvent {
     TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult Function(DeleteProductEvent value)? deleteProduct,
     TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
     required TResult orElse(),
   }) {
     if (filterByBrand != null) {
@@ -560,6 +578,7 @@ class _$FilterByStockStatusEventImpl implements FilterByStockStatusEvent {
     required TResult Function(bool silent) refreshProducts,
     required TResult Function(String productId) deleteProduct,
     required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
   }) {
     return filterByStockStatus(status);
   }
@@ -575,6 +594,7 @@ class _$FilterByStockStatusEventImpl implements FilterByStockStatusEvent {
     TResult? Function(bool silent)? refreshProducts,
     TResult? Function(String productId)? deleteProduct,
     TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
   }) {
     return filterByStockStatus?.call(status);
   }
@@ -590,6 +610,7 @@ class _$FilterByStockStatusEventImpl implements FilterByStockStatusEvent {
     TResult Function(bool silent)? refreshProducts,
     TResult Function(String productId)? deleteProduct,
     TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
     required TResult orElse(),
   }) {
     if (filterByStockStatus != null) {
@@ -610,6 +631,7 @@ class _$FilterByStockStatusEventImpl implements FilterByStockStatusEvent {
     required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
     required TResult Function(DeleteProductEvent value) deleteProduct,
     required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
   }) {
     return filterByStockStatus(this);
   }
@@ -625,6 +647,7 @@ class _$FilterByStockStatusEventImpl implements FilterByStockStatusEvent {
     TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult? Function(DeleteProductEvent value)? deleteProduct,
     TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
   }) {
     return filterByStockStatus?.call(this);
   }
@@ -640,6 +663,7 @@ class _$FilterByStockStatusEventImpl implements FilterByStockStatusEvent {
     TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult Function(DeleteProductEvent value)? deleteProduct,
     TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
     required TResult orElse(),
   }) {
     if (filterByStockStatus != null) {
@@ -744,6 +768,7 @@ class _$SearchAdminProductsEventImpl implements SearchAdminProductsEvent {
     required TResult Function(bool silent) refreshProducts,
     required TResult Function(String productId) deleteProduct,
     required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
   }) {
     return searchProducts(query);
   }
@@ -759,6 +784,7 @@ class _$SearchAdminProductsEventImpl implements SearchAdminProductsEvent {
     TResult? Function(bool silent)? refreshProducts,
     TResult? Function(String productId)? deleteProduct,
     TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
   }) {
     return searchProducts?.call(query);
   }
@@ -774,6 +800,7 @@ class _$SearchAdminProductsEventImpl implements SearchAdminProductsEvent {
     TResult Function(bool silent)? refreshProducts,
     TResult Function(String productId)? deleteProduct,
     TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
     required TResult orElse(),
   }) {
     if (searchProducts != null) {
@@ -794,6 +821,7 @@ class _$SearchAdminProductsEventImpl implements SearchAdminProductsEvent {
     required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
     required TResult Function(DeleteProductEvent value) deleteProduct,
     required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
   }) {
     return searchProducts(this);
   }
@@ -809,6 +837,7 @@ class _$SearchAdminProductsEventImpl implements SearchAdminProductsEvent {
     TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult? Function(DeleteProductEvent value)? deleteProduct,
     TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
   }) {
     return searchProducts?.call(this);
   }
@@ -824,6 +853,7 @@ class _$SearchAdminProductsEventImpl implements SearchAdminProductsEvent {
     TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult Function(DeleteProductEvent value)? deleteProduct,
     TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
     required TResult orElse(),
   }) {
     if (searchProducts != null) {
@@ -898,6 +928,7 @@ class _$ClearAdminSearchEventImpl implements ClearAdminSearchEvent {
     required TResult Function(bool silent) refreshProducts,
     required TResult Function(String productId) deleteProduct,
     required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
   }) {
     return clearSearch();
   }
@@ -913,6 +944,7 @@ class _$ClearAdminSearchEventImpl implements ClearAdminSearchEvent {
     TResult? Function(bool silent)? refreshProducts,
     TResult? Function(String productId)? deleteProduct,
     TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
   }) {
     return clearSearch?.call();
   }
@@ -928,6 +960,7 @@ class _$ClearAdminSearchEventImpl implements ClearAdminSearchEvent {
     TResult Function(bool silent)? refreshProducts,
     TResult Function(String productId)? deleteProduct,
     TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
     required TResult orElse(),
   }) {
     if (clearSearch != null) {
@@ -948,6 +981,7 @@ class _$ClearAdminSearchEventImpl implements ClearAdminSearchEvent {
     required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
     required TResult Function(DeleteProductEvent value) deleteProduct,
     required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
   }) {
     return clearSearch(this);
   }
@@ -963,6 +997,7 @@ class _$ClearAdminSearchEventImpl implements ClearAdminSearchEvent {
     TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult? Function(DeleteProductEvent value)? deleteProduct,
     TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
   }) {
     return clearSearch?.call(this);
   }
@@ -978,6 +1013,7 @@ class _$ClearAdminSearchEventImpl implements ClearAdminSearchEvent {
     TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult Function(DeleteProductEvent value)? deleteProduct,
     TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
     required TResult orElse(),
   }) {
     if (clearSearch != null) {
@@ -1074,6 +1110,7 @@ class _$RefreshAdminProductsEventImpl implements RefreshAdminProductsEvent {
     required TResult Function(bool silent) refreshProducts,
     required TResult Function(String productId) deleteProduct,
     required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
   }) {
     return refreshProducts(silent);
   }
@@ -1089,6 +1126,7 @@ class _$RefreshAdminProductsEventImpl implements RefreshAdminProductsEvent {
     TResult? Function(bool silent)? refreshProducts,
     TResult? Function(String productId)? deleteProduct,
     TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
   }) {
     return refreshProducts?.call(silent);
   }
@@ -1104,6 +1142,7 @@ class _$RefreshAdminProductsEventImpl implements RefreshAdminProductsEvent {
     TResult Function(bool silent)? refreshProducts,
     TResult Function(String productId)? deleteProduct,
     TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
     required TResult orElse(),
   }) {
     if (refreshProducts != null) {
@@ -1124,6 +1163,7 @@ class _$RefreshAdminProductsEventImpl implements RefreshAdminProductsEvent {
     required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
     required TResult Function(DeleteProductEvent value) deleteProduct,
     required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
   }) {
     return refreshProducts(this);
   }
@@ -1139,6 +1179,7 @@ class _$RefreshAdminProductsEventImpl implements RefreshAdminProductsEvent {
     TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult? Function(DeleteProductEvent value)? deleteProduct,
     TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
   }) {
     return refreshProducts?.call(this);
   }
@@ -1154,6 +1195,7 @@ class _$RefreshAdminProductsEventImpl implements RefreshAdminProductsEvent {
     TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult Function(DeleteProductEvent value)? deleteProduct,
     TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
     required TResult orElse(),
   }) {
     if (refreshProducts != null) {
@@ -1258,6 +1300,7 @@ class _$DeleteProductEventImpl implements DeleteProductEvent {
     required TResult Function(bool silent) refreshProducts,
     required TResult Function(String productId) deleteProduct,
     required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
   }) {
     return deleteProduct(productId);
   }
@@ -1273,6 +1316,7 @@ class _$DeleteProductEventImpl implements DeleteProductEvent {
     TResult? Function(bool silent)? refreshProducts,
     TResult? Function(String productId)? deleteProduct,
     TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
   }) {
     return deleteProduct?.call(productId);
   }
@@ -1288,6 +1332,7 @@ class _$DeleteProductEventImpl implements DeleteProductEvent {
     TResult Function(bool silent)? refreshProducts,
     TResult Function(String productId)? deleteProduct,
     TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
     required TResult orElse(),
   }) {
     if (deleteProduct != null) {
@@ -1308,6 +1353,7 @@ class _$DeleteProductEventImpl implements DeleteProductEvent {
     required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
     required TResult Function(DeleteProductEvent value) deleteProduct,
     required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
   }) {
     return deleteProduct(this);
   }
@@ -1323,6 +1369,7 @@ class _$DeleteProductEventImpl implements DeleteProductEvent {
     TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult? Function(DeleteProductEvent value)? deleteProduct,
     TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
   }) {
     return deleteProduct?.call(this);
   }
@@ -1338,6 +1385,7 @@ class _$DeleteProductEventImpl implements DeleteProductEvent {
     TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult Function(DeleteProductEvent value)? deleteProduct,
     TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
     required TResult orElse(),
   }) {
     if (deleteProduct != null) {
@@ -1443,6 +1491,7 @@ class _$GetProductDetailEventImpl implements GetProductDetailEvent {
     required TResult Function(bool silent) refreshProducts,
     required TResult Function(String productId) deleteProduct,
     required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
   }) {
     return getProductDetail(productId);
   }
@@ -1458,6 +1507,7 @@ class _$GetProductDetailEventImpl implements GetProductDetailEvent {
     TResult? Function(bool silent)? refreshProducts,
     TResult? Function(String productId)? deleteProduct,
     TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
   }) {
     return getProductDetail?.call(productId);
   }
@@ -1473,6 +1523,7 @@ class _$GetProductDetailEventImpl implements GetProductDetailEvent {
     TResult Function(bool silent)? refreshProducts,
     TResult Function(String productId)? deleteProduct,
     TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
     required TResult orElse(),
   }) {
     if (getProductDetail != null) {
@@ -1493,6 +1544,7 @@ class _$GetProductDetailEventImpl implements GetProductDetailEvent {
     required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
     required TResult Function(DeleteProductEvent value) deleteProduct,
     required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
   }) {
     return getProductDetail(this);
   }
@@ -1508,6 +1560,7 @@ class _$GetProductDetailEventImpl implements GetProductDetailEvent {
     TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult? Function(DeleteProductEvent value)? deleteProduct,
     TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
   }) {
     return getProductDetail?.call(this);
   }
@@ -1523,6 +1576,7 @@ class _$GetProductDetailEventImpl implements GetProductDetailEvent {
     TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
     TResult Function(DeleteProductEvent value)? deleteProduct,
     TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
     required TResult orElse(),
   }) {
     if (getProductDetail != null) {
@@ -1543,4 +1597,193 @@ abstract class GetProductDetailEvent implements AdminProductEvent {
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$GetProductDetailEventImplCopyWith<_$GetProductDetailEventImpl>
   get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$CreateProductEventImplCopyWith<$Res> {
+  factory _$$CreateProductEventImplCopyWith(
+    _$CreateProductEventImpl value,
+    $Res Function(_$CreateProductEventImpl) then,
+  ) = __$$CreateProductEventImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({ProductModel product});
+}
+
+/// @nodoc
+class __$$CreateProductEventImplCopyWithImpl<$Res>
+    extends _$AdminProductEventCopyWithImpl<$Res, _$CreateProductEventImpl>
+    implements _$$CreateProductEventImplCopyWith<$Res> {
+  __$$CreateProductEventImplCopyWithImpl(
+    _$CreateProductEventImpl _value,
+    $Res Function(_$CreateProductEventImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of AdminProductEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? product = null}) {
+    return _then(
+      _$CreateProductEventImpl(
+        product: null == product
+            ? _value.product
+            : product // ignore: cast_nullable_to_non_nullable
+                  as ProductModel,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$CreateProductEventImpl implements CreateProductEvent {
+  const _$CreateProductEventImpl({required this.product});
+
+  @override
+  final ProductModel product;
+
+  @override
+  String toString() {
+    return 'AdminProductEvent.createProduct(product: $product)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CreateProductEventImpl &&
+            (identical(other.product, product) || other.product == product));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, product);
+
+  /// Create a copy of AdminProductEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$CreateProductEventImplCopyWith<_$CreateProductEventImpl> get copyWith =>
+      __$$CreateProductEventImplCopyWithImpl<_$CreateProductEventImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(AdminProductFilter? filter) getProducts,
+    required TResult Function(String? brandName) filterByBrand,
+    required TResult Function(StockStatus status) filterByStockStatus,
+    required TResult Function(String query) searchProducts,
+    required TResult Function() clearSearch,
+    required TResult Function(bool silent) refreshProducts,
+    required TResult Function(String productId) deleteProduct,
+    required TResult Function(String productId) getProductDetail,
+    required TResult Function(ProductModel product) createProduct,
+  }) {
+    return createProduct(product);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(AdminProductFilter? filter)? getProducts,
+    TResult? Function(String? brandName)? filterByBrand,
+    TResult? Function(StockStatus status)? filterByStockStatus,
+    TResult? Function(String query)? searchProducts,
+    TResult? Function()? clearSearch,
+    TResult? Function(bool silent)? refreshProducts,
+    TResult? Function(String productId)? deleteProduct,
+    TResult? Function(String productId)? getProductDetail,
+    TResult? Function(ProductModel product)? createProduct,
+  }) {
+    return createProduct?.call(product);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(AdminProductFilter? filter)? getProducts,
+    TResult Function(String? brandName)? filterByBrand,
+    TResult Function(StockStatus status)? filterByStockStatus,
+    TResult Function(String query)? searchProducts,
+    TResult Function()? clearSearch,
+    TResult Function(bool silent)? refreshProducts,
+    TResult Function(String productId)? deleteProduct,
+    TResult Function(String productId)? getProductDetail,
+    TResult Function(ProductModel product)? createProduct,
+    required TResult orElse(),
+  }) {
+    if (createProduct != null) {
+      return createProduct(product);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(GetAdminProductsEvent value) getProducts,
+    required TResult Function(FilterByBrandEvent value) filterByBrand,
+    required TResult Function(FilterByStockStatusEvent value)
+    filterByStockStatus,
+    required TResult Function(SearchAdminProductsEvent value) searchProducts,
+    required TResult Function(ClearAdminSearchEvent value) clearSearch,
+    required TResult Function(RefreshAdminProductsEvent value) refreshProducts,
+    required TResult Function(DeleteProductEvent value) deleteProduct,
+    required TResult Function(GetProductDetailEvent value) getProductDetail,
+    required TResult Function(CreateProductEvent value) createProduct,
+  }) {
+    return createProduct(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(GetAdminProductsEvent value)? getProducts,
+    TResult? Function(FilterByBrandEvent value)? filterByBrand,
+    TResult? Function(FilterByStockStatusEvent value)? filterByStockStatus,
+    TResult? Function(SearchAdminProductsEvent value)? searchProducts,
+    TResult? Function(ClearAdminSearchEvent value)? clearSearch,
+    TResult? Function(RefreshAdminProductsEvent value)? refreshProducts,
+    TResult? Function(DeleteProductEvent value)? deleteProduct,
+    TResult? Function(GetProductDetailEvent value)? getProductDetail,
+    TResult? Function(CreateProductEvent value)? createProduct,
+  }) {
+    return createProduct?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(GetAdminProductsEvent value)? getProducts,
+    TResult Function(FilterByBrandEvent value)? filterByBrand,
+    TResult Function(FilterByStockStatusEvent value)? filterByStockStatus,
+    TResult Function(SearchAdminProductsEvent value)? searchProducts,
+    TResult Function(ClearAdminSearchEvent value)? clearSearch,
+    TResult Function(RefreshAdminProductsEvent value)? refreshProducts,
+    TResult Function(DeleteProductEvent value)? deleteProduct,
+    TResult Function(GetProductDetailEvent value)? getProductDetail,
+    TResult Function(CreateProductEvent value)? createProduct,
+    required TResult orElse(),
+  }) {
+    if (createProduct != null) {
+      return createProduct(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class CreateProductEvent implements AdminProductEvent {
+  const factory CreateProductEvent({required final ProductModel product}) =
+      _$CreateProductEventImpl;
+
+  ProductModel get product;
+
+  /// Create a copy of AdminProductEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$CreateProductEventImplCopyWith<_$CreateProductEventImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

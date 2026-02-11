@@ -39,6 +39,9 @@ mixin _$AdminProductState {
     required TResult Function(String productId) deleted,
     required TResult Function() detailLoading,
     required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
@@ -62,6 +65,9 @@ mixin _$AdminProductState {
     TResult? Function(String productId)? deleted,
     TResult? Function()? detailLoading,
     TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
@@ -85,6 +91,9 @@ mixin _$AdminProductState {
     TResult Function(String productId)? deleted,
     TResult Function()? detailLoading,
     TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -97,6 +106,9 @@ mixin _$AdminProductState {
     required TResult Function(AdminProductDeleted value) deleted,
     required TResult Function(AdminProductDetailLoading value) detailLoading,
     required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
@@ -108,6 +120,9 @@ mixin _$AdminProductState {
     TResult? Function(AdminProductDeleted value)? deleted,
     TResult? Function(AdminProductDetailLoading value)? detailLoading,
     TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
@@ -119,6 +134,9 @@ mixin _$AdminProductState {
     TResult Function(AdminProductDeleted value)? deleted,
     TResult Function(AdminProductDetailLoading value)? detailLoading,
     TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
 }
@@ -209,6 +227,9 @@ class _$AdminProductInitialImpl extends AdminProductInitial {
     required TResult Function(String productId) deleted,
     required TResult Function() detailLoading,
     required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
   }) {
     return initial();
   }
@@ -236,6 +257,9 @@ class _$AdminProductInitialImpl extends AdminProductInitial {
     TResult? Function(String productId)? deleted,
     TResult? Function()? detailLoading,
     TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
   }) {
     return initial?.call();
   }
@@ -263,6 +287,9 @@ class _$AdminProductInitialImpl extends AdminProductInitial {
     TResult Function(String productId)? deleted,
     TResult Function()? detailLoading,
     TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
     required TResult orElse(),
   }) {
     if (initial != null) {
@@ -282,6 +309,9 @@ class _$AdminProductInitialImpl extends AdminProductInitial {
     required TResult Function(AdminProductDeleted value) deleted,
     required TResult Function(AdminProductDetailLoading value) detailLoading,
     required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
   }) {
     return initial(this);
   }
@@ -297,6 +327,9 @@ class _$AdminProductInitialImpl extends AdminProductInitial {
     TResult? Function(AdminProductDeleted value)? deleted,
     TResult? Function(AdminProductDetailLoading value)? detailLoading,
     TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
   }) {
     return initial?.call(this);
   }
@@ -312,6 +345,9 @@ class _$AdminProductInitialImpl extends AdminProductInitial {
     TResult Function(AdminProductDeleted value)? deleted,
     TResult Function(AdminProductDetailLoading value)? detailLoading,
     TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
     required TResult orElse(),
   }) {
     if (initial != null) {
@@ -390,6 +426,9 @@ class _$AdminProductLoadingImpl extends AdminProductLoading {
     required TResult Function(String productId) deleted,
     required TResult Function() detailLoading,
     required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
   }) {
     return loading();
   }
@@ -417,6 +456,9 @@ class _$AdminProductLoadingImpl extends AdminProductLoading {
     TResult? Function(String productId)? deleted,
     TResult? Function()? detailLoading,
     TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
   }) {
     return loading?.call();
   }
@@ -444,6 +486,9 @@ class _$AdminProductLoadingImpl extends AdminProductLoading {
     TResult Function(String productId)? deleted,
     TResult Function()? detailLoading,
     TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
     required TResult orElse(),
   }) {
     if (loading != null) {
@@ -463,6 +508,9 @@ class _$AdminProductLoadingImpl extends AdminProductLoading {
     required TResult Function(AdminProductDeleted value) deleted,
     required TResult Function(AdminProductDetailLoading value) detailLoading,
     required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
   }) {
     return loading(this);
   }
@@ -478,6 +526,9 @@ class _$AdminProductLoadingImpl extends AdminProductLoading {
     TResult? Function(AdminProductDeleted value)? deleted,
     TResult? Function(AdminProductDetailLoading value)? detailLoading,
     TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
   }) {
     return loading?.call(this);
   }
@@ -493,6 +544,9 @@ class _$AdminProductLoadingImpl extends AdminProductLoading {
     TResult Function(AdminProductDeleted value)? deleted,
     TResult Function(AdminProductDetailLoading value)? detailLoading,
     TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
     required TResult orElse(),
   }) {
     if (loading != null) {
@@ -724,6 +778,9 @@ class _$AdminProductLoadedImpl extends AdminProductLoaded {
     required TResult Function(String productId) deleted,
     required TResult Function() detailLoading,
     required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
   }) {
     return loaded(
       products,
@@ -762,6 +819,9 @@ class _$AdminProductLoadedImpl extends AdminProductLoaded {
     TResult? Function(String productId)? deleted,
     TResult? Function()? detailLoading,
     TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
   }) {
     return loaded?.call(
       products,
@@ -800,6 +860,9 @@ class _$AdminProductLoadedImpl extends AdminProductLoaded {
     TResult Function(String productId)? deleted,
     TResult Function()? detailLoading,
     TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
     required TResult orElse(),
   }) {
     if (loaded != null) {
@@ -830,6 +893,9 @@ class _$AdminProductLoadedImpl extends AdminProductLoaded {
     required TResult Function(AdminProductDeleted value) deleted,
     required TResult Function(AdminProductDetailLoading value) detailLoading,
     required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
   }) {
     return loaded(this);
   }
@@ -845,6 +911,9 @@ class _$AdminProductLoadedImpl extends AdminProductLoaded {
     TResult? Function(AdminProductDeleted value)? deleted,
     TResult? Function(AdminProductDetailLoading value)? detailLoading,
     TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
   }) {
     return loaded?.call(this);
   }
@@ -860,6 +929,9 @@ class _$AdminProductLoadedImpl extends AdminProductLoaded {
     TResult Function(AdminProductDeleted value)? deleted,
     TResult Function(AdminProductDetailLoading value)? detailLoading,
     TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
     required TResult orElse(),
   }) {
     if (loaded != null) {
@@ -995,6 +1067,9 @@ class _$AdminProductErrorImpl extends AdminProductError {
     required TResult Function(String productId) deleted,
     required TResult Function() detailLoading,
     required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
   }) {
     return error(message);
   }
@@ -1022,6 +1097,9 @@ class _$AdminProductErrorImpl extends AdminProductError {
     TResult? Function(String productId)? deleted,
     TResult? Function()? detailLoading,
     TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
   }) {
     return error?.call(message);
   }
@@ -1049,6 +1127,9 @@ class _$AdminProductErrorImpl extends AdminProductError {
     TResult Function(String productId)? deleted,
     TResult Function()? detailLoading,
     TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
     required TResult orElse(),
   }) {
     if (error != null) {
@@ -1068,6 +1149,9 @@ class _$AdminProductErrorImpl extends AdminProductError {
     required TResult Function(AdminProductDeleted value) deleted,
     required TResult Function(AdminProductDetailLoading value) detailLoading,
     required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
   }) {
     return error(this);
   }
@@ -1083,6 +1167,9 @@ class _$AdminProductErrorImpl extends AdminProductError {
     TResult? Function(AdminProductDeleted value)? deleted,
     TResult? Function(AdminProductDetailLoading value)? detailLoading,
     TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
   }) {
     return error?.call(this);
   }
@@ -1098,6 +1185,9 @@ class _$AdminProductErrorImpl extends AdminProductError {
     TResult Function(AdminProductDeleted value)? deleted,
     TResult Function(AdminProductDetailLoading value)? detailLoading,
     TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
     required TResult orElse(),
   }) {
     if (error != null) {
@@ -1216,6 +1306,9 @@ class _$AdminProductDeletingImpl extends AdminProductDeleting {
     required TResult Function(String productId) deleted,
     required TResult Function() detailLoading,
     required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
   }) {
     return deleting(productId);
   }
@@ -1243,6 +1336,9 @@ class _$AdminProductDeletingImpl extends AdminProductDeleting {
     TResult? Function(String productId)? deleted,
     TResult? Function()? detailLoading,
     TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
   }) {
     return deleting?.call(productId);
   }
@@ -1270,6 +1366,9 @@ class _$AdminProductDeletingImpl extends AdminProductDeleting {
     TResult Function(String productId)? deleted,
     TResult Function()? detailLoading,
     TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
     required TResult orElse(),
   }) {
     if (deleting != null) {
@@ -1289,6 +1388,9 @@ class _$AdminProductDeletingImpl extends AdminProductDeleting {
     required TResult Function(AdminProductDeleted value) deleted,
     required TResult Function(AdminProductDetailLoading value) detailLoading,
     required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
   }) {
     return deleting(this);
   }
@@ -1304,6 +1406,9 @@ class _$AdminProductDeletingImpl extends AdminProductDeleting {
     TResult? Function(AdminProductDeleted value)? deleted,
     TResult? Function(AdminProductDetailLoading value)? detailLoading,
     TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
   }) {
     return deleting?.call(this);
   }
@@ -1319,6 +1424,9 @@ class _$AdminProductDeletingImpl extends AdminProductDeleting {
     TResult Function(AdminProductDeleted value)? deleted,
     TResult Function(AdminProductDetailLoading value)? detailLoading,
     TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
     required TResult orElse(),
   }) {
     if (deleting != null) {
@@ -1436,6 +1544,9 @@ class _$AdminProductDeletedImpl extends AdminProductDeleted {
     required TResult Function(String productId) deleted,
     required TResult Function() detailLoading,
     required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
   }) {
     return deleted(productId);
   }
@@ -1463,6 +1574,9 @@ class _$AdminProductDeletedImpl extends AdminProductDeleted {
     TResult? Function(String productId)? deleted,
     TResult? Function()? detailLoading,
     TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
   }) {
     return deleted?.call(productId);
   }
@@ -1490,6 +1604,9 @@ class _$AdminProductDeletedImpl extends AdminProductDeleted {
     TResult Function(String productId)? deleted,
     TResult Function()? detailLoading,
     TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
     required TResult orElse(),
   }) {
     if (deleted != null) {
@@ -1509,6 +1626,9 @@ class _$AdminProductDeletedImpl extends AdminProductDeleted {
     required TResult Function(AdminProductDeleted value) deleted,
     required TResult Function(AdminProductDetailLoading value) detailLoading,
     required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
   }) {
     return deleted(this);
   }
@@ -1524,6 +1644,9 @@ class _$AdminProductDeletedImpl extends AdminProductDeleted {
     TResult? Function(AdminProductDeleted value)? deleted,
     TResult? Function(AdminProductDetailLoading value)? detailLoading,
     TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
   }) {
     return deleted?.call(this);
   }
@@ -1539,6 +1662,9 @@ class _$AdminProductDeletedImpl extends AdminProductDeleted {
     TResult Function(AdminProductDeleted value)? deleted,
     TResult Function(AdminProductDetailLoading value)? detailLoading,
     TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
     required TResult orElse(),
   }) {
     if (deleted != null) {
@@ -1627,6 +1753,9 @@ class _$AdminProductDetailLoadingImpl extends AdminProductDetailLoading {
     required TResult Function(String productId) deleted,
     required TResult Function() detailLoading,
     required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
   }) {
     return detailLoading();
   }
@@ -1654,6 +1783,9 @@ class _$AdminProductDetailLoadingImpl extends AdminProductDetailLoading {
     TResult? Function(String productId)? deleted,
     TResult? Function()? detailLoading,
     TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
   }) {
     return detailLoading?.call();
   }
@@ -1681,6 +1813,9 @@ class _$AdminProductDetailLoadingImpl extends AdminProductDetailLoading {
     TResult Function(String productId)? deleted,
     TResult Function()? detailLoading,
     TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
     required TResult orElse(),
   }) {
     if (detailLoading != null) {
@@ -1700,6 +1835,9 @@ class _$AdminProductDetailLoadingImpl extends AdminProductDetailLoading {
     required TResult Function(AdminProductDeleted value) deleted,
     required TResult Function(AdminProductDetailLoading value) detailLoading,
     required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
   }) {
     return detailLoading(this);
   }
@@ -1715,6 +1853,9 @@ class _$AdminProductDetailLoadingImpl extends AdminProductDetailLoading {
     TResult? Function(AdminProductDeleted value)? deleted,
     TResult? Function(AdminProductDetailLoading value)? detailLoading,
     TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
   }) {
     return detailLoading?.call(this);
   }
@@ -1730,6 +1871,9 @@ class _$AdminProductDetailLoadingImpl extends AdminProductDetailLoading {
     TResult Function(AdminProductDeleted value)? deleted,
     TResult Function(AdminProductDetailLoading value)? detailLoading,
     TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
     required TResult orElse(),
   }) {
     if (detailLoading != null) {
@@ -1850,6 +1994,9 @@ class _$AdminProductDetailLoadedImpl extends AdminProductDetailLoaded {
     required TResult Function(String productId) deleted,
     required TResult Function() detailLoading,
     required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
   }) {
     return detailLoaded(product);
   }
@@ -1877,6 +2024,9 @@ class _$AdminProductDetailLoadedImpl extends AdminProductDetailLoaded {
     TResult? Function(String productId)? deleted,
     TResult? Function()? detailLoading,
     TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
   }) {
     return detailLoaded?.call(product);
   }
@@ -1904,6 +2054,9 @@ class _$AdminProductDetailLoadedImpl extends AdminProductDetailLoaded {
     TResult Function(String productId)? deleted,
     TResult Function()? detailLoading,
     TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
     required TResult orElse(),
   }) {
     if (detailLoaded != null) {
@@ -1923,6 +2076,9 @@ class _$AdminProductDetailLoadedImpl extends AdminProductDetailLoaded {
     required TResult Function(AdminProductDeleted value) deleted,
     required TResult Function(AdminProductDetailLoading value) detailLoading,
     required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
   }) {
     return detailLoaded(this);
   }
@@ -1938,6 +2094,9 @@ class _$AdminProductDetailLoadedImpl extends AdminProductDetailLoaded {
     TResult? Function(AdminProductDeleted value)? deleted,
     TResult? Function(AdminProductDetailLoading value)? detailLoading,
     TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
   }) {
     return detailLoaded?.call(this);
   }
@@ -1953,6 +2112,9 @@ class _$AdminProductDetailLoadedImpl extends AdminProductDetailLoaded {
     TResult Function(AdminProductDeleted value)? deleted,
     TResult Function(AdminProductDetailLoading value)? detailLoading,
     TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
     required TResult orElse(),
   }) {
     if (detailLoaded != null) {
@@ -1973,5 +2135,691 @@ abstract class AdminProductDetailLoaded extends AdminProductState {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AdminProductDetailLoadedImplCopyWith<_$AdminProductDetailLoadedImpl>
+  get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$AdminProductCreatingImplCopyWith<$Res> {
+  factory _$$AdminProductCreatingImplCopyWith(
+    _$AdminProductCreatingImpl value,
+    $Res Function(_$AdminProductCreatingImpl) then,
+  ) = __$$AdminProductCreatingImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$AdminProductCreatingImplCopyWithImpl<$Res>
+    extends _$AdminProductStateCopyWithImpl<$Res, _$AdminProductCreatingImpl>
+    implements _$$AdminProductCreatingImplCopyWith<$Res> {
+  __$$AdminProductCreatingImplCopyWithImpl(
+    _$AdminProductCreatingImpl _value,
+    $Res Function(_$AdminProductCreatingImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of AdminProductState
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+
+class _$AdminProductCreatingImpl extends AdminProductCreating {
+  const _$AdminProductCreatingImpl() : super._();
+
+  @override
+  String toString() {
+    return 'AdminProductState.creating()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AdminProductCreatingImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() loading,
+    required TResult Function(
+      List<Product> products,
+      AdminProductFilter filter,
+      String? selectedBrand,
+      StockStatus stockStatus,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+      bool isRefreshing,
+    )
+    loaded,
+    required TResult Function(String message) error,
+    required TResult Function(String productId) deleting,
+    required TResult Function(String productId) deleted,
+    required TResult Function() detailLoading,
+    required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
+  }) {
+    return creating();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? loading,
+    TResult? Function(
+      List<Product> products,
+      AdminProductFilter filter,
+      String? selectedBrand,
+      StockStatus stockStatus,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+      bool isRefreshing,
+    )?
+    loaded,
+    TResult? Function(String message)? error,
+    TResult? Function(String productId)? deleting,
+    TResult? Function(String productId)? deleted,
+    TResult? Function()? detailLoading,
+    TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
+  }) {
+    return creating?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? loading,
+    TResult Function(
+      List<Product> products,
+      AdminProductFilter filter,
+      String? selectedBrand,
+      StockStatus stockStatus,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+      bool isRefreshing,
+    )?
+    loaded,
+    TResult Function(String message)? error,
+    TResult Function(String productId)? deleting,
+    TResult Function(String productId)? deleted,
+    TResult Function()? detailLoading,
+    TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
+    required TResult orElse(),
+  }) {
+    if (creating != null) {
+      return creating();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(AdminProductInitial value) initial,
+    required TResult Function(AdminProductLoading value) loading,
+    required TResult Function(AdminProductLoaded value) loaded,
+    required TResult Function(AdminProductError value) error,
+    required TResult Function(AdminProductDeleting value) deleting,
+    required TResult Function(AdminProductDeleted value) deleted,
+    required TResult Function(AdminProductDetailLoading value) detailLoading,
+    required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
+  }) {
+    return creating(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(AdminProductInitial value)? initial,
+    TResult? Function(AdminProductLoading value)? loading,
+    TResult? Function(AdminProductLoaded value)? loaded,
+    TResult? Function(AdminProductError value)? error,
+    TResult? Function(AdminProductDeleting value)? deleting,
+    TResult? Function(AdminProductDeleted value)? deleted,
+    TResult? Function(AdminProductDetailLoading value)? detailLoading,
+    TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
+  }) {
+    return creating?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(AdminProductInitial value)? initial,
+    TResult Function(AdminProductLoading value)? loading,
+    TResult Function(AdminProductLoaded value)? loaded,
+    TResult Function(AdminProductError value)? error,
+    TResult Function(AdminProductDeleting value)? deleting,
+    TResult Function(AdminProductDeleted value)? deleted,
+    TResult Function(AdminProductDetailLoading value)? detailLoading,
+    TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
+    required TResult orElse(),
+  }) {
+    if (creating != null) {
+      return creating(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class AdminProductCreating extends AdminProductState {
+  const factory AdminProductCreating() = _$AdminProductCreatingImpl;
+  const AdminProductCreating._() : super._();
+}
+
+/// @nodoc
+abstract class _$$AdminProductCreateSuccessImplCopyWith<$Res> {
+  factory _$$AdminProductCreateSuccessImplCopyWith(
+    _$AdminProductCreateSuccessImpl value,
+    $Res Function(_$AdminProductCreateSuccessImpl) then,
+  ) = __$$AdminProductCreateSuccessImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({Product product});
+
+  $ProductCopyWith<$Res> get product;
+}
+
+/// @nodoc
+class __$$AdminProductCreateSuccessImplCopyWithImpl<$Res>
+    extends
+        _$AdminProductStateCopyWithImpl<$Res, _$AdminProductCreateSuccessImpl>
+    implements _$$AdminProductCreateSuccessImplCopyWith<$Res> {
+  __$$AdminProductCreateSuccessImplCopyWithImpl(
+    _$AdminProductCreateSuccessImpl _value,
+    $Res Function(_$AdminProductCreateSuccessImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of AdminProductState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? product = null}) {
+    return _then(
+      _$AdminProductCreateSuccessImpl(
+        product: null == product
+            ? _value.product
+            : product // ignore: cast_nullable_to_non_nullable
+                  as Product,
+      ),
+    );
+  }
+
+  /// Create a copy of AdminProductState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ProductCopyWith<$Res> get product {
+    return $ProductCopyWith<$Res>(_value.product, (value) {
+      return _then(_value.copyWith(product: value));
+    });
+  }
+}
+
+/// @nodoc
+
+class _$AdminProductCreateSuccessImpl extends AdminProductCreateSuccess {
+  const _$AdminProductCreateSuccessImpl({required this.product}) : super._();
+
+  @override
+  final Product product;
+
+  @override
+  String toString() {
+    return 'AdminProductState.createSuccess(product: $product)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AdminProductCreateSuccessImpl &&
+            (identical(other.product, product) || other.product == product));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, product);
+
+  /// Create a copy of AdminProductState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AdminProductCreateSuccessImplCopyWith<_$AdminProductCreateSuccessImpl>
+  get copyWith =>
+      __$$AdminProductCreateSuccessImplCopyWithImpl<
+        _$AdminProductCreateSuccessImpl
+      >(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() loading,
+    required TResult Function(
+      List<Product> products,
+      AdminProductFilter filter,
+      String? selectedBrand,
+      StockStatus stockStatus,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+      bool isRefreshing,
+    )
+    loaded,
+    required TResult Function(String message) error,
+    required TResult Function(String productId) deleting,
+    required TResult Function(String productId) deleted,
+    required TResult Function() detailLoading,
+    required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
+  }) {
+    return createSuccess(product);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? loading,
+    TResult? Function(
+      List<Product> products,
+      AdminProductFilter filter,
+      String? selectedBrand,
+      StockStatus stockStatus,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+      bool isRefreshing,
+    )?
+    loaded,
+    TResult? Function(String message)? error,
+    TResult? Function(String productId)? deleting,
+    TResult? Function(String productId)? deleted,
+    TResult? Function()? detailLoading,
+    TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
+  }) {
+    return createSuccess?.call(product);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? loading,
+    TResult Function(
+      List<Product> products,
+      AdminProductFilter filter,
+      String? selectedBrand,
+      StockStatus stockStatus,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+      bool isRefreshing,
+    )?
+    loaded,
+    TResult Function(String message)? error,
+    TResult Function(String productId)? deleting,
+    TResult Function(String productId)? deleted,
+    TResult Function()? detailLoading,
+    TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
+    required TResult orElse(),
+  }) {
+    if (createSuccess != null) {
+      return createSuccess(product);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(AdminProductInitial value) initial,
+    required TResult Function(AdminProductLoading value) loading,
+    required TResult Function(AdminProductLoaded value) loaded,
+    required TResult Function(AdminProductError value) error,
+    required TResult Function(AdminProductDeleting value) deleting,
+    required TResult Function(AdminProductDeleted value) deleted,
+    required TResult Function(AdminProductDetailLoading value) detailLoading,
+    required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
+  }) {
+    return createSuccess(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(AdminProductInitial value)? initial,
+    TResult? Function(AdminProductLoading value)? loading,
+    TResult? Function(AdminProductLoaded value)? loaded,
+    TResult? Function(AdminProductError value)? error,
+    TResult? Function(AdminProductDeleting value)? deleting,
+    TResult? Function(AdminProductDeleted value)? deleted,
+    TResult? Function(AdminProductDetailLoading value)? detailLoading,
+    TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
+  }) {
+    return createSuccess?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(AdminProductInitial value)? initial,
+    TResult Function(AdminProductLoading value)? loading,
+    TResult Function(AdminProductLoaded value)? loaded,
+    TResult Function(AdminProductError value)? error,
+    TResult Function(AdminProductDeleting value)? deleting,
+    TResult Function(AdminProductDeleted value)? deleted,
+    TResult Function(AdminProductDetailLoading value)? detailLoading,
+    TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
+    required TResult orElse(),
+  }) {
+    if (createSuccess != null) {
+      return createSuccess(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class AdminProductCreateSuccess extends AdminProductState {
+  const factory AdminProductCreateSuccess({required final Product product}) =
+      _$AdminProductCreateSuccessImpl;
+  const AdminProductCreateSuccess._() : super._();
+
+  Product get product;
+
+  /// Create a copy of AdminProductState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AdminProductCreateSuccessImplCopyWith<_$AdminProductCreateSuccessImpl>
+  get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$AdminProductCreateErrorImplCopyWith<$Res> {
+  factory _$$AdminProductCreateErrorImplCopyWith(
+    _$AdminProductCreateErrorImpl value,
+    $Res Function(_$AdminProductCreateErrorImpl) then,
+  ) = __$$AdminProductCreateErrorImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String message});
+}
+
+/// @nodoc
+class __$$AdminProductCreateErrorImplCopyWithImpl<$Res>
+    extends _$AdminProductStateCopyWithImpl<$Res, _$AdminProductCreateErrorImpl>
+    implements _$$AdminProductCreateErrorImplCopyWith<$Res> {
+  __$$AdminProductCreateErrorImplCopyWithImpl(
+    _$AdminProductCreateErrorImpl _value,
+    $Res Function(_$AdminProductCreateErrorImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of AdminProductState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? message = null}) {
+    return _then(
+      _$AdminProductCreateErrorImpl(
+        message: null == message
+            ? _value.message
+            : message // ignore: cast_nullable_to_non_nullable
+                  as String,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$AdminProductCreateErrorImpl extends AdminProductCreateError {
+  const _$AdminProductCreateErrorImpl({required this.message}) : super._();
+
+  @override
+  final String message;
+
+  @override
+  String toString() {
+    return 'AdminProductState.createError(message: $message)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AdminProductCreateErrorImpl &&
+            (identical(other.message, message) || other.message == message));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, message);
+
+  /// Create a copy of AdminProductState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AdminProductCreateErrorImplCopyWith<_$AdminProductCreateErrorImpl>
+  get copyWith =>
+      __$$AdminProductCreateErrorImplCopyWithImpl<
+        _$AdminProductCreateErrorImpl
+      >(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() loading,
+    required TResult Function(
+      List<Product> products,
+      AdminProductFilter filter,
+      String? selectedBrand,
+      StockStatus stockStatus,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+      bool isRefreshing,
+    )
+    loaded,
+    required TResult Function(String message) error,
+    required TResult Function(String productId) deleting,
+    required TResult Function(String productId) deleted,
+    required TResult Function() detailLoading,
+    required TResult Function(Product product) detailLoaded,
+    required TResult Function() creating,
+    required TResult Function(Product product) createSuccess,
+    required TResult Function(String message) createError,
+  }) {
+    return createError(message);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? loading,
+    TResult? Function(
+      List<Product> products,
+      AdminProductFilter filter,
+      String? selectedBrand,
+      StockStatus stockStatus,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+      bool isRefreshing,
+    )?
+    loaded,
+    TResult? Function(String message)? error,
+    TResult? Function(String productId)? deleting,
+    TResult? Function(String productId)? deleted,
+    TResult? Function()? detailLoading,
+    TResult? Function(Product product)? detailLoaded,
+    TResult? Function()? creating,
+    TResult? Function(Product product)? createSuccess,
+    TResult? Function(String message)? createError,
+  }) {
+    return createError?.call(message);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? loading,
+    TResult Function(
+      List<Product> products,
+      AdminProductFilter filter,
+      String? selectedBrand,
+      StockStatus stockStatus,
+      int currentPage,
+      int totalPages,
+      bool hasMore,
+      int totalCount,
+      bool isLoadingMore,
+      bool isRefreshing,
+    )?
+    loaded,
+    TResult Function(String message)? error,
+    TResult Function(String productId)? deleting,
+    TResult Function(String productId)? deleted,
+    TResult Function()? detailLoading,
+    TResult Function(Product product)? detailLoaded,
+    TResult Function()? creating,
+    TResult Function(Product product)? createSuccess,
+    TResult Function(String message)? createError,
+    required TResult orElse(),
+  }) {
+    if (createError != null) {
+      return createError(message);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(AdminProductInitial value) initial,
+    required TResult Function(AdminProductLoading value) loading,
+    required TResult Function(AdminProductLoaded value) loaded,
+    required TResult Function(AdminProductError value) error,
+    required TResult Function(AdminProductDeleting value) deleting,
+    required TResult Function(AdminProductDeleted value) deleted,
+    required TResult Function(AdminProductDetailLoading value) detailLoading,
+    required TResult Function(AdminProductDetailLoaded value) detailLoaded,
+    required TResult Function(AdminProductCreating value) creating,
+    required TResult Function(AdminProductCreateSuccess value) createSuccess,
+    required TResult Function(AdminProductCreateError value) createError,
+  }) {
+    return createError(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(AdminProductInitial value)? initial,
+    TResult? Function(AdminProductLoading value)? loading,
+    TResult? Function(AdminProductLoaded value)? loaded,
+    TResult? Function(AdminProductError value)? error,
+    TResult? Function(AdminProductDeleting value)? deleting,
+    TResult? Function(AdminProductDeleted value)? deleted,
+    TResult? Function(AdminProductDetailLoading value)? detailLoading,
+    TResult? Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult? Function(AdminProductCreating value)? creating,
+    TResult? Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult? Function(AdminProductCreateError value)? createError,
+  }) {
+    return createError?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(AdminProductInitial value)? initial,
+    TResult Function(AdminProductLoading value)? loading,
+    TResult Function(AdminProductLoaded value)? loaded,
+    TResult Function(AdminProductError value)? error,
+    TResult Function(AdminProductDeleting value)? deleting,
+    TResult Function(AdminProductDeleted value)? deleted,
+    TResult Function(AdminProductDetailLoading value)? detailLoading,
+    TResult Function(AdminProductDetailLoaded value)? detailLoaded,
+    TResult Function(AdminProductCreating value)? creating,
+    TResult Function(AdminProductCreateSuccess value)? createSuccess,
+    TResult Function(AdminProductCreateError value)? createError,
+    required TResult orElse(),
+  }) {
+    if (createError != null) {
+      return createError(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class AdminProductCreateError extends AdminProductState {
+  const factory AdminProductCreateError({required final String message}) =
+      _$AdminProductCreateErrorImpl;
+  const AdminProductCreateError._() : super._();
+
+  String get message;
+
+  /// Create a copy of AdminProductState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AdminProductCreateErrorImplCopyWith<_$AdminProductCreateErrorImpl>
   get copyWith => throw _privateConstructorUsedError;
 }

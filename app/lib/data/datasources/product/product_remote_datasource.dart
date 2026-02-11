@@ -8,7 +8,10 @@
 // 2. Methods: `getProducts`, `getProductDetail`, `createProduct`, `updateProduct`, `deleteProduct`.
 //
 
+import 'package:frontend_otis/data/models/brand_model.dart';
 import 'package:frontend_otis/data/models/product_list_model.dart';
+import 'package:frontend_otis/data/models/product_model.dart';
+import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
 
@@ -40,7 +43,7 @@ abstract class ProductRemoteDatasource {
   /// [product] - The product data to create
   ///
   /// Returns created [ProductModel].
-  Future<ProductListModel> createProduct({required ProductListModel product});
+  Future<ProductModel> createProduct({required ProductModel product});
 
   /// Updates an existing product.
   ///
@@ -74,4 +77,14 @@ abstract class ProductRemoteDatasource {
     required int limit,
     AdminProductFilter? filter,
   });
+
+  /// Retrieves a list of all brands.
+  ///
+  /// Returns list of [BrandModel].
+  Future<List<BrandModel>> getBrands();
+
+  /// Retrieves a list of all vehicle makes.
+  ///
+  /// Returns list of [VehicleMakeModel].
+  Future<List<VehicleMakeModel>> getVehicleMakes();
 }

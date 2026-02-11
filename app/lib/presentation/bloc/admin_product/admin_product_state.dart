@@ -91,6 +91,19 @@ class AdminProductState with _$AdminProductState {
     required Product product,
   }) = AdminProductDetailLoaded;
 
+  /// Create product in progress state
+  const factory AdminProductState.creating() = AdminProductCreating;
+
+  /// Create product success state
+  const factory AdminProductState.createSuccess({
+    required Product product,
+  }) = AdminProductCreateSuccess;
+
+  /// Create product error state
+  const factory AdminProductState.createError({
+    required String message,
+  }) = AdminProductCreateError;
+
   /// Helper: Check if state is initial
   bool get isInitial => this is AdminProductInitial;
 
@@ -310,5 +323,24 @@ class AdminProductState with _$AdminProductState {
   /// Helper: Get detail product (null if not loaded)
   Product? get detailProduct {
     return whenOrNull(detailLoaded: (product) => product);
+  }
+
+  /// Helper: Check if creating product
+  bool get isCreating => this is AdminProductCreating;
+
+  /// Helper: Check if create success
+  bool get isCreateSuccess => this is AdminProductCreateSuccess;
+
+  /// Helper: Check if create error
+  bool get isCreateError => this is AdminProductCreateError;
+
+  /// Helper: Get created product (null if not create success)
+  Product? get createdProduct {
+    return whenOrNull(createSuccess: (product) => product);
+  }
+
+  /// Helper: Get create error message (null if not create error)
+  String? get createErrorMessage {
+    return whenOrNull(createError: (message) => message);
   }
 }

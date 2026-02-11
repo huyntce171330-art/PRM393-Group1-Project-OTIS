@@ -15,8 +15,10 @@
 // UI → AdminProductEvent → AdminProductBloc → UseCase → Repository → DataSource → UI
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend_otis/data/models/product_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/domain/usecases/product/create_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
@@ -42,6 +44,9 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
   /// Use case for deleting a product
   final DeleteProductUsecase deleteProductUsecase;
 
+  /// Use case for creating a product
+  final CreateProductUsecase createProductUsecase;
+
   /// Current filter state for pagination and filtering
   AdminProductFilter _currentFilter = const AdminProductFilter();
 
@@ -57,10 +62,12 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
   /// [getAdminProductsUsecase]: Required use case for fetching admin products
   /// [getProductDetailUsecase]: Required use case for fetching product details
   /// [deleteProductUsecase]: Required use case for deleting products
+  /// [createProductUsecase]: Required use case for creating products
   AdminProductBloc({
     required this.getAdminProductsUsecase,
     required this.getProductDetailUsecase,
     required this.deleteProductUsecase,
+    required this.createProductUsecase,
   }) : super(AdminProductState.initial()) {
     // Register event handlers
     _registerEventHandlers();
@@ -478,6 +485,30 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
         },
       );
     });
+
+    // Handle CreateProductEvent - Create a new product
+    on<CreateProductEvent>((event, emit) async {
+      print('=== DEBUG BLOC: CreateProductEvent ===');
+      print('DEBUG: product.name: ${event.product.name}');
+      print('DEBUG: product.sku: ${event.product.sku}');
+
+      // Emit creating state
+      emit(AdminProductState.creating());
+
+      // Use createProductUsecase to create the product
+      final result = await createProductUsecase(CreateProductParams(product: event.product));
+
+      result.fold(
+        (failure) {
+          print('DEBUG: Create failed: ${failure.message}');
+          emit(AdminProductState.createError(message: failure.message));
+        },
+        (product) {
+          print('DEBUG: Product created successfully: ${product.id}');
+          emit(AdminProductState.createSuccess(product: product));
+        },
+      );
+    });
   }
 
   /// Get previous loaded state for recovery after errors
@@ -555,5 +586,10 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
   /// Get product details by ID
   void getProductDetail(String productId) {
     add(GetProductDetailEvent(productId: productId));
+  }
+
+  /// Create a new product
+  void createProduct(ProductModel product) {
+    add(CreateProductEvent(product: product));
   }
 }

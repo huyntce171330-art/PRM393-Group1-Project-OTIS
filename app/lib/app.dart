@@ -7,6 +7,7 @@ import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dar
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_products_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_create_product_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/home_screen.dart';
@@ -78,11 +79,7 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/admin/products/create',
           name: 'admin-product-create',
-          builder: (context, state) => const Scaffold(
-            body: Center(
-              child: Text('Create Product Screen - To be implemented'),
-            ),
-          ),
+          builder: (context, state) => const AdminCreateProductScreen(),
         ),
         GoRoute(
           path: '/admin/products/:id',

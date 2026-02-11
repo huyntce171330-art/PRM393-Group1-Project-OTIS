@@ -18,8 +18,11 @@ import 'package:frontend_otis/data/datasources/product/product_remote_datasource
 import 'package:frontend_otis/data/datasources/product/product_remote_datasource_impl.dart';
 import 'package:frontend_otis/data/repositories/product_repository_impl.dart';
 import 'package:frontend_otis/domain/repositories/product_repository.dart';
+import 'package:frontend_otis/domain/usecases/product/create_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/get_brands_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_products_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/get_vehicle_makes_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/search_products_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase.dart';
@@ -82,6 +85,21 @@ Future<void> init() async {
     () => GetAdminProductsUsecase(productRepository: sl()),
   );
 
+  // Create Product Use Case
+  sl.registerLazySingleton<CreateProductUsecase>(
+    () => CreateProductUsecase(productRepository: sl()),
+  );
+
+  // Get Brands Use Case
+  sl.registerLazySingleton<GetBrandsUsecase>(
+    () => GetBrandsUsecase(productRepository: sl()),
+  );
+
+  // Get Vehicle Makes Use Case
+  sl.registerLazySingleton<GetVehicleMakesUsecase>(
+    () => GetVehicleMakesUsecase(productRepository: sl()),
+  );
+
   // ========== 6. BLOCS ==========
   // Product BLoC
   sl.registerLazySingleton<ProductBloc>(
@@ -97,6 +115,7 @@ Future<void> init() async {
       getAdminProductsUsecase: sl(),
       getProductDetailUsecase: sl(),
       deleteProductUsecase: sl(),
+      createProductUsecase: sl(),
     ),
   );
 

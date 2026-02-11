@@ -1,3 +1,4 @@
+import 'package:frontend_otis/core/error/failures.dart';
 import 'package:frontend_otis/data/datasources/product/product_remote_datasource.dart';
 import 'package:frontend_otis/data/models/brand_model.dart';
 import 'package:frontend_otis/data/models/product_list_model.dart';
@@ -347,11 +348,129 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
   }
 
   @override
-  Future<ProductListModel> createProduct({
-    required ProductListModel product,
+  Future<ProductModel> createProduct({
+    required ProductModel product,
   }) async {
-    // TODO: Implement create product logic if needed
-    throw UnimplementedError('createProduct not yet implemented');
+    print('=== DEBUG createProduct ===');
+    print('DEBUG: product.name: ${product.name}');
+    print('DEBUG: product.sku: ${product.sku}');
+    print('DEBUG: product.tireSpec: width=${product.tireSpec.width}, aspect=${product.tireSpec.aspectRatio}, rim=${product.tireSpec.rimDiameter}');
+    print('DEBUG: product.brand: id=${product.brand.id}, name=${product.brand.name}');
+    print('DEBUG: product.vehicleMake: id=${product.vehicleMake.id}, name=${product.vehicleMake.name}');
+
+    // 1. First, handle tire_spec - check if exists or insert new
+    int tireSpecId;
+    final tireSpec = product.tireSpec;
+
+    // Check if tire_spec with same specs exists
+    final existingTireSpec = await database.rawQuery(
+      'SELECT tire_spec_id FROM tire_specs WHERE width = ? AND aspect_ratio = ? AND rim_diameter = ?',
+      [tireSpec.width, tireSpec.aspectRatio, tireSpec.rimDiameter],
+    );
+
+    if (existingTireSpec.isNotEmpty) {
+      // Use existing tire_spec
+      tireSpecId = existingTireSpec.first['tire_spec_id'] as int;
+      print('DEBUG: Using existing tire_spec_id: $tireSpecId');
+    } else {
+      // Insert new tire_spec
+      final tireSpecResult = await database.rawInsert(
+        'INSERT INTO tire_specs (width, aspect_ratio, rim_diameter) VALUES (?, ?, ?)',
+        [tireSpec.width, tireSpec.aspectRatio, tireSpec.rimDiameter],
+      );
+      tireSpecId = tireSpecResult;
+      print('DEBUG: Created new tire_spec_id: $tireSpecId');
+    }
+
+    // 2. Get brand_id and make_id from the model (they should already be IDs)
+    final brandId = int.tryParse(product.brand.id) ?? 0;
+    final makeId = int.tryParse(product.vehicleMake.id) ?? 0;
+
+    print('DEBUG: brandId: $brandId, makeId: $makeId');
+
+    // 3. Insert the product
+    int newProductId;
+    try {
+      final productResult = await database.rawInsert(
+        '''
+        INSERT INTO products (sku, name, image_url, brand_id, make_id, tire_spec_id, price, stock_quantity, is_active, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''',
+        [
+          product.sku,
+          product.name,
+          product.imageUrl,
+          brandId > 0 ? brandId : null,
+          makeId > 0 ? makeId : null,
+          tireSpecId,
+          product.price,
+          product.stockQuantity,
+          product.isActive ? 1 : 0,
+          DateTime.now().toIso8601String(),
+        ],
+      );
+
+      newProductId = productResult;
+      print('DEBUG: Created product with id: $newProductId');
+    } on DatabaseException catch (e) {
+      // Handle duplicate SKU error
+      if (e.toString().contains('UNIQUE constraint failed: products.sku')) {
+        print('DEBUG: Duplicate SKU error detected');
+        throw ValidationFailure(
+          message: 'SKU "${product.sku}" đã tồn tại. Vui lòng sử dụng SKU khác.',
+        );
+      }
+      // Re-throw other database errors as CacheFailure
+      print('DEBUG: Database error: $e');
+      throw CacheFailure(message: 'Lỗi cơ sở dữ liệu: $e');
+    }
+
+    // 4. Fetch and return the created product
+    final result = await database.rawQuery(
+      '''
+      SELECT
+        p.product_id as id,
+        p.sku,
+        p.name,
+        p.image_url,
+        p.price,
+        p.stock_quantity,
+        p.is_active,
+        p.created_at,
+
+        -- Brand Info
+        b.brand_id as brand_id,
+        b.name as brand_name,
+        b.logo_url as brand_logo_url,
+
+        -- Vehicle Make Info
+        vm.make_id as vehicle_make_id,
+        vm.name as vehicle_make_name,
+        vm.logo_url as vehicle_make_logo_url,
+
+        -- Tire Spec Info
+        ts.tire_spec_id as tire_spec_id,
+        ts.width,
+        ts.aspect_ratio,
+        ts.rim_diameter
+
+      FROM products p
+      LEFT JOIN brands b ON p.brand_id = b.brand_id
+      LEFT JOIN vehicle_makes vm ON p.make_id = vm.make_id
+      LEFT JOIN tire_specs ts ON p.tire_spec_id = ts.tire_spec_id
+      WHERE p.product_id = ?
+      LIMIT 1
+    ''',
+      [newProductId],
+    );
+
+    if (result.isEmpty) {
+      throw Exception('Failed to fetch created product');
+    }
+
+    final createdProduct = _rowToProductModel(result.first);
+
+    return createdProduct;
   }
 
   @override
@@ -419,5 +538,41 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
       return DateTime.fromMillisecondsSinceEpoch(value);
     }
     return DateTime.now();
+  }
+
+  @override
+  Future<List<BrandModel>> getBrands() async {
+    print('=== DEBUG getBrands ===');
+    final result = await database.rawQuery(
+      'SELECT brand_id as id, name, logo_url FROM brands ORDER BY name ASC',
+    );
+
+    print('DEBUG: Found ${result.length} brands');
+
+    return result.map((row) {
+      return BrandModel(
+        id: (row['id'] as int?)?.toString() ?? '',
+        name: (row['name'] as String?) ?? '',
+        logoUrl: (row['logo_url'] as String?) ?? '',
+      );
+    }).toList();
+  }
+
+  @override
+  Future<List<VehicleMakeModel>> getVehicleMakes() async {
+    print('=== DEBUG getVehicleMakes ===');
+    final result = await database.rawQuery(
+      'SELECT make_id as id, name, logo_url FROM vehicle_makes ORDER BY name ASC',
+    );
+
+    print('DEBUG: Found ${result.length} vehicle makes');
+
+    return result.map((row) {
+      return VehicleMakeModel(
+        id: (row['id'] as int?)?.toString() ?? '',
+        name: (row['name'] as String?) ?? '',
+        logoUrl: (row['logo_url'] as String?) ?? '',
+      );
+    }).toList();
   }
 }

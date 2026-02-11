@@ -515,5 +515,51 @@ void main() {
         },
       );
     });
+
+    group('createProduct', () {
+      test(
+        'should return product when datasource succeeds',
+        () async {
+          // Arrange
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+          when(() => mockDatasource.createProduct(product: tProductModel))
+              .thenAnswer((_) async => tProductModel);
+
+          // Act
+          final result = await repository.createProduct(product: tProductModel);
+
+          // Assert
+          expect(result.isRight(), true);
+          result.fold(
+            (failure) => fail('Should not return failure'),
+            (product) {
+              expect(product.sku, equals(tProductModel.sku));
+              expect(product.name, equals(tProductModel.name));
+            },
+          );
+          verify(() => mockDatasource.createProduct(product: tProductModel)).called(1);
+        },
+      );
+
+      test(
+        'should return left with NetworkFailure when no network',
+        () async {
+          // Arrange
+          when(() => mockNetworkInfo.isConnected).thenAnswer((_) async => false);
+
+          // Act
+          final result = await repository.createProduct(product: tProductModel);
+
+          // Assert
+          expect(result.isLeft(), true);
+          result.fold(
+            (failure) {
+              expect(failure, isA<NetworkFailure>());
+            },
+            (_) => fail('Should not return product'),
+          );
+        },
+      );
+    });
   });
 }

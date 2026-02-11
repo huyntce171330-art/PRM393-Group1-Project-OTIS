@@ -88,6 +88,9 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
               deleting: (_) => _buildLoadingState(),
               deleted: (_) => _buildLoadingState(),
               error: (message) => _buildErrorState(message, context),
+              creating: () => _buildLoadingState(),
+              createSuccess: (_) => _buildLoadingState(),
+              createError: (message) => _buildErrorState(message, context),
             );
           },
         ),

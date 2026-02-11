@@ -11,6 +11,7 @@
 // 1. Define events: `GetAdminProductsEvent`, `FilterByBrandEvent`, etc.
 
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:frontend_otis/data/models/product_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 
 part 'admin_product_event.freezed.dart';
@@ -77,4 +78,10 @@ class AdminProductEvent with _$AdminProductEvent {
   const factory AdminProductEvent.getProductDetail({
     required String productId,
   }) = GetProductDetailEvent;
+
+  /// Event to create a new product
+  /// Triggers product creation and returns success/error state
+  const factory AdminProductEvent.createProduct({
+    required ProductModel product,
+  }) = CreateProductEvent;
 }

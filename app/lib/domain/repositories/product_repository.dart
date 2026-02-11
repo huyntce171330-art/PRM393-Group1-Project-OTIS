@@ -7,6 +7,9 @@
 
 import 'package:dartz/dartz.dart';
 import 'package:frontend_otis/core/error/failures.dart';
+import 'package:frontend_otis/data/models/brand_model.dart';
+import 'package:frontend_otis/data/models/product_model.dart';
+import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
@@ -72,4 +75,21 @@ abstract class ProductRepository {
   ///
   /// Returns [Either<Failure, bool>] - true if deletion was successful, or failure
   Future<Either<Failure, bool>> deleteProduct({required String productId});
+
+  /// Creates a new product.
+  ///
+  /// [product] - The product data to create (ProductModel)
+  ///
+  /// Returns [Either<Failure, Product>] - Created product domain entity or failure
+  Future<Either<Failure, Product>> createProduct({required ProductModel product});
+
+  /// Retrieves a list of all brands.
+  ///
+  /// Returns [Either<Failure, List<BrandModel>>] - List of brands or failure
+  Future<Either<Failure, List<BrandModel>>> getBrands();
+
+  /// Retrieves a list of all vehicle makes.
+  ///
+  /// Returns [Either<Failure, List<VehicleMakeModel>>] - List of vehicle makes or failure
+  Future<Either<Failure, List<VehicleMakeModel>>> getVehicleMakes();
 }

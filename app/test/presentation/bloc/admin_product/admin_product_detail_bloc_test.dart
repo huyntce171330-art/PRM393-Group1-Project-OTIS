@@ -22,6 +22,7 @@ import 'package:frontend_otis/domain/entities/vehicle_make.dart';
 import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/create_product_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_event.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_state.dart';
@@ -33,6 +34,8 @@ class MockDeleteProductUsecase extends Mock implements DeleteProductUsecase {}
 
 class MockGetProductDetailUsecase extends Mock
     implements GetProductDetailUsecase {}
+
+class MockCreateProductUsecase extends Mock implements CreateProductUsecase {}
 
 class FakeProductFilter extends Fake implements ProductFilter {}
 
@@ -283,15 +286,18 @@ void main() {
   late MockGetAdminProductsUsecase mockGetAdminProductsUsecase;
   late MockDeleteProductUsecase mockDeleteProductUsecase;
   late MockGetProductDetailUsecase mockGetProductDetailUsecase;
+  late MockCreateProductUsecase mockCreateProductUsecase;
 
   setUp(() {
     mockGetAdminProductsUsecase = MockGetAdminProductsUsecase();
     mockDeleteProductUsecase = MockDeleteProductUsecase();
     mockGetProductDetailUsecase = MockGetProductDetailUsecase();
+    mockCreateProductUsecase = MockCreateProductUsecase();
     bloc = AdminProductBloc(
       getAdminProductsUsecase: mockGetAdminProductsUsecase,
       getProductDetailUsecase: mockGetProductDetailUsecase,
       deleteProductUsecase: mockDeleteProductUsecase,
+      createProductUsecase: mockCreateProductUsecase,
     );
   });
 
@@ -349,6 +355,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '1')),
       expect: () => [
@@ -376,6 +383,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '1')),
       expect: () => [
@@ -406,6 +414,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '1')),
       expect: () => [
@@ -432,6 +441,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '1')),
       expect: () => [
@@ -456,6 +466,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '1')),
       expect: () => [
@@ -477,6 +488,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '999')),
       expect: () => [
@@ -497,6 +509,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '1')),
       expect: () => [
@@ -519,6 +532,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '1')),
       expect: () => [
@@ -545,6 +559,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '6')),
       expect: () => [
@@ -570,6 +585,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '3')),
       expect: () => [
@@ -594,6 +610,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '2')),
       expect: () => [
@@ -618,6 +635,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '4')),
       expect: () => [
@@ -641,6 +659,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '5')),
       expect: () => [
@@ -664,6 +683,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '7')),
       expect: () => [
@@ -687,6 +707,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) =>
           bloc.add(const GetProductDetailEvent(productId: 'test-id-123')),
@@ -710,6 +731,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '1')),
       expect: () => [
@@ -731,6 +753,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetProductDetailEvent(productId: '1')),
       expect: () => [
@@ -765,6 +788,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const DeleteProductEvent(productId: '1')),
       expect: () => [
@@ -789,6 +813,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) => bloc.add(const DeleteProductEvent(productId: '1')),
       expect: () => [
@@ -872,6 +897,7 @@ void main() {
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
       ),
       act: (bloc) async {
         bloc.add(const GetProductDetailEvent(productId: '1'));
