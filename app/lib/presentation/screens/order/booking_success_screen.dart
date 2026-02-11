@@ -54,15 +54,6 @@ class BookingSuccessScreen extends StatelessWidget {
 
                 // Main Ticket Card
                 _buildTicketCard(context),
-
-                const SizedBox(height: 24),
-
-                // Bottom Helper Text
-                Text(
-                  'A copy of this confirmation has been saved to your order history.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
               ],
             ),
           ),
@@ -372,17 +363,15 @@ class BookingSuccessScreen extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
-        // Add to Calendar Button (Matching Template)
+        // Back to My Orders Button
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Added to calendar')),
-              );
+              context.go('/orders');
             },
-            icon: const Icon(Icons.calendar_month),
-            label: const Text('Add to Apple Calendar'),
+            icon: const Icon(Icons.receipt_long),
+            label: const Text('Back to My Orders'),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF4F0F0),
               foregroundColor: Colors.black87,
