@@ -13,6 +13,7 @@ import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_orders_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_order_details_screen.dart';
 import 'package:frontend_otis/presentation/screens/cart/cart_screen.dart';
 import 'package:frontend_otis/presentation/screens/cart/checkout_screen.dart';
 import 'package:frontend_otis/presentation/screens/home_screen.dart';
@@ -108,6 +109,14 @@ final GoRouter router = GoRouter(
       path: '/admin/orders',
       name: 'admin-orders',
       builder: (context, state) => const AdminOrdersScreen(),
+    ),
+    GoRoute(
+      path: '/admin/order/:orderId',
+      name: 'admin-order-detail',
+      builder: (context, state) {
+        final orderId = state.pathParameters['orderId']!;
+        return AdminOrderDetailsScreen(orderId: orderId);
+      },
     ),
     GoRoute(
       path: '/order/:id',
