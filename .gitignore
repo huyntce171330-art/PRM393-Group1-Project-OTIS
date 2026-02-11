@@ -62,3 +62,7 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
+
+# Config files
+config/
+.env
