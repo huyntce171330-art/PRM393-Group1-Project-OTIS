@@ -5,8 +5,19 @@ import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
+import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
+
+import 'package:frontend_otis/core/enums/order_enums.dart';
+import 'package:frontend_otis/domain/entities/cart_item.dart';
+import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_orders_screen.dart';
 import 'package:frontend_otis/presentation/screens/cart/cart_screen.dart';
+import 'package:frontend_otis/presentation/screens/cart/checkout_screen.dart';
 import 'package:frontend_otis/presentation/screens/home_screen.dart';
+import 'package:frontend_otis/presentation/screens/payment/payment_screen.dart';
+import 'package:frontend_otis/presentation/screens/order/order_detail_screen.dart';
+import 'package:frontend_otis/presentation/screens/order/order_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/product/product_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/product/product_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/splash_screen.dart';
@@ -49,6 +60,45 @@ final GoRouter router = GoRouter(
       name: 'cart',
       builder: (context, state) => const CartScreen(),
     ),
+    GoRoute(
+      path: '/orders',
+      name: 'order-list',
+      builder: (context, state) => const OrderListScreen(),
+    ),
+    GoRoute(
+      path: '/checkout',
+      name: 'checkout',
+      builder: (context, state) {
+        final items = state.extra as List<CartItem>;
+        return CheckoutScreen(items: items);
+      },
+    ),
+    GoRoute(
+      path: '/payment',
+      name: 'payment',
+      builder: (context, state) {
+        final extras = state.extra as Map<String, dynamic>;
+        final order = extras['order'] as Order;
+        final method = extras['method'] as PaymentMethod?;
+        return BlocProvider(
+          create: (context) => di.sl<PaymentBloc>(),
+          child: PaymentScreen(order: order, initialMethod: method),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/admin/orders',
+      name: 'admin-orders',
+      builder: (context, state) => const AdminOrdersScreen(),
+    ),
+    GoRoute(
+      path: '/order/:id',
+      name: 'order-detail',
+      builder: (context, state) {
+        final orderId = state.pathParameters['id']!;
+        return OrderDetailScreen(orderId: orderId);
+      },
+    ),
   ],
   errorPageBuilder: (context, state) => MaterialPage(
     child: Scaffold(
@@ -84,6 +134,7 @@ class OtisApp extends StatelessWidget {
         BlocProvider<CartBloc>(
           create: (context) => di.sl<CartBloc>()..add(LoadCartEvent()),
         ),
+        BlocProvider<OrderBloc>(create: (context) => di.sl<OrderBloc>()),
       ],
       child: MaterialApp.router(
         title: 'OTIS Project',

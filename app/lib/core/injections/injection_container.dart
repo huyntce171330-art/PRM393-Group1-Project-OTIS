@@ -33,6 +33,21 @@ import 'package:frontend_otis/domain/usecases/cart/get_cart_usecase.dart';
 import 'package:frontend_otis/domain/usecases/cart/update_cart_usecase.dart';
 import 'package:frontend_otis/domain/usecases/cart/remove_from_cart_usecase.dart';
 import 'package:frontend_otis/domain/usecases/cart/clear_cart_usecase.dart';
+import 'package:frontend_otis/data/datasources/payment/payment_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/repositories/payment_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/payment_repository.dart';
+import 'package:frontend_otis/domain/usecases/payment/create_payment_usecase.dart';
+import 'package:frontend_otis/domain/usecases/payment/process_payment_usecase.dart';
+import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
+import 'package:frontend_otis/data/datasources/order/order_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/order/order_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/repositories/order_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/order_repository.dart';
+import 'package:frontend_otis/domain/usecases/order/create_order_usecase.dart';
+import 'package:frontend_otis/domain/usecases/order/get_order_detail_usecase.dart';
+import 'package:frontend_otis/domain/usecases/order/get_orders_usecase.dart';
+import 'package:frontend_otis/domain/usecases/order/update_order_status_usecase.dart';
+import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -65,6 +80,16 @@ Future<void> init() async {
     () => CartRemoteDatasourceImpl(apiClient: sl()),
   );
 
+  // Payment Data Source
+  sl.registerLazySingleton<PaymentRemoteDataSource>(
+    () => PaymentRemoteDataSourceImpl(),
+  );
+
+  // Order Data Source
+  sl.registerLazySingleton<OrderRemoteDatasource>(
+    () => OrderRemoteDatasourceImpl(),
+  );
+
   // ========== 4. REPOSITORIES ==========
   // Product Repository
   sl.registerLazySingleton<ProductRepository>(
@@ -75,6 +100,16 @@ Future<void> init() async {
   // Cart Repository
   sl.registerLazySingleton<CartRepository>(
     () => CartRepositoryImpl(cartRemoteDatasource: sl()),
+  );
+
+  // Payment Repository
+  sl.registerLazySingleton<PaymentRepository>(
+    () => PaymentRepositoryImpl(sl()),
+  );
+
+  // Order Repository
+  sl.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImpl(remoteDatasource: sl()),
   );
 
   // ========== 5. USE CASES ==========
@@ -108,6 +143,24 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ClearCartUsecase>(() => ClearCartUsecase(sl()));
 
+  // Payment Use Cases
+  sl.registerLazySingleton<CreatePaymentUseCase>(
+    () => CreatePaymentUseCase(sl()),
+  );
+  sl.registerLazySingleton<ProcessPaymentUseCase>(
+    () => ProcessPaymentUseCase(sl()),
+  );
+
+  // Order Use Cases
+  sl.registerLazySingleton<GetOrdersUseCase>(() => GetOrdersUseCase(sl()));
+  sl.registerLazySingleton<GetOrderDetailUseCase>(
+    () => GetOrderDetailUseCase(sl()),
+  );
+  sl.registerLazySingleton<CreateOrderUseCase>(() => CreateOrderUseCase(sl()));
+  sl.registerLazySingleton<UpdateOrderStatusUseCase>(
+    () => UpdateOrderStatusUseCase(sl()),
+  );
+
   // ========== 6. BLOCS ==========
   // Product BLoC
   sl.registerLazySingleton<ProductBloc>(
@@ -122,6 +175,21 @@ Future<void> init() async {
       updateCartUsecase: sl(),
       removeFromCartUsecase: sl(),
       clearCartUsecase: sl(),
+    ),
+  );
+
+  // Payment BLoC
+  sl.registerFactory<PaymentBloc>(
+    () => PaymentBloc(createPayment: sl(), processPayment: sl()),
+  );
+
+  // Order BLoC
+  sl.registerFactory<OrderBloc>(
+    () => OrderBloc(
+      getOrdersUseCase: sl(),
+      getOrderDetailUseCase: sl(),
+      createOrderUseCase: sl(),
+      updateOrderStatusUseCase: sl(),
     ),
   );
 

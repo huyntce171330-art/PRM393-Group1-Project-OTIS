@@ -2,51 +2,50 @@ import 'package:json_annotation/json_annotation.dart';
 
 /// Order status in the system.
 /// Maps to database status: 'pending', 'shipping', 'delivered', 'cancelled'
-enum OrderStatus {
-  pending,
-  shipping,
-  delivered,
-  cancelled,
-}
+enum OrderStatus { pendingPayment, paid, processing, completed, cancelled }
 
 /// Payment method for orders.
 /// Maps to database payment_method: 'cash', 'transfer'
-enum PaymentMethod {
-  cash,
-  transfer,
-}
+enum PaymentMethod { cash, transfer }
+
+/// Payment status in the system.
+/// Maps to database status: 'pending', 'success', 'failed'
+enum PaymentStatus { pending, success, failed }
 
 /// JSON converter for OrderStatus to handle string mapping from database.
-/// Maps status from database (string values) to enum values.
 class OrderStatusConverter implements JsonConverter<OrderStatus, String> {
   const OrderStatusConverter();
 
   @override
   OrderStatus fromJson(String json) {
     switch (json.toLowerCase()) {
-      case 'pending':
-        return OrderStatus.pending;
-      case 'shipping':
-        return OrderStatus.shipping;
-      case 'delivered':
-        return OrderStatus.delivered;
+      case 'pending_payment':
+      case 'pendingpayment':
+        return OrderStatus.pendingPayment;
+      case 'paid':
+        return OrderStatus.paid;
+      case 'processing':
+        return OrderStatus.processing;
+      case 'completed':
+        return OrderStatus.completed;
       case 'cancelled':
         return OrderStatus.cancelled;
       default:
-        // Default to pending for unknown values (defensive programming)
-        return OrderStatus.pending;
+        return OrderStatus.pendingPayment;
     }
   }
 
   @override
   String toJson(OrderStatus object) {
     switch (object) {
-      case OrderStatus.pending:
-        return 'pending';
-      case OrderStatus.shipping:
-        return 'shipping';
-      case OrderStatus.delivered:
-        return 'delivered';
+      case OrderStatus.pendingPayment:
+        return 'pending_payment';
+      case OrderStatus.paid:
+        return 'paid';
+      case OrderStatus.processing:
+        return 'processing';
+      case OrderStatus.completed:
+        return 'completed';
       case OrderStatus.cancelled:
         return 'cancelled';
     }
@@ -82,17 +81,50 @@ class PaymentMethodConverter implements JsonConverter<PaymentMethod, String> {
   }
 }
 
+/// JSON converter for PaymentStatus to handle string mapping from database.
+class PaymentStatusConverter implements JsonConverter<PaymentStatus, String> {
+  const PaymentStatusConverter();
+
+  @override
+  PaymentStatus fromJson(String json) {
+    switch (json.toLowerCase()) {
+      case 'pending':
+        return PaymentStatus.pending;
+      case 'success':
+        return PaymentStatus.success;
+      case 'failed':
+        return PaymentStatus.failed;
+      default:
+        return PaymentStatus.pending;
+    }
+  }
+
+  @override
+  String toJson(PaymentStatus object) {
+    switch (object) {
+      case PaymentStatus.pending:
+        return 'pending';
+      case PaymentStatus.success:
+        return 'success';
+      case PaymentStatus.failed:
+        return 'failed';
+    }
+  }
+}
+
 /// Extension methods for OrderStatus enum
 extension OrderStatusExtension on OrderStatus {
   /// Get the display name for the status
   String get displayName {
     switch (this) {
-      case OrderStatus.pending:
-        return 'Pending';
-      case OrderStatus.shipping:
-        return 'Shipping';
-      case OrderStatus.delivered:
-        return 'Delivered';
+      case OrderStatus.pendingPayment:
+        return 'Pending Payment';
+      case OrderStatus.paid:
+        return 'Paid';
+      case OrderStatus.processing:
+        return 'Processing';
+      case OrderStatus.completed:
+        return 'Completed';
       case OrderStatus.cancelled:
         return 'Cancelled';
     }
@@ -100,13 +132,14 @@ extension OrderStatusExtension on OrderStatus {
 
   /// Check if the order can be cancelled
   bool get canBeCancelled =>
-      this == OrderStatus.pending || this == OrderStatus.shipping;
+      this == OrderStatus.pendingPayment || this == OrderStatus.paid;
 
   /// Check if the order is completed
-  bool get isCompleted => this == OrderStatus.delivered;
+  bool get isCompleted => this == OrderStatus.completed;
 
   /// Check if the order is in progress
-  bool get isInProgress => this == OrderStatus.pending || this == OrderStatus.shipping;
+  bool get isInProgress =>
+      this == OrderStatus.processing || this == OrderStatus.paid;
 }
 
 /// Extension methods for PaymentMethod enum
@@ -128,6 +161,21 @@ extension PaymentMethodExtension on PaymentMethod {
         return 'Pay with cash upon delivery';
       case PaymentMethod.transfer:
         return 'Pay via bank transfer';
+    }
+  }
+}
+
+/// Extension methods for PaymentStatus enum
+extension PaymentStatusExtension on PaymentStatus {
+  /// Get the display name for the payment status
+  String get displayName {
+    switch (this) {
+      case PaymentStatus.pending:
+        return 'Pending';
+      case PaymentStatus.success:
+        return 'Success';
+      case PaymentStatus.failed:
+        return 'Failed';
     }
   }
 }

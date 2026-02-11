@@ -145,14 +145,16 @@ class OrderModel {
 
   /// Parse order status from JSON to OrderStatus enum with defensive handling.
   static OrderStatus _parseOrderStatus(dynamic value) {
-    if (value == null) return OrderStatus.pending; // Default to pending
+    if (value == null) {
+      return OrderStatus.pendingPayment; // Default to pendingPayment
+    }
 
     if (value is String) {
       return const OrderStatusConverter().fromJson(value);
     }
 
-    // Default to pending for non-string values
-    return OrderStatus.pending;
+    // Default to pendingPayment for non-string values
+    return OrderStatus.pendingPayment;
   }
 
   /// Parse order items from JSON array.

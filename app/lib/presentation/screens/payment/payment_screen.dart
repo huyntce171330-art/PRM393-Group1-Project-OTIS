@@ -1,8 +1,220 @@
-// Screen for Payment.
-//
-// Steps:
-// 1. Receive `Order` object or `amount`.
-// 2. Display Order Summary.
-// 3. Payment Method Selection (Radio buttons/Dropdown).
-// 4. "Confirm Payment" button -> Dispatch `ProcessPaymentEvent`.
-// 5. Handle `PaymentSuccess` state -> Show Success Dialog -> Navigate to Home/Order History.
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:frontend_otis/core/constants/app_colors.dart';
+import 'package:frontend_otis/core/enums/order_enums.dart';
+import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/payment/payment_event.dart';
+import 'package:frontend_otis/presentation/bloc/payment/payment_state.dart';
+import 'package:go_router/go_router.dart';
+
+class PaymentScreen extends StatefulWidget {
+  final Order order;
+  final PaymentMethod? initialMethod;
+
+  const PaymentScreen({super.key, required this.order, this.initialMethod});
+
+  @override
+  State<PaymentScreen> createState() => _PaymentScreenState();
+}
+
+class _PaymentScreenState extends State<PaymentScreen> {
+  late PaymentMethod _selectedMethod;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMethod = widget.initialMethod ?? PaymentMethod.cash;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<PaymentBloc, PaymentState>(
+      listener: (context, state) {
+        if (state is PaymentInitiated) {
+          if (state.payment.method == PaymentMethod.cash) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Order placed successfully (COD)"),
+                backgroundColor: AppColors.success,
+              ),
+            );
+            context.pop(true);
+          }
+        } else if (state is PaymentSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Payment Confirmed"),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          context.pop(true);
+        } else if (state is PaymentFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              state is PaymentInitiated ? "Scan to Pay" : "Select Payment",
+            ),
+            centerTitle: true,
+          ),
+          body:
+              state is PaymentInitiated &&
+                  state.payment.method == PaymentMethod.transfer
+              ? _buildQRCodeView(context, state.payment.paymentCode)
+              : _buildSelectionView(context, state is PaymentLoading),
+        );
+      },
+    );
+  }
+
+  Widget _buildSelectionView(BuildContext context, bool isLoading) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Order Amount: ${widget.order.formattedTotalAmount}",
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            "Choose Payment Method",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 16),
+          _buildMethodOption(
+            PaymentMethod.cash,
+            "Cash on Delivery",
+            Icons.money,
+          ),
+          const SizedBox(height: 12),
+          _buildMethodOption(
+            PaymentMethod.transfer,
+            "Bank Transfer",
+            Icons.account_balance,
+          ),
+          const Spacer(),
+          if (isLoading)
+            const Center(child: CircularProgressIndicator())
+          else
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  context.read<PaymentBloc>().add(
+                    SelectPaymentMethodEvent(
+                      orderId: widget.order.id,
+                      method: _selectedMethod,
+                      amount: widget.order.totalAmount,
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text("Confirm Payment Method"),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMethodOption(PaymentMethod method, String label, IconData icon) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedMethod = method;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: _selectedMethod == method
+                ? AppColors.primary
+                : Colors.grey[300]!,
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: _selectedMethod == method
+                  ? AppColors.primary
+                  : Colors.grey,
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: _selectedMethod == method
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+            ),
+            const Spacer(),
+            if (_selectedMethod == method)
+              const Icon(Icons.check_circle, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQRCodeView(BuildContext context, String qrContent) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            QrImageView(
+              data: qrContent,
+              version: QrVersions.auto,
+              size: 220,
+              backgroundColor: Colors.white,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              widget.order.formattedTotalAmount,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 48),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  context.read<PaymentBloc>().add(
+                    ProcessPaymentEvent(widget.order.id),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text("I Have Paid"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

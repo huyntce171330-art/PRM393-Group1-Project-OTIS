@@ -18,24 +18,18 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  // Check if CartBloc is already provided by parent context or needs injection
-  // In a real app, CartBloc is often global. Assuming it's a singleton in DI.
   late CartBloc _cartBloc;
   final Set<String> _selectedItemIds = {};
-
   bool _hasInitializedSelection = false;
 
   @override
   void initState() {
     super.initState();
-    // Assuming we want to use the global singleton instance from GetIt
-    // and provide it if not already in context.
     try {
       _cartBloc = context.read<CartBloc>();
     } catch (_) {
       _cartBloc = di.sl<CartBloc>();
     }
-    // Only load if not already loaded? Or always refresh?
     if (_cartBloc.state is CartInitial) {
       _cartBloc.add(LoadCartEvent());
     }
@@ -47,7 +41,6 @@ class _CartScreenState extends State<CartScreen> {
       _selectedItemIds.addAll(state.cartItems.map((e) => e.productId));
       _hasInitializedSelection = true;
     } else {
-      // Maintain selection for existing items
       final currentIds = state.cartItems.map((e) => e.productId).toSet();
       _selectedItemIds.removeWhere((id) => !currentIds.contains(id));
     }
@@ -55,11 +48,11 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // If context doesn't have CartBloc, wrap with BlocProvider.value
-    // But usually routes are wrapped or global.
-    // For safety, let's wrap just in case this is a pushed route without provider.
-    return BlocProvider.value(
-      value: _cartBloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _cartBloc),
+        // Ensure OrderBloc is available (it should be global, but good to check)
+      ],
       child: BlocBuilder<CartBloc, CartState>(
         builder: (context, state) {
           int count = 0;
@@ -70,11 +63,10 @@ class _CartScreenState extends State<CartScreen> {
           return Scaffold(
             backgroundColor: Theme.of(context).brightness == Brightness.dark
                 ? AppColors.backgroundDark
-                : const Color(0xFFF8F6F6), // background-light
+                : const Color(0xFFF8F6F6),
             appBar: HeaderBar(
               title: 'My Cart ($count)',
               onBack: () => context.pop(),
-              actions: const [],
             ),
             body: SafeArea(
               child: Column(
@@ -106,6 +98,18 @@ class _CartScreenState extends State<CartScreen> {
         },
       ),
     );
+  }
+
+  // ... (rest of the file until _onCheckout)
+
+  void _onCheckout(BuildContext context, CartLoaded state) {
+    final selectedItems = state.cartItems
+        .where((item) => _selectedItemIds.contains(item.productId))
+        .toList();
+
+    if (selectedItems.isEmpty) return;
+
+    context.push('/checkout', extra: selectedItems);
   }
 
   Widget _buildCartContent(BuildContext context, CartLoaded state) {
@@ -224,7 +228,6 @@ class _CartScreenState extends State<CartScreen> {
                     },
                   ),
                 ),
-                // Order Notes Removed as per request
               ],
             ),
           ),
@@ -358,14 +361,7 @@ class _CartScreenState extends State<CartScreen> {
                     child: ElevatedButton(
                       onPressed: _selectedItemIds.isEmpty
                           ? null // Disable if nothing selected
-                          : () {
-                              // Checkout logic for _selectedItemIds
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Proceeding to Checkout...'),
-                                ),
-                              );
-                            },
+                          : () => _onCheckout(context, state),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,

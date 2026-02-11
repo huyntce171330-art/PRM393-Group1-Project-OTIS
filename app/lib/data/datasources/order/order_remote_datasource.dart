@@ -1,8 +1,8 @@
-// Interface for Order Remote Data Source.
-//
-// Steps:
-// 1. Define `OrderRemoteDatasource`.
-// 2. Methods:
-//    - `fetchOrders()`
-//    - `fetchOrderDetail(String id)`
-//    - `createOrder(Map<String, dynamic> orderData)`
+import 'package:frontend_otis/data/models/order_model.dart';
+
+abstract class OrderRemoteDatasource {
+  Future<List<OrderModel>> fetchOrders();
+  Future<OrderModel> fetchOrderDetail(String id);
+  Future<OrderModel> createOrder(Map<String, dynamic> orderData);
+  Future<OrderModel> updateOrderStatus(String id, String status);
+}

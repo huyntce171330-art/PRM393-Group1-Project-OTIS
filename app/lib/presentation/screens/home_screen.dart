@@ -244,9 +244,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
+          // Admin Button (Temporary for demo)
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings),
+            color: isDarkMode ? Colors.white : AppColors.primary,
+            onPressed: () => context.push('/admin/orders'),
+          ),
+          const SizedBox(width: 8),
           // Avatar
-          _buildAvatar(context),
+          GestureDetector(
+            onTap: () => context.push('/orders'),
+            child: _buildAvatar(context),
+          ),
         ],
       ),
     );
@@ -670,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         else if (state is ProductError)
           Container(
-            height: 150,
+            constraints: const BoxConstraints(minHeight: 150),
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -682,6 +692,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     state.message,

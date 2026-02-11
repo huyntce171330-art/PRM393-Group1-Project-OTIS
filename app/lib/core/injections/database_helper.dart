@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'otis_v1.0.0.db');
+    final path = join(dbPath, 'otis_v1.0.1.db');
 
     final exists = await databaseExists(path);
 
@@ -26,7 +26,7 @@ class DatabaseHelper {
       } catch (_) {}
 
       ByteData data = await rootBundle.load(
-        join("assets", "database", "otis_v1.0.0.db"),
+        join("assets", "database", "otis_v1.0.1.db"),
       );
       List<int> bytes = data.buffer.asUint8List(
         data.offsetInBytes,

@@ -1,7 +1,14 @@
-// Use case to create a new order.
-//
-// Steps:
-// 1. Create `CreateOrderUsecase`.
-// 2. Inject `OrderRepository`.
-// 3. `call` method (accepting `Order` or Cart details).
-// 4. Invoke `repository.createOrder(...)`.
+import 'package:dartz/dartz.dart' hide Order;
+import 'package:frontend_otis/core/error/failures.dart';
+import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/domain/repositories/order_repository.dart';
+
+class CreateOrderUseCase {
+  final OrderRepository repository;
+
+  CreateOrderUseCase(this.repository);
+
+  Future<Either<Failure, Order>> call(Order order) {
+    return repository.createOrder(order);
+  }
+}
