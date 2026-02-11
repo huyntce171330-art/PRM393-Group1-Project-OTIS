@@ -21,6 +21,7 @@ import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/core/utils/ui_utils.dart';
+import 'package:frontend_otis/presentation/widgets/nav_bar.dart';
 
 /// Home screen - Main landing page.
 class HomeScreen extends StatefulWidget {
@@ -176,10 +177,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         // Bottom Navigation
-        bottomNavigationBar: _buildBottomNavigation(
-          context,
-          isDarkMode,
-          isSmallScreen,
+        bottomNavigationBar: NavBar(
+          currentIndex: 0,
+          onTap: (index) {
+            // Logic for other tabs can be added here
+          },
         ),
       ),
     );
@@ -719,190 +721,6 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         else
           const SizedBox.shrink(),
-      ],
-    );
-  }
-
-  Widget _buildBottomNavigation(
-    BuildContext context,
-    bool isDarkMode,
-    bool isSmallScreen,
-  ) {
-    final iconSize = isSmallScreen ? 20.0 : 24.0;
-    final itemPadding = isSmallScreen ? 8.0 : 10.0;
-
-    return BlocBuilder<CartBloc, CartState>(
-      builder: (context, state) {
-        int cartItemCount = 0;
-        if (state is CartLoaded) {
-          cartItemCount = state.itemCount;
-        }
-
-        return Container(
-          padding: EdgeInsets.only(
-            left: isSmallScreen ? 12 : 16,
-            right: isSmallScreen ? 12 : 16,
-            bottom: isSmallScreen ? 4 : 8,
-            top: isSmallScreen ? 4 : 8,
-          ),
-          decoration: BoxDecoration(
-            color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
-            border: Border(
-              top: BorderSide(
-                color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-              ),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Home
-              _buildNavItem(
-                context,
-                icon: Icons.home,
-                label: 'Home',
-                isSelected: true,
-                iconSize: iconSize,
-                padding: itemPadding,
-                onTap: () {},
-              ),
-              // Service
-              _buildNavItem(
-                context,
-                icon: Icons.build,
-                label: 'Service',
-                isSelected: false,
-                iconSize: iconSize,
-                padding: itemPadding,
-                onTap: () {},
-              ),
-              // Cart with badge
-              _buildNavItemWithBadge(
-                context,
-                icon: Icons.shopping_cart,
-                label: 'Cart',
-                isSelected: false,
-                badgeCount: cartItemCount,
-                iconSize: iconSize,
-                padding: itemPadding,
-                onTap: () => context.push('/cart'),
-              ),
-              // Account
-              _buildNavItem(
-                context,
-                icon: Icons.person,
-                label: 'Account',
-                isSelected: false,
-                iconSize: iconSize,
-                padding: itemPadding,
-                onTap: () {},
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildNavItem(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required double iconSize,
-    required double padding,
-    required VoidCallback onTap,
-  }) {
-    final selectedColor = isSelected ? AppColors.primary : Colors.grey[400];
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: padding, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: iconSize, color: selectedColor),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w500,
-                color: selectedColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItemWithBadge(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required int badgeCount,
-    required double iconSize,
-    required double padding,
-    required VoidCallback onTap,
-  }) {
-    final selectedColor = isSelected ? AppColors.primary : Colors.grey[400];
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: padding, vertical: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: iconSize, color: selectedColor),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
-                    color: selectedColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        // Badge
-        if (badgeCount > 0)
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(9999),
-                border: Border.all(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.surfaceDark
-                      : AppColors.surfaceLight,
-                  width: 1.5,
-                ),
-              ),
-              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
-              child: Text(
-                badgeCount > 99 ? '99+' : '$badgeCount',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 8,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
