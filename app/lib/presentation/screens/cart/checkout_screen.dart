@@ -152,7 +152,7 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  DeliveryType _deliveryType = DeliveryType.HOME;
+  final DeliveryType _deliveryType = DeliveryType.SHOP;
   PaymentMethod _paymentMethod = PaymentMethod.cash;
 
   final Map<String, dynamic> _selectedBranch = {
@@ -160,8 +160,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     'district': 'District 1, HCMC',
     'distance': '2.5 km away',
   };
-  String _bookingTime = 'Today, 14:00';
-  final double _discount = 50000;
+  final double _discount = 0;
 
   // State for Buy Now quantity
   late int _buyNowQuantity;
@@ -200,7 +199,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double get _grandTotal => _tirePriceTotal + _serviceFee - _discount;
 
   String _formatPrice(double price) {
-    return '${price.toStringAsFixed(0)}₫';
+    return '${price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}₫';
   }
 
   void _incrementBuyNowQuantity() {
@@ -246,6 +245,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               productId: cartItem.productId,
               quantity: cartItem.quantity,
               unitPrice: cartItem.product?.price ?? 0.0,
+              productName: cartItem.product?.name,
             ),
           )
           .toList(),
@@ -326,88 +326,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      color: Colors.grey[50],
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Delivery vs. Service',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              Switch(
-                                value: _deliveryType == DeliveryType.SHOP,
-                                onChanged: (val) {
-                                  setState(() {
-                                    _deliveryType = val
-                                        ? DeliveryType.SHOP
-                                        : DeliveryType.HOME;
-                                  });
-                                },
-                                activeColor: AppColors.primary,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(color: Colors.grey[200]!),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _buildToggleOption(
-                                    'Delivery to Home',
-                                    _deliveryType == DeliveryType.HOME,
-                                    () => setState(
-                                      () => _deliveryType = DeliveryType.HOME,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _buildToggleOption(
-                                    'Install at Shop',
-                                    _deliveryType == DeliveryType.SHOP,
-                                    () => setState(
-                                      () => _deliveryType = DeliveryType.SHOP,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
                     Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildDetailCard(
-                              'Select Branch',
-                              '${_selectedBranch['name']}\n${_selectedBranch['district']}',
-                              _selectedBranch['distance'],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildDetailCard(
-                              'Book Date & Time',
-                              _bookingTime,
-                              null,
-                            ),
-                          ),
-                        ],
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: _buildDetailCard(
+                          'Branch',
+                          '${_selectedBranch['name']}\n${_selectedBranch['district']}',
+                          _selectedBranch['distance'],
+                          isCentered: true,
+                        ),
                       ),
                     ),
 
@@ -455,6 +383,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
 
                     const SizedBox(height: 24),
+                    const SectionHeader(title: 'Customer Information'),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildCustomerInfo(),
+                    ),
+
+                    const SizedBox(height: 24),
 
                     const SectionHeader(title: 'Order Summary'),
                     Container(
@@ -479,12 +414,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             _formatPrice(_tirePriceTotal),
                           ),
                           const SizedBox(height: 12),
-                          _buildSummaryRow(
-                            'Installation Service Fee',
-                            _formatPrice(_serviceFee),
-                            isFree: _serviceFee == 0,
-                          ),
-                          const SizedBox(height: 12),
+
                           _buildSummaryRow(
                             'Discount',
                             '- ${_formatPrice(_discount)}',
@@ -598,39 +528,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildToggleOption(String label, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : Colors.grey[500],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailCard(String title, String value, String? subtitle) {
+  Widget _buildDetailCard(
+    String title,
+    String value,
+    String? subtitle, {
+    bool isCentered = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -639,7 +542,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: isCentered
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
         children: [
           Text(
             title.toUpperCase(),
@@ -652,6 +557,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 4),
           Text(
             value,
+            textAlign: isCentered ? TextAlign.center : TextAlign.start,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -662,11 +568,65 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SizedBox(height: 4),
             Text(
               subtitle,
+              textAlign: isCentered ? TextAlign.center : TextAlign.start,
               style: TextStyle(fontSize: 11, color: Colors.grey[400]),
             ),
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildCustomerInfo() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey[200]!),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          _buildInfoRow(Icons.person_outline, "Full Name", "Nguyen Van A"),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Divider(height: 1),
+          ),
+          _buildInfoRow(
+            Icons.location_on_outlined,
+            "Delivery Address",
+            "123 Ly Tu Trong, District 1, HCMC",
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppColors.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

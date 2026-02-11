@@ -108,7 +108,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.productId, // Should verify if name is available or fetch it
+                            item.productName ?? 'Product #${item.productId}',
                             style: const TextStyle(fontWeight: FontWeight.w500),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,

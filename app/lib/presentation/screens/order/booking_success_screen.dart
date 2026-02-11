@@ -254,6 +254,10 @@ class BookingSuccessScreen extends StatelessWidget {
   }
 
   Widget _buildDetailsGrid() {
+    final paymentMethod = order.status == OrderStatus.processing
+        ? "Cash on Delivery (COD)"
+        : "Bank Transfer";
+
     return Column(
       children: [
         Row(
@@ -271,21 +275,104 @@ class BookingSuccessScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
+        _buildDetailItem('Payment Method', paymentMethod, icon: Icons.payment),
+        const SizedBox(height: 20),
         Container(
-          padding: const EdgeInsets.only(top: 12),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: Colors.grey[200]!,
-                width: 1,
-                style: BorderStyle.solid,
+            border: Border.all(color: Colors.grey[200]!),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'BRANCH',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: Colors.grey[500],
+                ),
               ),
+              const SizedBox(height: 4),
+              const Text(
+                'OTIS Shop - D1',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'District 1, HCMC',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        const SectionHeaderTitle(title: 'PURCHASED ITEMS'),
+        const SizedBox(height: 12),
+        ...order.items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    item.productName ?? 'Product #${item.productId}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Text(
+                  'x${item.quantity}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
-          child: _buildDetailItem(
-            'Shipping Address',
-            order.shippingAddress,
-            icon: Icons.location_on,
+        ),
+        const Divider(height: 32),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.person, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'CUSTOMER INFORMATION',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildDetailItem('Full Name', 'Nguyen Van A'),
+              const SizedBox(height: 12),
+              _buildDetailItem(
+                'Delivery Address',
+                order.shippingAddress.isNotEmpty &&
+                        !order.shippingAddress.contains("OTIS Shop")
+                    ? order.shippingAddress
+                    : "123 Ly Tu Trong, District 1, HCMC",
+                icon: Icons.location_on,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 20),
@@ -396,6 +483,27 @@ class BookingSuccessScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class SectionHeaderTitle extends StatelessWidget {
+  final String title;
+  const SectionHeaderTitle({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+          color: Colors.grey[500],
+        ),
+      ),
     );
   }
 }

@@ -22,13 +22,17 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
 
       for (var orderMap in orderMaps) {
         final orderId = orderMap['order_id'];
-        final List<Map<String, dynamic>> itemMaps = await db.query(
-          'order_items',
-          where: 'order_id = ?',
-          whereArgs: [orderId],
+
+        final List<Map<String, dynamic>> itemMaps = await db.rawQuery(
+          '''
+          SELECT oi.*, p.name as product_name 
+          FROM order_items oi
+          JOIN products p ON oi.product_id = p.product_id
+          WHERE oi.order_id = ?
+        ''',
+          [orderId],
         );
 
-        // Merge items into order map for Model parsing
         final fullOrderMap = Map<String, dynamic>.from(orderMap);
         fullOrderMap['order_items'] = itemMaps;
 
@@ -80,10 +84,15 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
       final orderMap = orderMaps.first;
       final orderId = orderMap['order_id'];
 
-      final List<Map<String, dynamic>> itemMaps = await db.query(
-        'order_items',
-        where: 'order_id = ?',
-        whereArgs: [orderId],
+      // Thực hiện JOIN để lấy name từ bảng products
+      final List<Map<String, dynamic>> itemMaps = await db.rawQuery(
+        '''
+        SELECT oi.*, p.name as product_name 
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.product_id
+        WHERE oi.order_id = ?
+      ''',
+        [orderId],
       );
 
       final fullOrderMap = Map<String, dynamic>.from(orderMap);
@@ -166,6 +175,7 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
                   'product_id': i['product_id'],
                   'quantity': i['quantity'],
                   'unit_price': i['price'],
+                  'product_name': i['product_name'] ?? '',
                 },
               )
               .toList(),

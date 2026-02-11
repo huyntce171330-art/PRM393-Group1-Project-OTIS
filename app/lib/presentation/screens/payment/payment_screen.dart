@@ -78,15 +78,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             centerTitle: true,
           ),
-          body:
-              state is PaymentInitiated &&
-                  state.payment.method == PaymentMethod.transfer
-              ? _buildQRCodeView(
-                  context,
-                  state.payment.paymentCode,
-                  state.bankAccount,
-                )
-              : _buildSelectionView(context, state is PaymentLoading),
+          body: SingleChildScrollView(
+            child:
+                state is PaymentInitiated &&
+                    state.payment.method == PaymentMethod.transfer
+                ? _buildQRCodeView(
+                    context,
+                    state.payment.paymentCode,
+                    state.bankAccount,
+                  )
+                : _buildSelectionView(context, state is PaymentLoading),
+          ),
         );
       },
     );
@@ -121,7 +123,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
             "Bank Transfer",
             Icons.account_balance,
           ),
-          const Spacer(),
+          const SizedBox(height: 32),
+          _buildCustomerInfo(),
+          const SizedBox(height: 48),
           if (isLoading)
             const Center(child: CircularProgressIndicator())
           else
@@ -143,8 +147,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text("Confirm Payment Method"),
+                    child: const Text(
+                      "Confirm Payment Method",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -174,34 +184,46 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _buildOrderSummary() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Order Code", style: TextStyle(color: Colors.grey)),
-              Text(
-                widget.order.code,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
+          _buildSummaryItem("Order Code", widget.order.code, isCentered: true),
+          const SizedBox(height: 12),
+          const Divider(),
+          const SizedBox(height: 12),
+          _buildSummaryItem(
+            "Branch",
+            "OTIS Shop - District 1",
+            isCentered: true,
           ),
-          const Divider(height: 24),
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Total Amount", style: TextStyle(fontSize: 16)),
+              const Text(
+                "Total Amount",
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
               Text(
                 widget.order.formattedTotalAmount,
                 style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
                   color: AppColors.primary,
                 ),
               ),
@@ -209,6 +231,143 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummaryItem(
+    String label,
+    String value, {
+    bool isCentered = false,
+  }) {
+    return Column(
+      crossAxisAlignment: isCentered
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+            color: Colors.grey[400],
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          textAlign: isCentered ? TextAlign.center : TextAlign.start,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCustomerInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              "CUSTOMER INFORMATION",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                "Verified",
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _buildInfoRow(
+                Icons.person_rounded,
+                "Customer Full Name",
+                "Nguyen Van A",
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Divider(height: 1),
+              ),
+              _buildInfoRow(
+                Icons.location_on_rounded,
+                "Customer Address",
+                widget.order.shippingAddress.isNotEmpty &&
+                        !widget.order.shippingAddress.contains("OTIS Shop")
+                    ? widget.order.shippingAddress
+                    : "123 Ly Tu Trong, District 1, HCMC",
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: AppColors.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -307,6 +466,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ],
             ),
           ),
+
+          const SizedBox(height: 24),
+
+          // Added Customer Info to QR view for visibility
+          _buildCustomerInfo(),
 
           const SizedBox(height: 24),
 
