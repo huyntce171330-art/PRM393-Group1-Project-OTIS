@@ -27,6 +27,9 @@ class Order extends Equatable {
   /// List of order items
   final List<OrderItem> items;
 
+  /// Source of the order ('buy_now' or 'cart')
+  final String source;
+
   const Order({
     required this.id,
     required this.code,
@@ -35,6 +38,7 @@ class Order extends Equatable {
     required this.shippingAddress,
     required this.createdAt,
     required this.items,
+    this.source = 'cart',
   });
 
   @override
@@ -46,6 +50,7 @@ class Order extends Equatable {
     shippingAddress,
     createdAt,
     items,
+    source,
   ];
 
   /// Create a copy of Order with modified fields
@@ -57,6 +62,7 @@ class Order extends Equatable {
     String? shippingAddress,
     DateTime? createdAt,
     List<OrderItem>? items,
+    String? source,
   }) {
     return Order(
       id: id ?? this.id,
@@ -66,6 +72,7 @@ class Order extends Equatable {
       shippingAddress: shippingAddress ?? this.shippingAddress,
       createdAt: createdAt ?? this.createdAt,
       items: items ?? this.items,
+      source: source ?? this.source,
     );
   }
 

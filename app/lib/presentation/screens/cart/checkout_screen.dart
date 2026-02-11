@@ -6,6 +6,7 @@ import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/domain/entities/order_item.dart';
 import 'package:frontend_otis/domain/entities/cart_item.dart';
+import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
@@ -60,7 +61,9 @@ class PaymentMethodItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderColor = selected ? AppColors.primary : Colors.grey[200]!;
-    final bgColor = selected ? AppColors.primary.withOpacity(0.05) : Colors.white;
+    final bgColor = selected
+        ? AppColors.primary.withOpacity(0.05)
+        : Colors.white;
 
     return GestureDetector(
       onTap: onTap,
@@ -82,10 +85,7 @@ class PaymentMethodItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: Text(
-                  icon,
-                  style: const TextStyle(fontSize: 24),
-                ),
+                child: Text(icon, style: const TextStyle(fontSize: 24)),
               ),
             ),
             const SizedBox(width: 16),
@@ -103,10 +103,7 @@ class PaymentMethodItem extends StatelessWidget {
                   ),
                   Text(
                     sublabel,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -134,9 +131,18 @@ class PaymentMethodItem extends StatelessWidget {
 }
 
 class CheckoutScreen extends StatefulWidget {
-  final List<CartItem> items;
+  final String checkoutSource; // 'cart' or 'buyNow'
+  final List<CartItem> items; // Used if source == 'cart'
+  final Product? product; // Used if source == 'buyNow'
+  final int? quantity; // Used if source == 'buyNow'
 
-  const CheckoutScreen({super.key, required this.items});
+  const CheckoutScreen({
+    super.key,
+    required this.checkoutSource,
+    this.items = const [],
+    this.product,
+    this.quantity,
+  });
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -145,7 +151,7 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   DeliveryType _deliveryType = DeliveryType.HOME;
   PaymentMethod _paymentMethod = PaymentMethod.cash;
-  
+
   final Map<String, dynamic> _selectedBranch = {
     'name': 'OTIS Shop - D1',
     'district': 'District 1, HCMC',
@@ -154,29 +160,97 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String _bookingTime = 'Today, 14:00';
   final double _discount = 50000;
 
-  double get _tirePriceTotal => widget.items.fold(0, (sum, item) => sum + item.totalPrice);
+  // State for Buy Now quantity
+  late int _buyNowQuantity;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.checkoutSource == 'buyNow') {
+      _buyNowQuantity = widget.quantity ?? 1;
+    } else {
+      _buyNowQuantity = 0; // Not used
+    }
+  }
+
+  // Helper to get effective items
+  List<CartItem> get _effectiveItems {
+    if (widget.checkoutSource == 'cart') {
+      return widget.items;
+    } else {
+      if (widget.product != null) {
+        return [
+          CartItem(
+            productId: widget.product!.id,
+            quantity: _buyNowQuantity,
+            product: widget.product,
+          ),
+        ];
+      }
+      return [];
+    }
+  }
+
+  double get _tirePriceTotal =>
+      _effectiveItems.fold(0, (sum, item) => sum + item.totalPrice);
   double get _serviceFee => 0;
   double get _grandTotal => _tirePriceTotal + _serviceFee - _discount;
 
   String _formatPrice(double price) {
-    return '${price.toStringAsFixed(0)}â‚«';
+    return '${price.toStringAsFixed(0)}₫';
+  }
+
+  void _incrementBuyNowQuantity() {
+    if (widget.product != null &&
+        _buyNowQuantity < widget.product!.stockQuantity) {
+      setState(() {
+        _buyNowQuantity++;
+      });
+    }
+  }
+
+  void _decrementBuyNowQuantity() {
+    if (_buyNowQuantity > 1) {
+      setState(() {
+        _buyNowQuantity--;
+      });
+    }
   }
 
   void _onConfirmBooking() {
+    // 1. Validation
+    if (_effectiveItems.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No items to checkout')));
+      return;
+    }
+
+    // Address validation (basic)
+    final shippingAddress = _deliveryType == DeliveryType.HOME
+        ? '123 User Address, HCMC'
+        : '${_selectedBranch['name']}, ${_selectedBranch['district']}';
+
+    if (shippingAddress.isEmpty) return;
+
     final newOrder = Order(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      code: 'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
-      items: widget.items.map((cartItem) => OrderItem(
-        productId: cartItem.productId,
-        quantity: cartItem.quantity,
-        unitPrice: cartItem.product?.price ?? 0.0,
-      )).toList(),
+      code:
+          'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+      items: _effectiveItems
+          .map(
+            (cartItem) => OrderItem(
+              productId: cartItem.productId,
+              quantity: cartItem.quantity,
+              unitPrice: cartItem.product?.price ?? 0.0,
+            ),
+          )
+          .toList(),
       totalAmount: _grandTotal,
       status: OrderStatus.pendingPayment,
       createdAt: DateTime.now(),
-      shippingAddress: _deliveryType == DeliveryType.HOME 
-          ? '123 User Address, HCMC' 
-          : '${_selectedBranch['name']}, ${_selectedBranch['district']}',
+      shippingAddress: shippingAddress,
+      source: widget.checkoutSource == 'buyNow' ? 'buy_now' : 'cart',
     );
 
     context.read<OrderBloc>().add(CreateOrderEvent(newOrder));
@@ -187,18 +261,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return BlocListener<OrderBloc, OrderState>(
       listener: (context, state) {
         if (state is OrderDetailLoaded) {
-          // IMPORTANT: Clear cart items that were part of this order
-          // This is safe because OrderBloc is global, CartBloc is global
-          for (var item in widget.items) {
-            context.read<CartBloc>().add(RemoveFromCartEvent(productId: item.productId));
+          // IMPORTANT: Only clear cart if source is 'cart'
+          if (widget.checkoutSource == 'cart') {
+            for (var item in widget.items) {
+              context.read<CartBloc>().add(
+                RemoveFromCartEvent(productId: item.productId),
+              );
+            }
           }
 
           final order = state.order;
-          
-          context.push('/payment', extra: {
-            'order': order,
-            'method': _paymentMethod,
-          });
+
+          context.push(
+            '/payment',
+            extra: {'order': order, 'method': _paymentMethod},
+          );
         } else if (state is OrderError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Order Failed: ${state.message}')),
@@ -232,10 +309,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                               ),
                               Switch(
-                                value: _deliveryType == DeliveryType.SHOP, 
+                                value: _deliveryType == DeliveryType.SHOP,
                                 onChanged: (val) {
                                   setState(() {
-                                    _deliveryType = val ? DeliveryType.SHOP : DeliveryType.HOME;
+                                    _deliveryType = val
+                                        ? DeliveryType.SHOP
+                                        : DeliveryType.HOME;
                                   });
                                 },
                                 activeColor: AppColors.primary,
@@ -255,14 +334,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   child: _buildToggleOption(
                                     'Delivery to Home',
                                     _deliveryType == DeliveryType.HOME,
-                                    () => setState(() => _deliveryType = DeliveryType.HOME),
+                                    () => setState(
+                                      () => _deliveryType = DeliveryType.HOME,
+                                    ),
                                   ),
                                 ),
                                 Expanded(
                                   child: _buildToggleOption(
                                     'Install at Shop',
                                     _deliveryType == DeliveryType.SHOP,
-                                    () => setState(() => _deliveryType = DeliveryType.SHOP),
+                                    () => setState(
+                                      () => _deliveryType = DeliveryType.SHOP,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -295,11 +378,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     ),
 
-                    SectionHeader(title: 'Order Items (${widget.items.length})'),
+                    SectionHeader(
+                      title: 'Order Items (${_effectiveItems.length})',
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
-                        children: widget.items.map((item) => _buildItemRow(item)).toList(),
+                        children: _effectiveItems
+                            .map((item) => _buildItemRow(item))
+                            .toList(),
                       ),
                     ),
 
@@ -314,75 +401,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             type: PaymentMethod.cash,
                             label: 'Cash on Delivery (COD)',
                             sublabel: 'Pay when you receive',
-                            icon: 'ðŸ’µ',
+                            icon: '💵',
                             selected: _paymentMethod == PaymentMethod.cash,
-                            onTap: () => setState(() => _paymentMethod = PaymentMethod.cash),
+                            onTap: () => setState(
+                              () => _paymentMethod = PaymentMethod.cash,
+                            ),
                           ),
                           PaymentMethodItem(
                             type: PaymentMethod.transfer,
                             label: 'Bank Transfer',
                             sublabel: 'Vietcombank, Techcombank',
-                            icon: 'ðŸ¦',
+                            icon: '🏦',
                             selected: _paymentMethod == PaymentMethod.transfer,
-                            onTap: () => setState(() => _paymentMethod = PaymentMethod.transfer),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.indigo[50],
-                        border: Border.all(color: Colors.indigo[100]!),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.indigo,
-                              borderRadius: BorderRadius.circular(8),
+                            onTap: () => setState(
+                              () => _paymentMethod = PaymentMethod.transfer,
                             ),
-                            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Gemini AI Assistant',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo[900],
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  'Check compatibility with your vehicle',
-                                  style: TextStyle(
-                                    color: Colors.indigo[700],
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              side: BorderSide(color: Colors.indigo[200]!),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: const Text('Ask', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -399,16 +432,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         border: Border.all(color: Colors.grey[200]!),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
                         ],
                       ),
                       child: Column(
                         children: [
-                          _buildSummaryRow('Tire Price (${widget.items.length} items)', _formatPrice(_tirePriceTotal)),
+                          _buildSummaryRow(
+                            'Tire Price (${_effectiveItems.length} items)',
+                            _formatPrice(_tirePriceTotal),
+                          ),
                           const SizedBox(height: 12),
-                          _buildSummaryRow('Installation Service Fee', _formatPrice(_serviceFee), isFree: _serviceFee == 0),
+                          _buildSummaryRow(
+                            'Installation Service Fee',
+                            _formatPrice(_serviceFee),
+                            isFree: _serviceFee == 0,
+                          ),
                           const SizedBox(height: 12),
-                          _buildSummaryRow('Discount', '- ${_formatPrice(_discount)}', isDiscount: true),
+                          _buildSummaryRow(
+                            'Discount',
+                            '- ${_formatPrice(_discount)}',
+                            isDiscount: true,
+                          ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             child: Divider(color: Colors.grey[100]),
@@ -416,8 +464,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Grand Total', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              Text(_formatPrice(_grandTotal), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: AppColors.primary)),
+                              const Text(
+                                'Grand Total',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                _formatPrice(_grandTotal),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 20,
+                                  color: AppColors.primary,
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -427,12 +488,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
             ),
-            
+
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
                 border: Border(top: BorderSide(color: Colors.grey[100]!)),
               ),
               child: SafeArea(
@@ -443,8 +510,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('Total Payment', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          Text(_formatPrice(_grandTotal), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                          const Text(
+                            'Total Payment',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          Text(
+                            _formatPrice(_grandTotal),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -453,16 +534,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         elevation: 4,
                         shadowColor: AppColors.primary.withOpacity(0.4),
                       ),
                       child: const Row(
                         children: [
-                          Text('Confirm Booking', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                            'Place Order',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           SizedBox(width: 8),
-                          Icon(Icons.arrow_forward, size: 18),
+                          Icon(Icons.check, size: 18),
                         ],
                       ),
                     ),
@@ -484,7 +573,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
-          boxShadow: isSelected ? [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))] : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Center(
           child: Text(
@@ -511,12 +608,29 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[400])),
+          Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[400],
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, height: 1.2)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
+            ),
+          ),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
-            Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 11, color: Colors.grey[400]),
+            ),
           ],
         ],
       ),
@@ -563,7 +677,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     Expanded(
                       child: Text(
                         item.product?.name ?? 'Unknown Product',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -571,7 +688,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     const SizedBox(width: 8),
                     Text(
                       _formatPrice(item.product?.price ?? 0),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -579,8 +699,64 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Size: 245/45R18', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-                    Text('x${item.quantity}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey[400])),
+                    Text(
+                      'Size: 245/45R18',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                    ),
+                    if (widget.checkoutSource == 'cart')
+                      Text(
+                        'x${item.quantity}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[400],
+                        ),
+                      )
+                    else
+                      // Editable quantity for Buy Now
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            InkWell(
+                              onTap: _buyNowQuantity > 1
+                                  ? _decrementBuyNowQuantity
+                                  : null,
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4),
+                                child: Icon(Icons.remove, size: 14),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Text(
+                                '$_buyNowQuantity',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            InkWell(
+                              onTap:
+                                  widget.product != null &&
+                                      _buyNowQuantity <
+                                          widget.product!.stockQuantity
+                                  ? _incrementBuyNowQuantity
+                                  : null,
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4),
+                                child: Icon(Icons.add, size: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ],
@@ -591,20 +767,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isFree = false, bool isDiscount = false}) {
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isFree = false,
+    bool isDiscount = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+            Text(
+              label,
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+            ),
             if (isFree) ...[
-               const SizedBox(width: 8),
-               Container(
-                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                 decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(4)),
-                 child: const Text('Free', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green)),
-               ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'Free',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
             ],
           ],
         ),

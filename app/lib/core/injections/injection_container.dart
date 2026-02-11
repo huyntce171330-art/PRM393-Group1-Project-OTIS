@@ -38,6 +38,7 @@ import 'package:frontend_otis/data/repositories/payment_repository_impl.dart';
 import 'package:frontend_otis/domain/repositories/payment_repository.dart';
 import 'package:frontend_otis/domain/usecases/payment/create_payment_usecase.dart';
 import 'package:frontend_otis/domain/usecases/payment/process_payment_usecase.dart';
+import 'package:frontend_otis/domain/usecases/payment/get_active_bank_account_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/data/datasources/order/order_remote_datasource.dart';
 import 'package:frontend_otis/data/datasources/order/order_remote_datasource_impl.dart';
@@ -150,6 +151,9 @@ Future<void> init() async {
   sl.registerLazySingleton<ProcessPaymentUseCase>(
     () => ProcessPaymentUseCase(sl()),
   );
+  sl.registerLazySingleton<GetActiveBankAccountUseCase>(
+    () => GetActiveBankAccountUseCase(sl()),
+  );
 
   // Order Use Cases
   sl.registerLazySingleton<GetOrdersUseCase>(() => GetOrdersUseCase(sl()));
@@ -180,7 +184,11 @@ Future<void> init() async {
 
   // Payment BLoC
   sl.registerFactory<PaymentBloc>(
-    () => PaymentBloc(createPayment: sl(), processPayment: sl()),
+    () => PaymentBloc(
+      createPayment: sl(),
+      processPayment: sl(),
+      getActiveBankAccount: sl(),
+    ),
   );
 
   // Order BLoC

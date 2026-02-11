@@ -1,3 +1,4 @@
+import 'package:frontend_otis/domain/entities/bank_account.dart';
 import 'package:frontend_otis/domain/entities/payment.dart';
 
 abstract class PaymentState {}
@@ -10,7 +11,8 @@ class PaymentSuccess extends PaymentState {}
 
 class PaymentInitiated extends PaymentState {
   final Payment payment;
-  PaymentInitiated(this.payment);
+  final BankAccount? bankAccount;
+  PaymentInitiated(this.payment, {this.bankAccount});
 }
 
 class PaymentFailure extends PaymentState {

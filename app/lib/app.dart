@@ -10,6 +10,7 @@ import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/cart_item.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_orders_screen.dart';
 import 'package:frontend_otis/presentation/screens/cart/cart_screen.dart';
@@ -69,8 +70,13 @@ final GoRouter router = GoRouter(
       path: '/checkout',
       name: 'checkout',
       builder: (context, state) {
-        final items = state.extra as List<CartItem>;
-        return CheckoutScreen(items: items);
+        final extras = state.extra as Map<String, dynamic>;
+        return CheckoutScreen(
+          checkoutSource: extras['source'] as String,
+          items: (extras['items'] as List<CartItem>?) ?? [],
+          product: extras['product'] as Product?,
+          quantity: extras['quantity'] as int?,
+        );
       },
     ),
     GoRoute(

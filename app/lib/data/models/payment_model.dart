@@ -11,6 +11,7 @@ class PaymentModel extends Payment {
     required super.status,
     required super.createdAt,
     super.paidAt,
+    super.bankAccountId,
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
@@ -31,6 +32,7 @@ class PaymentModel extends Payment {
       paidAt: json['paid_at'] != null
           ? DateTime.tryParse(json['paid_at'] as String)
           : null,
+      bankAccountId: json['bank_account_id']?.toString(),
     );
   }
 
@@ -44,6 +46,7 @@ class PaymentModel extends Payment {
       'status': const PaymentStatusConverter().toJson(status),
       'created_at': createdAt.toIso8601String(),
       'paid_at': paidAt?.toIso8601String(),
+      'bank_account_id': bankAccountId,
     };
   }
 
@@ -57,6 +60,7 @@ class PaymentModel extends Payment {
       status: payment.status,
       createdAt: payment.createdAt,
       paidAt: payment.paidAt,
+      bankAccountId: payment.bankAccountId,
     );
   }
 }

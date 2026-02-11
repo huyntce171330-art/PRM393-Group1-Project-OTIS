@@ -126,6 +126,7 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
           'total_amount': totalAmount,
           'status': status,
           'shipping_address': shippingAddress,
+          'source': orderData['source'] ?? 'cart',
           'user_id': userId,
           'created_at': DateTime.now().toIso8601String(),
         });

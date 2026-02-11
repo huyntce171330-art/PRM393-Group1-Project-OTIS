@@ -1,10 +1,12 @@
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/core/injections/database_helper.dart';
+import 'package:frontend_otis/data/models/bank_account_model.dart';
 import 'package:frontend_otis/data/models/payment_model.dart';
 
 abstract class PaymentRemoteDataSource {
   Future<PaymentModel> createPayment(PaymentModel payment);
   Future<PaymentModel> processFakePayment(String orderId);
+  Future<BankAccountModel> getActiveBankAccount();
 }
 
 class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
@@ -26,6 +28,9 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
           'method': const PaymentMethodConverter().toJson(payment.method),
           'status': const PaymentStatusConverter().toJson(payment.status),
           'created_at': DateTime.now().toIso8601String(),
+          'bank_account_id': payment.bankAccountId != null
+              ? int.tryParse(payment.bankAccountId!)
+              : null,
         });
 
         // COD Logic: Update Order Status immediately
@@ -48,6 +53,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
           method: payment.method,
           status: payment.status,
           createdAt: DateTime.now(),
+          bankAccountId: payment.bankAccountId,
         );
       } catch (e) {
         throw Exception("Create Payment Failed: $e");
@@ -128,10 +134,31 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
           status: PaymentStatus.success,
           createdAt: currentPayment.createdAt,
           paidAt: DateTime.now(),
+          bankAccountId: currentPayment.bankAccountId,
         );
       } catch (e) {
         throw Exception("Process Payment Failed: $e");
       }
     });
+  }
+
+  @override
+  Future<BankAccountModel> getActiveBankAccount() async {
+    final db = await DatabaseHelper.database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        'bank_accounts',
+        where: 'is_active = 1',
+        limit: 1,
+      );
+
+      if (maps.isNotEmpty) {
+        return BankAccountModel.fromJson(maps.first);
+      } else {
+        throw Exception("No active bank account found");
+      }
+    } catch (e) {
+      throw Exception("Get Bank Account Failed: $e");
+    }
   }
 }

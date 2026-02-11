@@ -6,6 +6,7 @@
 // - Specifications grid (Width, Profile, Rim, Speed)
 // - Services section (Warranty, Delivery)
 // - Sticky action bar (Add to Cart, Buy Now)
+// - Quantity Selector
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +32,7 @@ import 'package:frontend_otis/core/utils/ui_utils.dart';
 ///
 /// Follows the Thai Phung design system and Clean Architecture pattern.
 /// Uses BLoC for state management.
-class ProductDetailScreen extends StatelessWidget {
+class ProductDetailScreen extends StatefulWidget {
   /// The product ID to fetch details for
   final String productId;
 
@@ -41,11 +42,35 @@ class ProductDetailScreen extends StatelessWidget {
   const ProductDetailScreen({super.key, required this.productId});
 
   @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  int _quantity = 1;
+
+  void _incrementQuantity(int stock) {
+    if (_quantity < stock) {
+      setState(() {
+        _quantity++;
+      });
+    }
+  }
+
+  void _decrementQuantity() {
+    if (_quantity > 1) {
+      setState(() {
+        _quantity--;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Use BlocProvider.value instead of create to prevent closing the singleton Bloc
     // when this screen is disposed. The Bloc is a singleton managed by GetIt.
     return BlocProvider<ProductBloc>.value(
-      value: di.sl<ProductBloc>()..add(GetProductDetailEvent(id: productId)),
+      value: di.sl<ProductBloc>()
+        ..add(GetProductDetailEvent(id: widget.productId)),
       child: Scaffold(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
             ? AppColors.backgroundDark
@@ -170,7 +195,7 @@ class ProductDetailScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               context.read<ProductBloc>().add(
-                GetProductDetailEvent(id: productId),
+                GetProductDetailEvent(id: widget.productId),
               );
             },
             style: ElevatedButton.styleFrom(
@@ -252,6 +277,67 @@ class ProductDetailScreen extends StatelessWidget {
                 ),
               ),
 
+              // Quantity Selector
+              if (product.stockQuantity > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'Quantity:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              onPressed: _quantity > 1
+                                  ? _decrementQuantity
+                                  : null,
+                              icon: const Icon(Icons.remove),
+                              padding: EdgeInsets.zero,
+                              iconSize: 20,
+                              constraints: const BoxConstraints(
+                                minWidth: 40,
+                                minHeight: 40,
+                              ),
+                            ),
+                            Text(
+                              '$_quantity',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _quantity < product.stockQuantity
+                                  ? () => _incrementQuantity(
+                                      product.stockQuantity,
+                                    )
+                                  : null,
+                              icon: const Icon(Icons.add),
+                              padding: EdgeInsets.zero,
+                              iconSize: 20,
+                              constraints: const BoxConstraints(
+                                minWidth: 40,
+                                minHeight: 40,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               const SizedBox(height: 8),
 
               // Divider
@@ -287,7 +373,6 @@ class ProductDetailScreen extends StatelessWidget {
         ),
 
         // Sticky action bar
-        // Sticky action bar
         BlocBuilder<CartBloc, CartState>(
           builder: (context, state) {
             bool isInCart = false;
@@ -301,20 +386,23 @@ class ProductDetailScreen extends StatelessWidget {
               onViewCart: () => context.push('/cart'),
               onAddToCart: () {
                 context.read<CartBloc>().add(
-                  AddProductToCartEvent(product: product, quantity: 1),
+                  AddProductToCartEvent(product: product, quantity: _quantity),
                 );
                 UiUtils.showSuccessPopup(
                   context,
-                  '${product.name} added to cart',
+                  '${product.name} added to cart (x$_quantity)',
                 );
               },
               onBuyNow: () {
-                if (!isInCart) {
-                  context.read<CartBloc>().add(
-                    AddProductToCartEvent(product: product, quantity: 1),
-                  );
-                }
-                context.push('/cart');
+                // Navigate to checkout directly logic
+                context.push(
+                  '/checkout',
+                  extra: {
+                    'source': 'buyNow',
+                    'product': product,
+                    'quantity': _quantity,
+                  },
+                );
               },
               isDisabled: product.stockQuantity <= 0,
             );

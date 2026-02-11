@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
@@ -7,6 +8,7 @@ import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_event.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_state.dart';
+import 'package:frontend_otis/domain/entities/bank_account.dart';
 import 'package:go_router/go_router.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -21,6 +23,9 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   late PaymentMethod _selectedMethod;
+  bool _processedInitialMethod = false;
+
+  // Fake bank account data removed. Using data from BLoC state.
 
   @override
   void initState() {
@@ -29,27 +34,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_processedInitialMethod && widget.initialMethod != null) {
+      _processedInitialMethod = true;
+      // Auto-trigger selection if method passed from checkout
+      context.read<PaymentBloc>().add(
+        SelectPaymentMethodEvent(
+          orderId: widget.order.id,
+          method: widget.initialMethod!,
+          amount: widget.order.totalAmount,
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<PaymentBloc, PaymentState>(
       listener: (context, state) {
         if (state is PaymentInitiated) {
           if (state.payment.method == PaymentMethod.cash) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Order placed successfully (COD)"),
-                backgroundColor: AppColors.success,
-              ),
-            );
-            context.pop(true);
+            _showSuccess(context, "Order placed successfully (COD)");
           }
         } else if (state is PaymentSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Payment Confirmed"),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          context.pop(true);
+          _showSuccess(context, "Payment Confirmed");
         } else if (state is PaymentFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -70,11 +79,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
           body:
               state is PaymentInitiated &&
                   state.payment.method == PaymentMethod.transfer
-              ? _buildQRCodeView(context, state.payment.paymentCode)
+              ? _buildQRCodeView(
+                  context,
+                  state.payment.paymentCode,
+                  state.bankAccount,
+                )
               : _buildSelectionView(context, state is PaymentLoading),
         );
       },
     );
+  }
+
+  void _showSuccess(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.success),
+    );
+    // Navigate to Order List and clear history stack to prevent back nav to payment
+    context.go('/orders');
   }
 
   Widget _buildSelectionView(BuildContext context, bool isLoading) {
@@ -83,10 +104,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Order Amount: ${widget.order.formattedTotalAmount}",
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
+          _buildOrderSummary(),
           const SizedBox(height: 32),
           const Text(
             "Choose Payment Method",
@@ -122,10 +140,52 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
                 ),
                 child: const Text("Confirm Payment Method"),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderSummary() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Order Code", style: TextStyle(color: Colors.grey)),
+              Text(
+                widget.order.code,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const Divider(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Total Amount", style: TextStyle(fontSize: 16)),
+              Text(
+                widget.order.formattedTotalAmount,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -176,44 +236,168 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildQRCodeView(BuildContext context, String qrContent) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            QrImageView(
-              data: qrContent,
-              version: QrVersions.auto,
-              size: 220,
-              backgroundColor: Colors.white,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              widget.order.formattedTotalAmount,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 48),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  context.read<PaymentBloc>().add(
-                    ProcessPaymentEvent(widget.order.id),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+  Widget _buildQRCodeView(
+    BuildContext context,
+    String qrContent,
+    BankAccount? bankAccount,
+  ) {
+    final transferContent = "Thanh toan don hang ${widget.order.code}";
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          // QR Code Section
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
                 ),
-                child: const Text("I Have Paid"),
+              ],
+            ),
+            child: Column(
+              children: [
+                QrImageView(
+                  data: qrContent,
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Scan with Mobile Banking",
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  widget.order.formattedTotalAmount,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Bank Info Section
+          if (bankAccount != null)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Bank Transfer Details",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildBankInfoRow("Bank", bankAccount.bankName),
+                  _buildBankInfoRow(
+                    "Account Number",
+                    bankAccount.accountNumber,
+                    isCopyable: true,
+                  ),
+                  _buildBankInfoRow(
+                    "Account Holder",
+                    bankAccount.accountHolder,
+                  ),
+                  if (bankAccount.branch != null)
+                    _buildBankInfoRow("Branch", bankAccount.branch!),
+                  _buildBankInfoRow(
+                    "Content",
+                    transferContent,
+                    isCopyable: true,
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+
+          const SizedBox(height: 32),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                context.read<PaymentBloc>().add(
+                  ProcessPaymentEvent(widget.order.id),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                "I Have Paid",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBankInfoRow(
+    String label,
+    String value, {
+    bool isCopyable = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (isCopyable)
+                InkWell(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: value));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("$label copied to clipboard"),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(Icons.copy, size: 18, color: AppColors.primary),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

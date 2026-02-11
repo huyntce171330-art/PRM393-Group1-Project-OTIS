@@ -11,6 +11,7 @@ class Payment extends Equatable {
   final PaymentStatus status;
   final DateTime createdAt;
   final DateTime? paidAt;
+  final String? bankAccountId;
 
   const Payment({
     required this.id,
@@ -21,6 +22,7 @@ class Payment extends Equatable {
     required this.status,
     required this.createdAt,
     this.paidAt,
+    this.bankAccountId,
   });
 
   @override
@@ -33,5 +35,6 @@ class Payment extends Equatable {
     status,
     createdAt,
     paidAt,
+    bankAccountId,
   ];
 }

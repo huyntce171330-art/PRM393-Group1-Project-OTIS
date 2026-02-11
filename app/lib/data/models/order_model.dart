@@ -6,16 +6,6 @@ import 'package:frontend_otis/data/models/order_item_model.dart';
 /// Handles conversion between JSON API responses and domain entities.
 /// Uses explicitToJson: true to properly serialize nested order items.
 class OrderModel {
-  const OrderModel({
-    required this.id,
-    required this.code,
-    required this.totalAmount,
-    required this.status,
-    required this.shippingAddress,
-    required this.createdAt,
-    required this.items,
-  });
-
   /// Unique identifier for the order
   final String id;
 
@@ -37,6 +27,20 @@ class OrderModel {
   /// List of order item models
   final List<OrderItemModel> items;
 
+  /// Source of the order
+  final String source;
+
+  const OrderModel({
+    required this.id,
+    required this.code,
+    required this.totalAmount,
+    required this.status,
+    required this.shippingAddress,
+    required this.createdAt,
+    required this.items,
+    this.source = 'cart',
+  });
+
   /// Convert OrderModel to JSON for API requests.
   Map<String, dynamic> toJson() {
     return {
@@ -47,6 +51,7 @@ class OrderModel {
       'shipping_address': shippingAddress,
       'created_at': createdAt.toIso8601String(),
       'order_items': items.map((item) => item.toJson()).toList(),
+      'source': source,
     };
   }
 
@@ -61,6 +66,7 @@ class OrderModel {
       shippingAddress: _parseString(json['shipping_address'], defaultValue: ''),
       createdAt: _parseDateTime(json['created_at']),
       items: _parseOrderItems(json['order_items'] ?? json['items'] ?? []),
+      source: _parseString(json['source'], defaultValue: 'cart'),
     );
   }
 
@@ -74,6 +80,7 @@ class OrderModel {
       shippingAddress: shippingAddress,
       createdAt: createdAt,
       items: items.map((item) => item.toDomain()).toList(),
+      source: source,
     );
   }
 
@@ -89,6 +96,7 @@ class OrderModel {
       items: order.items
           .map((item) => OrderItemModel.fromDomain(item))
           .toList(),
+      source: order.source,
     );
   }
 

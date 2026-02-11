@@ -109,7 +109,10 @@ class _CartScreenState extends State<CartScreen> {
 
     if (selectedItems.isEmpty) return;
 
-    context.push('/checkout', extra: selectedItems);
+    context.push(
+      '/checkout',
+      extra: {'source': 'cart', 'items': selectedItems},
+    );
   }
 
   Widget _buildCartContent(BuildContext context, CartLoaded state) {
