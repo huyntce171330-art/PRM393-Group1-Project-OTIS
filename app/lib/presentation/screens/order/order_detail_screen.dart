@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
@@ -66,7 +67,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildStatusSection(order, surfaceColor),
-                const SizedBox(height: 2),
+                const SizedBox(height: 16),
+                _buildQrCodeSection(order, surfaceColor),
+                const SizedBox(height: 16),
                 _buildProductList(order, surfaceColor),
                 const SizedBox(height: 2),
                 _buildDeliveryInfo(order, surfaceColor),
@@ -497,6 +500,51 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1))),
       ),
       child: Row(children: [Expanded(child: actionButton)]),
+    );
+  }
+
+  Widget _buildQrCodeSection(Order order, Color surfaceColor) {
+    return Container(
+      width: double.infinity,
+      color: surfaceColor,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Text(
+            'ORDER QR CODE',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: QrImageView(
+              data: order.code,
+              version: QrVersions.auto,
+              size: 200,
+              backgroundColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            order.code,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

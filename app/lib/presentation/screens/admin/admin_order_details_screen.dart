@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
@@ -126,6 +127,15 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
         children: [
           const SizedBox(height: 16),
           _buildCustomerCard(
+            order,
+            surfaceColor,
+            textMain,
+            textSub,
+            primaryColor,
+            isDarkMode,
+          ),
+          const SizedBox(height: 16),
+          _buildQrCodeSection(
             order,
             surfaceColor,
             textMain,
@@ -813,6 +823,60 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildQrCodeSection(
+    Order order,
+    Color surfaceColor,
+    Color textMain,
+    Color textSub,
+    Color primaryColor,
+    bool isDarkMode,
+  ) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode ? const Color(0xFF4A2A2A) : Colors.grey[100]!,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'ORDER QR CODE',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: QrImageView(
+              data: order.code,
+              version: QrVersions.auto,
+              size: 180,
+              backgroundColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            order.code,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: textMain,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
       ),
     );
   }
