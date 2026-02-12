@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
@@ -34,13 +35,15 @@ class _LoginScreenState extends State<LoginScreen> {
             if (state is AuthError) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(content: Text(state.message)),
-                );
+                ..showSnackBar(SnackBar(content: Text(state.message)));
             }
 
             if (state is Authenticated) {
-              Navigator.pop(context);
+              if (state.user.isAdmin) {
+                context.go('/admin/home');
+              } else {
+                context.go('/home');
+              }
             }
           },
           builder: (context, state) {
@@ -115,13 +118,13 @@ class _LoginScreenState extends State<LoginScreen> {
         onPressed: state is AuthLoading
             ? null
             : () {
-          context.read<AuthBloc>().add(
-            LoginEvent(
-              phone: _phoneController.text.trim(),
-              password: _passwordController.text,
-            ),
-          );
-        },
+                context.read<AuthBloc>().add(
+                  LoginEvent(
+                    phone: _phoneController.text.trim(),
+                    password: _passwordController.text,
+                  ),
+                );
+              },
         child: state is AuthLoading
             ? const CircularProgressIndicator(color: Colors.white)
             : const Text('ĐĂNG NHẬP'),
@@ -149,6 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
   Widget _buildForgotPasswordButton(BuildContext context) {
     return Align(
       alignment: Alignment.centerRight,
@@ -164,10 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
         },
-        child: const Text(
-          'Quên mật khẩu?',
-          style: TextStyle(fontSize: 13),
-        ),
+        child: const Text('Quên mật khẩu?', style: TextStyle(fontSize: 13)),
       ),
     );
   }
