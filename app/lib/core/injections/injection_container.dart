@@ -11,6 +11,10 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:get_it/get_it.dart';
+import '../../data/datasources/auth/auth_remote_datasource.dart';
+import '../../data/datasources/auth/auth_remote_datasource_impl.dart';
+import './database_helper.dart';
 import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/core/network/network_info.dart';
 import 'package:frontend_otis/core/network/network_info_impl.dart';
@@ -57,6 +61,13 @@ Future<void> init() async {
   // Database instance (singleton)
   final database = await DatabaseHelper.database;
   sl.registerLazySingleton<Database>(() => database);
+
+  // AUTH DATASOURCE (still called "remote" by design)
+  sl.registerLazySingleton<AuthRemoteDatasource>(
+    () => AuthRemoteDatasourceImpl(sl()),
+  );
+
+  print("SQLite Connected Successfully");
 
   // Connectivity checker
   sl.registerLazySingleton<Connectivity>(() => Connectivity());
