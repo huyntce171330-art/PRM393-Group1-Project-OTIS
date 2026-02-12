@@ -186,7 +186,9 @@ class _HomeScreenState extends State<HomeScreen> {
         bottomNavigationBar: NavBar(
           currentIndex: 0,
           onTap: (index) {
-            // Logic for other tabs can be added here
+            if (index == 3) {
+              context.push('/profile');
+            }
           },
         ),
       ),
@@ -254,30 +256,26 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 8),
 
-          // Avatar
+          // Notifications
           GestureDetector(
-            onTap: () => context.push('/orders'),
-            child: _buildAvatar(context),
+            onTap: () => context.push('/notifications'),
+            child: _buildNotificationIcon(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAvatar(BuildContext context) {
+  Widget _buildNotificationIcon(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    const avatarSize = 40.0;
+    const size = 40.0;
 
     return Container(
-      width: avatarSize,
-      height: avatarSize,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(avatarSize / 2),
-        border: Border.all(
-          color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
-          width: 2,
-        ),
+        color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(size / 2),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -286,19 +284,33 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(avatarSize / 2),
-        child: Image.network(
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuDoMz-m7oRFdmKmL5PET_dO5sHFaZjichh44_wwwVs0PAlFU_gDPh2pCfn8-wMnRVEn4YXj4ItTQPDv__swxN9ylZtQQOFbIj6TbFNDn9zwJ3VV3vTbl_nnCo-_vfPEgtR9P53rP28VZiBJ8zkE02TwgGupNiEf58xm-fuGju55E8qh6KhYsbpejjngMZ9D6baAxvyDZS13XwktZGri0Jlg16X9JOO4FGMduD-jXuaeur1QTVJKbiHQbInfJ6CYEXOrR9jIfjAOgl8',
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(
-              Icons.person,
-              color: Colors.grey[400],
-              size: avatarSize * 0.6,
-            );
-          },
-        ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(
+            Icons.notifications_outlined,
+            color: isDarkMode ? Colors.white : Colors.grey[600],
+            size: 24,
+          ),
+          Positioned(
+            top: 10,
+            right: 10,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDarkMode
+                      ? AppColors.surfaceDark
+                      : AppColors.surfaceLight,
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

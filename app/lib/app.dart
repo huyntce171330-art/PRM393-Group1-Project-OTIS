@@ -29,6 +29,9 @@ import 'package:frontend_otis/presentation/screens/product/product_detail_screen
 import 'package:frontend_otis/presentation/screens/splash_screen.dart';
 import 'package:frontend_otis/presentation/screens/auth/login_screen.dart';
 import 'package:frontend_otis/presentation/screens/auth/register_screen.dart';
+import 'package:frontend_otis/presentation/screens/profile/profile_screen.dart';
+import 'package:frontend_otis/presentation/screens/profile/profile_update_screen.dart';
+import 'package:frontend_otis/presentation/screens/notification/notification_list_screen.dart';
 
 /// GoRouter configuration for the OTIS app.
 ///
@@ -152,6 +155,21 @@ final GoRouter router = GoRouter(
         final orderId = state.pathParameters['id']!;
         return OrderDetailScreen(orderId: orderId);
       },
+    ),
+    GoRoute(
+      path: '/profile',
+      name: 'profile',
+      builder: (context, state) => const ProfileScreen(),
+    ),
+    GoRoute(
+      path: '/profile/update',
+      name: 'profile-update',
+      builder: (context, state) => const ProfileUpdateScreen(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      name: 'notifications',
+      builder: (context, state) => const NotificationListScreen(),
     ),
   ],
   errorPageBuilder: (context, state) => MaterialPage(
