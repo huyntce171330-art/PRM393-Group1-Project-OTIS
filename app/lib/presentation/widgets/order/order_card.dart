@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/domain/entities/order_item.dart';
+import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/domain/repositories/product_repository.dart';
 import 'package:frontend_otis/presentation/widgets/order/status_badge.dart';
 
 class OrderCard extends StatelessWidget {
@@ -13,18 +17,6 @@ class OrderCard extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDarkMode ? const Color(0xFF1A2230) : Colors.white;
     final primaryColor = const Color(0xFF135BEC);
-
-    // Get summary text from first item
-    String firstItemName = 'Order Items';
-    if (order.items.isNotEmpty) {
-      final item = order.items.first;
-      firstItemName = item.productName ?? 'Product #${item.productId}';
-      if (order.items.length > 1) {
-        firstItemName += ' and ${order.items.length - 1} more';
-      } else {
-        firstItemName += ' (x${item.quantity})';
-      }
-    }
 
     return GestureDetector(
       onTap: onTap,
@@ -110,18 +102,23 @@ class OrderCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          firstItemName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: isDarkMode
-                                ? Colors.white
-                                : const Color(0xFF1E293B),
+                        if (order.items.isNotEmpty)
+                          _OrderProductSummary(
+                            item: order.items.first,
+                            itemCount: order.items.length,
+                            isDarkMode: isDarkMode,
+                          )
+                        else
+                          Text(
+                            'No Items',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : const Color(0xFF1E293B),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
                         const SizedBox(height: 2),
                         Text(
                           'Maintenance and Spare parts',
@@ -147,8 +144,7 @@ class OrderCard extends StatelessWidget {
                           ? Colors.grey[800]!
                           : const Color(0xFFE2E8F0),
                       width: 1,
-                      style: BorderStyle
-                          .none, // Template uses dashed, flutter needs custom painter for better dash
+                      style: BorderStyle.none,
                     ),
                   ),
                 ),
@@ -200,6 +196,61 @@ class OrderCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _OrderProductSummary extends StatefulWidget {
+  final OrderItem item;
+  final int itemCount;
+  final bool isDarkMode;
+
+  const _OrderProductSummary({
+    required this.item,
+    required this.itemCount,
+    required this.isDarkMode,
+  });
+
+  @override
+  State<_OrderProductSummary> createState() => _OrderProductSummaryState();
+}
+
+class _OrderProductSummaryState extends State<_OrderProductSummary> {
+  Product? _product;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProduct();
+  }
+
+  Future<void> _loadProduct() async {
+    final result = await sl<ProductRepository>().getProductDetail(
+      productId: widget.item.productId,
+    );
+    result.fold((l) => null, (r) {
+      if (mounted) setState(() => _product = r);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String summary = _product?.name ?? 'Product #${widget.item.productId}';
+    if (widget.itemCount > 1) {
+      summary += ' and ${widget.itemCount - 1} more';
+    } else {
+      summary += ' (x${widget.item.quantity})';
+    }
+
+    return Text(
+      summary,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: widget.isDarkMode ? Colors.white : const Color(0xFF1E293B),
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
+import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/domain/entities/order_item.dart';
+import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/domain/entities/user.dart';
+import 'package:frontend_otis/domain/repositories/product_repository.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 
 class BookingSuccessScreen extends StatelessWidget {
   final Order order;
@@ -39,26 +47,32 @@ class BookingSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Top Branding
-                _buildBranding(),
-                const SizedBox(height: 24),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        User? currentUser;
+        if (authState is Authenticated) {
+          currentUser = authState.user;
+        }
 
-                // Main Ticket Card
-                _buildTicketCard(context),
-              ],
+        return Scaffold(
+          backgroundColor: Colors.grey[50],
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildBranding(),
+                    const SizedBox(height: 24),
+                    _buildTicketCard(context, currentUser),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -81,7 +95,7 @@ class BookingSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTicketCard(BuildContext context) {
+  Widget _buildTicketCard(BuildContext context, User? user) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 380),
       decoration: BoxDecoration(
@@ -97,14 +111,9 @@ class BookingSuccessScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Top Section: Success & QR
           _buildTopSection(),
-
-          // Cut Line Visual
           _buildCutLine(),
-
-          // Bottom Section: Details & Actions
-          _buildBottomSection(context),
+          _buildBottomSection(context, user),
         ],
       ),
     );
@@ -115,7 +124,6 @@ class BookingSuccessScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
       child: Column(
         children: [
-          // Success Indicator
           Container(
             width: 48,
             height: 48,
@@ -126,8 +134,6 @@ class BookingSuccessScreen extends StatelessWidget {
             child: const Icon(Icons.check, color: AppColors.primary, size: 28),
           ),
           const SizedBox(height: 12),
-
-          // Title
           const Text(
             'Order Confirmed',
             style: TextStyle(
@@ -137,15 +143,11 @@ class BookingSuccessScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-
-          // Reference ID
           Text(
             'Order ID: ${order.code}',
             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
           const SizedBox(height: 24),
-
-          // QR Code
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -175,8 +177,6 @@ class BookingSuccessScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-
-          // Scan instruction
           Text(
             'SHOW THIS AT PICKUP',
             style: TextStyle(
@@ -196,7 +196,6 @@ class BookingSuccessScreen extends StatelessWidget {
       height: 24,
       child: Stack(
         children: [
-          // Left Notch
           Positioned(
             left: -12,
             child: Container(
@@ -208,8 +207,6 @@ class BookingSuccessScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // Dotted Line
           Center(
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -219,8 +216,6 @@ class BookingSuccessScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // Right Notch
           Positioned(
             right: -12,
             child: Container(
@@ -237,26 +232,31 @@ class BookingSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomSection(BuildContext context) {
+  Widget _buildBottomSection(BuildContext context, User? user) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       child: Column(
         children: [
-          // Details Grid
-          _buildDetailsGrid(),
+          _buildDetailsGrid(user),
           const SizedBox(height: 32),
-
-          // Action Buttons
           _buildActionButtons(context),
         ],
       ),
     );
   }
 
-  Widget _buildDetailsGrid() {
+  Widget _buildDetailsGrid(User? user) {
     final paymentMethod = order.status == OrderStatus.processing
         ? "Cash on Delivery (COD)"
         : "Bank Transfer";
+
+    final customerName = user?.fullName.isNotEmpty == true
+        ? user!.fullName
+        : "Guest";
+    final address = order.shippingAddress.isNotEmpty
+        ? order.shippingAddress
+        : (user?.address ?? "Unknown Address");
+    final phone = user?.phone.isNotEmpty == true ? user!.phone : "N/A";
 
     return Column(
       children: [
@@ -310,32 +310,7 @@ class BookingSuccessScreen extends StatelessWidget {
         const SizedBox(height: 20),
         const SectionHeaderTitle(title: 'PURCHASED ITEMS'),
         const SizedBox(height: 12),
-        ...order.items.map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    item.productName ?? 'Product #${item.productId}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Text(
-                  'x${item.quantity}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        ...order.items.map((item) => _BookingProductSummaryItem(item: item)),
         const Divider(height: 32),
         Container(
           padding: const EdgeInsets.all(16),
@@ -362,14 +337,13 @@ class BookingSuccessScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              _buildDetailItem('Full Name', 'Nguyen Van A'),
+              _buildDetailItem('Full Name', customerName),
+              const SizedBox(height: 12),
+              _buildDetailItem('Phone Number', phone, icon: Icons.phone),
               const SizedBox(height: 12),
               _buildDetailItem(
                 'Delivery Address',
-                order.shippingAddress.isNotEmpty &&
-                        !order.shippingAddress.contains("OTIS Shop")
-                    ? order.shippingAddress
-                    : "123 Ly Tu Trong, District 1, HCMC",
+                address,
                 icon: Icons.location_on,
               ),
             ],
@@ -450,7 +424,6 @@ class BookingSuccessScreen extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
-        // Back to My Orders Button
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
@@ -471,8 +444,6 @@ class BookingSuccessScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-
-        // Back to Home Button
         TextButton(
           onPressed: () {
             context.go('/');
@@ -508,7 +479,6 @@ class SectionHeaderTitle extends StatelessWidget {
   }
 }
 
-// Custom Painter for Dashed Line
 class DashedLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -529,4 +499,55 @@ class DashedLinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _BookingProductSummaryItem extends StatefulWidget {
+  final OrderItem item;
+  const _BookingProductSummaryItem({required this.item});
+
+  @override
+  State<_BookingProductSummaryItem> createState() =>
+      _BookingProductSummaryItemState();
+}
+
+class _BookingProductSummaryItemState
+    extends State<_BookingProductSummaryItem> {
+  Product? _product;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProduct();
+  }
+
+  Future<void> _loadProduct() async {
+    final result = await sl<ProductRepository>().getProductDetail(
+      productId: widget.item.productId,
+    );
+    result.fold((failure) => null, (product) {
+      if (mounted) setState(() => _product = product);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              _product?.name ?? 'Product #${widget.item.productId}',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+          ),
+          Text(
+            'x${widget.item.quantity}',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
 }

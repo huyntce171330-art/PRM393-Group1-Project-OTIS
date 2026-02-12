@@ -5,11 +5,14 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/domain/entities/user.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_event.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_state.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend_otis/domain/entities/bank_account.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,8 +29,6 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   late PaymentMethod _selectedMethod;
   bool _processedInitialMethod = false;
-
-  // Fake bank account data removed. Using data from BLoC state.
 
   @override
   void initState() {
@@ -54,43 +55,126 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<PaymentBloc, PaymentState>(
-      listener: (context, state) {
-        if (state is PaymentInitiated) {
-          if (state.payment.method == PaymentMethod.cash) {
+      listener: (context, paymentState) {
+        if (paymentState is PaymentInitiated) {
+          if (paymentState.payment.method == PaymentMethod.cash) {
             _showSuccess(context, "Order placed successfully (COD)");
           }
-        } else if (state is PaymentSuccess) {
+        } else if (paymentState is PaymentSuccess) {
           _showSuccess(context, "Payment Confirmed");
-        } else if (state is PaymentFailure) {
+        } else if (paymentState is PaymentFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message),
+              content: Text(paymentState.message),
               backgroundColor: AppColors.error,
             ),
           );
         }
       },
-      builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              state is PaymentInitiated ? "Scan to Pay" : "Select Payment",
-            ),
-            centerTitle: true,
-          ),
-          body: SingleChildScrollView(
-            child:
-                state is PaymentInitiated &&
-                    state.payment.method == PaymentMethod.transfer
-                ? _buildQRCodeView(
-                    context,
-                    state.payment.paymentCode,
-                    state.bankAccount,
-                  )
-                : _buildSelectionView(context, state is PaymentLoading),
-          ),
+      builder: (context, paymentState) {
+        return BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            User? currentUser;
+            if (authState is Authenticated) {
+              currentUser = authState.user;
+            }
+
+            // Enforce Profile Completion
+            if (currentUser != null) {
+              final missingInfo =
+                  currentUser.fullName.isEmpty ||
+                  currentUser.address.isEmpty ||
+                  currentUser.phone.isEmpty;
+
+              if (missingInfo) {
+                return Scaffold(
+                  appBar: AppBar(title: const Text("Complete Profile")),
+                  body: _buildProfileUpdateRequired(context),
+                );
+              }
+            } else {
+              // If unauthenticated, you might want to force login or handle guest
+              // For this implementation, we'll suggest logging in if user is null
+              // assuming this screen is protected.
+            }
+
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  paymentState is PaymentInitiated
+                      ? "Scan to Pay"
+                      : "Select Payment",
+                ),
+                centerTitle: true,
+              ),
+              body: SingleChildScrollView(
+                child:
+                    paymentState is PaymentInitiated &&
+                        paymentState.payment.method == PaymentMethod.transfer
+                    ? _buildQRCodeView(
+                        context,
+                        paymentState.payment.paymentCode,
+                        paymentState.bankAccount,
+                        currentUser,
+                      )
+                    : _buildSelectionView(
+                        context,
+                        paymentState is PaymentLoading,
+                        currentUser,
+                      ),
+              ),
+            );
+          },
         );
       },
+    );
+  }
+
+  Widget _buildProfileUpdateRequired(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              size: 64,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Profile Incomplete",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "We need your full name, address, and phone number to process the order. Please update your profile.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => context.push('/profile/update'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "Update Profile Now",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -99,7 +183,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     context.go('/booking-success', extra: widget.order);
   }
 
-  Widget _buildSelectionView(BuildContext context, bool isLoading) {
+  Widget _buildSelectionView(BuildContext context, bool isLoading, User? user) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -124,7 +208,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             Icons.account_balance,
           ),
           const SizedBox(height: 32),
-          _buildCustomerInfo(),
+          _buildCustomerInfo(user),
           const SizedBox(height: 48),
           if (isLoading)
             const Center(child: CircularProgressIndicator())
@@ -267,7 +351,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildCustomerInfo() {
+  Widget _buildCustomerInfo(User? user) {
+    // If user is null (e.g. guest), fallback or hide?
+    // Requirement implies logged in user.
+    final name = user?.fullName.isNotEmpty == true
+        ? user!.fullName
+        : "Guest/Unknown";
+    final address = user?.address.isNotEmpty == true
+        ? user!.address
+        : "No address provided";
+    // Phone usually exists if logged in
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -317,10 +411,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
           child: Column(
             children: [
+              _buildInfoRow(Icons.person_rounded, "Customer Full Name", name),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Divider(height: 1),
+              ),
               _buildInfoRow(
-                Icons.person_rounded,
-                "Customer Full Name",
-                "Nguyen Van A",
+                Icons.phone_rounded,
+                "Phone Number",
+                user?.phone ?? "N/A",
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
@@ -329,10 +428,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               _buildInfoRow(
                 Icons.location_on_rounded,
                 "Customer Address",
-                widget.order.shippingAddress.isNotEmpty &&
-                        !widget.order.shippingAddress.contains("OTIS Shop")
-                    ? widget.order.shippingAddress
-                    : "123 Ly Tu Trong, District 1, HCMC",
+                address,
               ),
             ],
           ),
@@ -420,6 +516,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     BuildContext context,
     String qrContent,
     BankAccount? bankAccount,
+    User? user,
   ) {
     final transferContent = "Thanh toan don hang ${widget.order.code}";
 
@@ -470,7 +567,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           const SizedBox(height: 24),
 
           // Added Customer Info to QR view for visibility
-          _buildCustomerInfo(),
+          _buildCustomerInfo(user),
 
           const SizedBox(height: 24),
 

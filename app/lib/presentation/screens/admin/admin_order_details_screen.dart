@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
+import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/domain/entities/order_item.dart';
+import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/domain/repositories/product_repository.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
@@ -121,7 +125,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
       child: Column(
         children: [
           const SizedBox(height: 16),
-          // Customer Card
           _buildCustomerCard(
             order,
             surfaceColor,
@@ -131,7 +134,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             isDarkMode,
           ),
           const SizedBox(height: 16),
-          // Payment Status Section
           _buildPaymentStatusSection(
             order,
             surfaceColor,
@@ -141,7 +143,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             isDarkMode,
           ),
           const SizedBox(height: 16),
-          // Shipping Info Section
           _buildShippingInfoSection(
             order,
             surfaceColor,
@@ -151,7 +152,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             isDarkMode,
           ),
           const SizedBox(height: 16),
-          // Order Items Section
           _buildOrderItemsSection(
             order,
             surfaceColor,
@@ -161,7 +161,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             isDarkMode,
           ),
           const SizedBox(height: 16),
-          // Financial Summary
           _buildFinancialSummary(
             order,
             surfaceColor,
@@ -475,7 +474,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          // Driver
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -530,7 +528,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          // Tracking
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -613,62 +610,10 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             separatorBuilder: (context, index) => const Divider(height: 24),
             itemBuilder: (context, index) {
               final item = order.items[index];
-              return Row(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          'https://lh3.googleusercontent.com/aida-public/AB6AXuDxxj1YV6zoC5YFIyQeKacONx06D4T-nyKv1N07AnhUuAXh0DFvE1VY2Om-09b4IK7e5WfWUCnLYVB7i1A3sTdb2zJbyryNTfZ_Ufs-ZSpCJEF7pU6u37nSTpwCnFYGIKWAdGHF8SZWHGV1r2oBX489pxTLb8qDUaZRfJ_ohgcYXPwOR-p_RFZS38ge2svuto9tmQNGdtMIQR9xoYZWtD_gqJloYId3aTaTJLcPQMTR8Cwlfye_2gQIgr36iaa5ESy3ou7LEJRapM4',
-                        ),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.productName ?? 'Product #${item.productId}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          'Service & Installation',
-                          style: TextStyle(color: textSub, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        item.formattedTotalPrice,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        'x${item.quantity}',
-                        style: TextStyle(color: textSub, fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ],
+              return _AdminProductItemRow(
+                item: item,
+                isDarkMode: isDarkMode,
+                textSub: textSub,
               );
             },
           ),
@@ -877,5 +822,102 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
       return order.shippingAddress.split(',').first;
     }
     return 'Customer #${order.id.substring(order.id.length - 4)}';
+  }
+}
+
+class _AdminProductItemRow extends StatefulWidget {
+  final OrderItem item;
+  final bool isDarkMode;
+  final Color textSub;
+
+  const _AdminProductItemRow({
+    required this.item,
+    required this.isDarkMode,
+    required this.textSub,
+  });
+
+  @override
+  State<_AdminProductItemRow> createState() => _AdminProductItemRowState();
+}
+
+class _AdminProductItemRowState extends State<_AdminProductItemRow> {
+  Product? _product;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProduct();
+  }
+
+  Future<void> _loadProduct() async {
+    final result = await sl<ProductRepository>().getProductDetail(
+      productId: widget.item.productId,
+    );
+    result.fold((failure) => null, (product) {
+      if (mounted) setState(() => _product = product);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: widget.isDarkMode
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+            image: _product?.imageUrl != null
+                ? DecorationImage(
+                    image: NetworkImage(_product!.imageUrl),
+                    fit: BoxFit.cover,
+                  )
+                : const DecorationImage(
+                    image: NetworkImage(
+                      'https://lh3.googleusercontent.com/aida-public/AB6AXuDxxj1YV6zoC5YFIyQeKacONx06D4T-nyKv1N07AnhUuAXh0DFvE1VY2Om-09b4IK7e5WfWUCnLYVB7i1A3sTdb2zJbyryNTfZ_Ufs-ZSpCJEF7pU6u37nSTpwCnFYGIKWAdGHF8SZWHGV1r2oBX489pxTLb8qDUaZRfJ_ohgcYXPwOR-p_RFZS38ge2svuto9tmQNGdtMIQR9xoYZWtD_gqJloYId3aTaTJLcPQMTR8Cwlfye_2gQIgr36iaa5ESy3ou7LEJRapM4',
+                    ),
+                    fit: BoxFit.cover,
+                  ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _product?.name ?? 'Product #${widget.item.productId}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                'Service & Installation',
+                style: TextStyle(color: widget.textSub, fontSize: 11),
+              ),
+            ],
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              widget.item.formattedTotalPrice,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            Text(
+              'x${widget.item.quantity}',
+              style: TextStyle(color: widget.textSub, fontSize: 11),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

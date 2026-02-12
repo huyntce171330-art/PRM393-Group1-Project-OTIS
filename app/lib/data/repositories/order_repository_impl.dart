@@ -49,7 +49,6 @@ class OrderRepositoryImpl implements OrderRepository {
                 'product_id': item.productId,
                 'quantity': item.quantity,
                 'price': item.unitPrice,
-                'product_name': item.productName,
               },
             )
             .toList(),

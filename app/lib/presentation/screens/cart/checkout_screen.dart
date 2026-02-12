@@ -7,6 +7,7 @@ import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/domain/entities/order_item.dart';
 import 'package:frontend_otis/domain/entities/cart_item.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/domain/entities/user.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
@@ -16,6 +17,8 @@ import 'package:frontend_otis/presentation/widgets/header_bar.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_event.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_state.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 
 // --- Types ---
 enum DeliveryType { HOME, SHOP }
@@ -152,7 +155,8 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final DeliveryType _deliveryType = DeliveryType.SHOP;
+  final DeliveryType _deliveryType =
+      DeliveryType.HOME; // Default to HOME to use address
   PaymentMethod _paymentMethod = PaymentMethod.cash;
 
   final Map<String, dynamic> _selectedBranch = {
@@ -228,10 +232,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
-    // Address validation (basic)
+    // Get currentUser to use address
+    final authState = context.read<AuthBloc>().state;
+    String userAddress = '';
+
+    if (authState is Authenticated) {
+      userAddress = authState.user.address;
+    }
+
+    // Address validation
     final shippingAddress = _deliveryType == DeliveryType.HOME
-        ? '123 User Address, HCMC'
+        ? userAddress
         : '${_selectedBranch['name']}, ${_selectedBranch['district']}';
+
+    if (_deliveryType == DeliveryType.HOME && shippingAddress.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Shipping address is missing. Please update profile."),
+        ),
+      );
+      return;
+    }
 
     if (shippingAddress.isEmpty) return;
 
@@ -245,7 +266,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               productId: cartItem.productId,
               quantity: cartItem.quantity,
               unitPrice: cartItem.product?.price ?? 0.0,
-              productName: cartItem.product?.name,
             ),
           )
           .toList(),
@@ -263,262 +283,340 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<OrderBloc, OrderState>(
-          listener: (context, state) {
-            if (state is OrderCreated) {
-              // IMPORTANT: Only clear cart if source is 'cart'
-              if (widget.checkoutSource == 'cart') {
-                for (var item in widget.items) {
-                  context.read<CartBloc>().add(
-                    RemoveFromCartEvent(productId: item.productId),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        User? currentUser;
+        if (authState is Authenticated) {
+          currentUser = authState.user;
+        }
+
+        // Validate Profile
+        if (currentUser != null) {
+          final missingInfo =
+              currentUser.fullName.isEmpty ||
+              currentUser.address.isEmpty ||
+              currentUser.phone.isEmpty;
+
+          if (missingInfo) {
+            return Scaffold(
+              appBar: const HeaderBar(title: 'Checkout'),
+              body: _buildProfileUpdateRequired(context),
+            );
+          }
+        }
+
+        return MultiBlocListener(
+          listeners: [
+            BlocListener<OrderBloc, OrderState>(
+              listener: (context, state) {
+                if (state is OrderCreated) {
+                  // IMPORTANT: Only clear cart if source is 'cart'
+                  if (widget.checkoutSource == 'cart') {
+                    for (var item in widget.items) {
+                      context.read<CartBloc>().add(
+                        RemoveFromCartEvent(productId: item.productId),
+                      );
+                    }
+                  }
+
+                  final order = state.order;
+
+                  // Navigate based on payment method
+                  if (_paymentMethod == PaymentMethod.cash) {
+                    // COD: Create payment record in background for bookkeeping
+                    context.read<PaymentBloc>().add(
+                      SelectPaymentMethodEvent(
+                        orderId: order.id,
+                        method: PaymentMethod.cash,
+                        amount: order.totalAmount,
+                      ),
+                    );
+                    // Go directly to success
+                    context.go('/booking-success', extra: order);
+                  } else {
+                    // Bank Transfer: Go to payment screen to show QR
+                    context.push(
+                      '/payment',
+                      extra: {'order': order, 'method': _paymentMethod},
+                    );
+                  }
+                } else if (state is OrderError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Order Failed: ${state.message}')),
                   );
                 }
-              }
-
-              final order = state.order;
-
-              // Navigate based on payment method
-              if (_paymentMethod == PaymentMethod.cash) {
-                // COD: Create payment record in background for bookkeeping
-                context.read<PaymentBloc>().add(
-                  SelectPaymentMethodEvent(
-                    orderId: order.id,
-                    method: PaymentMethod.cash,
-                    amount: order.totalAmount,
-                  ),
-                );
-                // Go directly to success
-                context.go('/booking-success', extra: order);
-              } else {
-                // Bank Transfer: Go to payment screen to show QR
-                context.push(
-                  '/payment',
-                  extra: {'order': order, 'method': _paymentMethod},
-                );
-              }
-            } else if (state is OrderError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Order Failed: ${state.message}')),
-              );
-            }
-          },
-        ),
-        BlocListener<PaymentBloc, PaymentState>(
-          listener: (context, state) {
-            if (state is PaymentFailure) {
-              print(
-                "Background Payment Record Creation Failed: ${state.message}",
-              );
-            }
-          },
-        ),
-      ],
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: const HeaderBar(title: 'Checkout'),
-        body: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: _buildDetailCard(
-                          'Branch',
-                          '${_selectedBranch['name']}\n${_selectedBranch['district']}',
-                          _selectedBranch['distance'],
-                          isCentered: true,
-                        ),
-                      ),
-                    ),
-
-                    SectionHeader(
-                      title: 'Order Items (${_effectiveItems.length})',
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: _effectiveItems
-                            .map((item) => _buildItemRow(item))
-                            .toList(),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    const SectionHeader(title: 'Payment Methods'),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: [
-                          PaymentMethodItem(
-                            type: PaymentMethod.cash,
-                            label: 'Cash on Delivery (COD)',
-                            sublabel: 'Pay when you receive',
-                            icon: '💵',
-                            selected: _paymentMethod == PaymentMethod.cash,
-                            onTap: () => setState(
-                              () => _paymentMethod = PaymentMethod.cash,
-                            ),
-                          ),
-                          PaymentMethodItem(
-                            type: PaymentMethod.transfer,
-                            label: 'Bank Transfer',
-                            sublabel: 'Vietcombank, Techcombank',
-                            icon: '🏦',
-                            selected: _paymentMethod == PaymentMethod.transfer,
-                            onTap: () => setState(
-                              () => _paymentMethod = PaymentMethod.transfer,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-                    const SectionHeader(title: 'Customer Information'),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildCustomerInfo(),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    const SectionHeader(title: 'Order Summary'),
-                    Container(
-                      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.grey[200]!),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _buildSummaryRow(
-                            'Tire Price (${_effectiveItems.length} items)',
-                            _formatPrice(_tirePriceTotal),
-                          ),
-                          const SizedBox(height: 12),
-
-                          _buildSummaryRow(
-                            'Discount',
-                            '- ${_formatPrice(_discount)}',
-                            isDiscount: true,
-                          ),
+              },
+            ),
+            BlocListener<PaymentBloc, PaymentState>(
+              listener: (context, state) {
+                if (state is PaymentFailure) {
+                  print(
+                    "Background Payment Record Creation Failed: ${state.message}",
+                  );
+                }
+              },
+            ),
+          ],
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            appBar: const HeaderBar(title: 'Checkout'),
+            body: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_deliveryType == DeliveryType.SHOP)
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Divider(color: Colors.grey[100]),
+                            padding: const EdgeInsets.all(16),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: _buildDetailCard(
+                                'Branch',
+                                '${_selectedBranch['name']}\n${_selectedBranch['district']}',
+                                _selectedBranch['distance'],
+                                isCentered: true,
+                              ),
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                        SectionHeader(
+                          title: 'Order Items (${_effectiveItems.length})',
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            children: _effectiveItems
+                                .map((item) => _buildItemRow(item))
+                                .toList(),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        const SectionHeader(title: 'Payment Methods'),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            children: [
+                              PaymentMethodItem(
+                                type: PaymentMethod.cash,
+                                label: 'Cash on Delivery (COD)',
+                                sublabel: 'Pay when you receive',
+                                icon: '💵',
+                                selected: _paymentMethod == PaymentMethod.cash,
+                                onTap: () => setState(
+                                  () => _paymentMethod = PaymentMethod.cash,
+                                ),
+                              ),
+                              PaymentMethodItem(
+                                type: PaymentMethod.transfer,
+                                label: 'Bank Transfer',
+                                sublabel: 'Vietcombank, Techcombank',
+                                icon: '🏦',
+                                selected:
+                                    _paymentMethod == PaymentMethod.transfer,
+                                onTap: () => setState(
+                                  () => _paymentMethod = PaymentMethod.transfer,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+                        const SectionHeader(title: 'Customer Information'),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _buildCustomerInfo(currentUser),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        const SectionHeader(title: 'Order Summary'),
+                        Container(
+                          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.grey[200]!),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _buildSummaryRow(
+                                'Tire Price (${_effectiveItems.length} items)',
+                                _formatPrice(_tirePriceTotal),
+                              ),
+                              const SizedBox(height: 12),
+
+                              _buildSummaryRow(
+                                'Discount',
+                                '- ${_formatPrice(_discount)}',
+                                isDiscount: true,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                child: Divider(color: Colors.grey[100]),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Grand Total',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatPrice(_grandTotal),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 20,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+                    border: Border(top: BorderSide(color: Colors.grey[100]!)),
+                  ),
+                  child: SafeArea(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               const Text(
-                                'Grand Total',
+                                'Total Payment',
                                 style: TextStyle(
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  color: Colors.grey,
                                 ),
                               ),
                               Text(
                                 _formatPrice(_grandTotal),
                                 style: const TextStyle(
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 20,
                                   color: AppColors.primary,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        ElevatedButton(
+                          onPressed: _onConfirmBooking,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 4,
+                            shadowColor: AppColors.primary.withOpacity(0.4),
+                          ),
+                          child: const Row(
+                            children: [
+                              Text(
+                                'Place Order',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.check, size: 18),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
                   ),
-                ],
-                border: Border(top: BorderSide(color: Colors.grey[100]!)),
-              ),
-              child: SafeArea(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Total Payment',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            _formatPrice(_grandTotal),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: _onConfirmBooking,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 4,
-                        shadowColor: AppColors.primary.withOpacity(0.4),
-                      ),
-                      child: const Row(
-                        children: [
-                          Text(
-                            'Place Order',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(Icons.check, size: 18),
-                        ],
-                      ),
-                    ),
-                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProfileUpdateRequired(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              size: 64,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Profile Incomplete",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "We need your full name, address, and phone number to complete the order. Please update your profile.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () =>
+                    context.push('/profile/update'), // Navigate to update
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "Update Profile Now",
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -577,7 +675,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildCustomerInfo() {
+  Widget _buildCustomerInfo(User? user) {
+    final name = user?.fullName.isNotEmpty == true ? user!.fullName : "Unknown";
+    final address = user?.address.isNotEmpty == true
+        ? user!.address
+        : "No Address";
+    final phone = user?.phone.isNotEmpty == true ? user!.phone : "No Phone";
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -587,7 +691,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       child: Column(
         children: [
-          _buildInfoRow(Icons.person_outline, "Full Name", "Nguyen Van A"),
+          _buildInfoRow(Icons.person_outline, "Full Name", name),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Divider(height: 1),
+          ),
+          _buildInfoRow(Icons.phone_outlined, "Phone Number", phone),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Divider(height: 1),
@@ -595,7 +704,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           _buildInfoRow(
             Icons.location_on_outlined,
             "Delivery Address",
-            "123 Ly Tu Trong, District 1, HCMC",
+            address,
           ),
         ],
       ),
@@ -800,7 +909,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: isDiscount ? Colors.green : Colors.grey[900],
+            color: isDiscount ? Colors.red : Colors.black87,
           ),
         ),
       ],

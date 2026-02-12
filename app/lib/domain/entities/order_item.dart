@@ -5,29 +5,21 @@ class OrderItem extends Equatable {
   final String productId;
   final int quantity;
   final double unitPrice;
-  final String? productName;
 
   const OrderItem({
     required this.productId,
     required this.quantity,
     required this.unitPrice,
-    this.productName,
   });
 
   @override
-  List<Object?> get props => [productId, quantity, unitPrice, productName];
+  List<Object?> get props => [productId, quantity, unitPrice];
 
-  OrderItem copyWith({
-    String? productId,
-    int? quantity,
-    double? unitPrice,
-    String? productName,
-  }) {
+  OrderItem copyWith({String? productId, int? quantity, double? unitPrice}) {
     return OrderItem(
       productId: productId ?? this.productId,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
-      productName: productName ?? this.productName,
     );
   }
 

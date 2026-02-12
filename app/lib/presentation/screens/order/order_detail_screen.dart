@@ -3,11 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/domain/entities/order_item.dart';
+import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/domain/entities/user.dart';
+import 'package:frontend_otis/domain/repositories/product_repository.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
-import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
-import 'package:frontend_otis/presentation/screens/payment/payment_screen.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend_otis/presentation/widgets/header_bar.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -61,26 +65,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Status Section
                 _buildStatusSection(order, surfaceColor),
                 const SizedBox(height: 2),
-
-                // Product List
                 _buildProductList(order, surfaceColor),
                 const SizedBox(height: 2),
-
-                // Delivery Info
                 _buildDeliveryInfo(order, surfaceColor),
                 const SizedBox(height: 2),
-
-                // Cost Summary
                 _buildCostSummary(order, surfaceColor),
-                const SizedBox(height: 80), // Space for fixed footer
+                const SizedBox(height: 80),
               ],
             ),
           ),
         ),
-        // Fixed Footer
         _buildFixedFooter(order, surfaceColor),
       ],
     );
@@ -88,11 +84,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildStatusSection(Order order, Color surfaceColor) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = const Color(0xFF135BEC);
+    final statusColor = Colors.red;
 
-    // Determine stepper status
     int currentStep = 0;
-    if (order.status == OrderStatus.pendingPayment)
+    if (order.status == OrderStatus.pendingPayment ||
+        order.status == OrderStatus.paid)
       currentStep = 0;
     else if (order.status == OrderStatus.processing)
       currentStep = 1;
@@ -108,7 +104,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           Text(
             order.status == OrderStatus.completed
                 ? 'Arrived on ${order.formattedCreatedAt}'
-                : 'Arriving soon...',
+                : (order.status == OrderStatus.canceled
+                      ? 'Order Cancelled'
+                      : 'Arriving soon...'),
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -116,18 +114,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          // Stepper
           Stack(
             alignment: Alignment.center,
             children: [
-              // Progress Line Background
               Container(
                 height: 4,
                 width: double.infinity,
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
               ),
-              // Progress Line Active
               LayoutBuilder(
                 builder: (context, constraints) {
                   double progressWidth = 0;
@@ -141,12 +136,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: Container(
                       height: 4,
                       width: progressWidth,
-                      color: primaryColor,
+                      color: statusColor,
                     ),
                   );
                 },
               ),
-              // Steps
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -154,28 +148,28 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     Icons.check,
                     currentStep >= 0,
                     'Ordered',
-                    primaryColor,
+                    statusColor,
                     true,
                   ),
                   _buildStepCircle(
                     Icons.local_shipping,
                     currentStep >= 1,
                     'Shipping',
-                    primaryColor,
+                    statusColor,
                     currentStep >= 1,
                   ),
                   _buildStepCircle(
                     Icons.home,
                     currentStep >= 2,
                     'Delivered',
-                    primaryColor,
+                    statusColor,
                     currentStep >= 2,
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 24), // Extra padding for labels
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -233,17 +227,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Items (${order.items.length})',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            child: Text(
+              'Items (${order.items.length})',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
           const Divider(height: 1),
@@ -258,63 +244,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   : Colors.grey[100],
             ),
             itemBuilder: (context, index) {
-              final item = order.items[index];
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.image,
-                        color: Colors.grey,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.productName ?? 'Product #${item.productId}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Qty: ${item.quantity}',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                              ),
-                              Text(
-                                item.formattedTotalPrice,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              return _ProductItemRow(
+                item: order.items[index],
+                isDarkMode: isDarkMode,
               );
             },
           ),
@@ -325,60 +257,83 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildDeliveryInfo(Order order, Color surfaceColor) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = const Color(0xFF135BEC);
+    final primaryColor = Colors.red;
 
-    return Container(
-      color: surfaceColor,
-      padding: const EdgeInsets.all(16),
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        User? user;
+        if (state is Authenticated) {
+          user = state.user;
+        }
+
+        final customerName = user?.fullName.isNotEmpty == true
+            ? user!.fullName
+            : "Guest";
+        final customerPhone = user?.phone.isNotEmpty == true
+            ? user!.phone
+            : "N/A";
+
+        return Container(
+          color: surfaceColor,
+          padding: const EdgeInsets.all(16),
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: primaryColor.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.person, size: 16, color: primaryColor),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'CUSTOMER INFORMATION',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.person, size: 16, color: primaryColor),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'CUSTOMER INFORMATION',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildCustomerDetailItem(
+                      'Full Name',
+                      customerName,
+                      isDarkMode,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCustomerDetailItem(
+                      'Phone Number',
+                      customerPhone,
+                      isDarkMode,
+                      icon: Icons.phone,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCustomerDetailItem(
+                      'Delivery Address',
+                      order.shippingAddress.isNotEmpty &&
+                              !order.shippingAddress.contains("OTIS Shop")
+                          ? order.shippingAddress
+                          : "123 Ly Tu Trong, District 1, HCMC",
+                      isDarkMode,
+                      icon: Icons.location_on,
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                _buildCustomerDetailItem(
-                  'Full Name',
-                  'Nguyen Van A',
-                  isDarkMode,
-                ),
-                const SizedBox(height: 12),
-                _buildCustomerDetailItem(
-                  'Delivery Address',
-                  order.shippingAddress.isNotEmpty &&
-                          !order.shippingAddress.contains("OTIS Shop")
-                      ? order.shippingAddress
-                      : "123 Ly Tu Trong, District 1, HCMC",
-                  isDarkMode,
-                  icon: Icons.location_on,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -388,7 +343,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     bool isDarkMode, {
     IconData? icon,
   }) {
-    final primaryColor = const Color(0xFF135BEC);
+    final primaryColor = Colors.red;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -430,7 +385,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildCostSummary(Order order, Color surfaceColor) {
-    final primaryColor = const Color(0xFF135BEC);
+    final primaryColor = Colors.red;
     return Container(
       color: surfaceColor,
       padding: const EdgeInsets.all(16),
@@ -447,12 +402,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildSummaryRow(
-            'Subtotal',
-            order.formattedTotalAmount,
-          ), // Placeholder subtotal
+          _buildSummaryRow('Subtotal', order.formattedTotalAmount),
           _buildSummaryRow('Shipping', 'Free'),
-          _buildSummaryRow('Estimated Tax', '0 đ'), // Placeholder tax
+          _buildSummaryRow('Estimated Tax', '0 đ'),
           const Divider(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -493,86 +445,152 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildFixedFooter(Order order, Color surfaceColor) {
-    final primaryColor = const Color(0xFF135BEC);
+    final bool canCancel =
+        order.status == OrderStatus.pendingPayment ||
+        order.status == OrderStatus.processing ||
+        order.status == OrderStatus.paid;
+
+    Widget actionButton;
+
+    if (canCancel) {
+      actionButton = ElevatedButton(
+        onPressed: () {
+          context.read<OrderBloc>().add(
+            UpdateOrderStatusEvent(order.id, 'canceled'),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          elevation: 0,
+        ),
+        child: const Text(
+          'Cancel Order',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      );
+    } else {
+      actionButton = ElevatedButton(
+        onPressed: () {
+          // Re-order logic
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          elevation: 0,
+        ),
+        child: const Text(
+          'Re-order',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: surfaceColor,
-        border: Border(
-          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1))),
       ),
+      child: Row(children: [Expanded(child: actionButton)]),
+    );
+  }
+}
+
+class _ProductItemRow extends StatefulWidget {
+  final OrderItem item;
+  final bool isDarkMode;
+  const _ProductItemRow({required this.item, required this.isDarkMode});
+
+  @override
+  State<_ProductItemRow> createState() => _ProductItemRowState();
+}
+
+class _ProductItemRowState extends State<_ProductItemRow> {
+  Product? _product;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProduct();
+  }
+
+  Future<void> _loadProduct() async {
+    final result = await sl<ProductRepository>().getProductDetail(
+      productId: widget.item.productId,
+    );
+    result.fold((failure) => null, (product) {
+      if (mounted) {
+        setState(() {
+          _product = product;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(color: Colors.grey[300]!),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Rate Product',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: widget.isDarkMode ? Colors.grey[900] : Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              image: _product?.imageUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(_product!.imageUrl),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
+            child: _product?.imageUrl == null
+                ? const Icon(Icons.image, color: Colors.grey, size: 32)
+                : null,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
-            child: ElevatedButton(
-              onPressed: () {
-                if (order.status == OrderStatus.pendingPayment) {
-                  _navigateToPayment(context, order);
-                } else {
-                  // Re-order logic
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _product?.name ?? 'Product #${widget.item.productId}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                elevation: 0,
-              ),
-              child: Text(
-                order.status == OrderStatus.pendingPayment
-                    ? 'Pay Now'
-                    : 'Re-order',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Qty: ${widget.item.quantity}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                    Text(
+                      widget.item.formattedTotalPrice,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
-  }
-
-  void _navigateToPayment(BuildContext context, Order order) async {
-    try {
-      final result = await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => sl<PaymentBloc>(),
-            child: PaymentScreen(order: order),
-          ),
-        ),
-      );
-
-      if (result == true) {
-        if (mounted) {
-          context.read<OrderBloc>().add(GetOrderDetailEvent(widget.orderId));
-        }
-      }
-    } catch (e) {
-      debugPrint('Navigation to Payment Screen failed: $e');
-    }
   }
 }
