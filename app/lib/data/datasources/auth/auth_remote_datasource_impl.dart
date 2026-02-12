@@ -27,7 +27,6 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
   /// In-memory OTP store
   static final Map<String, _OtpSession> _otpStore = {};
 
-
   AuthRemoteDatasourceImpl(this.database);
 
   // ─────────────────────────────────────────────
@@ -44,7 +43,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (result.isEmpty) {
-      throw ServerFailure('Invalid phone or password');
+      throw ServerFailure(message: 'Invalid phone or password');
     }
 
     return UserModel.fromJson(result.first);
@@ -52,10 +51,10 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
 
   @override
   Future<UserModel> register(
-      String fullName,
-      String password,
-      String phone,
-      ) async {
+    String fullName,
+    String password,
+    String phone,
+  ) async {
     final exists = await database.query(
       'users',
       where: 'phone = ?',
@@ -64,20 +63,17 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (exists.isNotEmpty) {
-      throw ServerFailure('Phone number already exists');
+      throw ServerFailure(message: 'Phone number already exists');
     }
 
-    await database.insert(
-      'users',
-      {
-        'full_name': fullName,
-        'phone': phone,
-        'password_hash': password,
-        'status': 'active',
-        'role_id': 0,
-        'created_at': DateTime.now().toIso8601String(),
-      },
-    );
+    await database.insert('users', {
+      'full_name': fullName,
+      'phone': phone,
+      'password_hash': password,
+      'status': 'active',
+      'role_id': 0,
+      'created_at': DateTime.now().toIso8601String(),
+    });
 
     final result = await database.query(
       'users',
@@ -87,7 +83,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (result.isEmpty) {
-      throw ServerFailure('Failed to create user');
+      throw ServerFailure(message: 'Failed to create user');
     }
 
     return UserModel.fromJson(result.first);
@@ -112,7 +108,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (user.isEmpty) {
-      throw ServerFailure('Phone number not found');
+      throw ServerFailure(message: 'Phone number not found');
     }
 
     final otp = _generateOtp();
@@ -132,22 +128,21 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     final session = _otpStore[phone];
 
     if (session == null) {
-      throw ServerFailure('OTP not requested');
+      throw ServerFailure(message: 'OTP not requested');
     }
 
     if (DateTime.now().isAfter(session.expiresAt)) {
       _otpStore.remove(phone);
-      throw ServerFailure('OTP expired');
+      throw ServerFailure(message: 'OTP expired');
     }
 
     if (session.otp != otp) {
-      throw ServerFailure('Invalid OTP');
+      throw ServerFailure(message: 'Invalid OTP');
     }
 
     // Mark as verified (OTP itself is now useless)
     session.verified = true;
   }
-
 
   // ─────────────────────────────────────────────
   // 🔑 PASSWORD
@@ -158,7 +153,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     final session = _otpStore[phone];
 
     if (session == null || session.verified != true) {
-      throw ServerFailure('OTP verification required');
+      throw ServerFailure(message: 'OTP verification required');
     }
 
     final count = await database.update(
@@ -169,13 +164,12 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (count == 0) {
-      throw ServerFailure('Failed to reset password');
+      throw ServerFailure(message: 'Failed to reset password');
     }
 
     // OTP is single-use → destroy session
     _otpStore.remove(phone);
   }
-
 
   @override
   Future<void> changePassword(String phone, String newPassword) async {
@@ -187,7 +181,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (count == 0) {
-      throw ServerFailure('Failed to change password');
+      throw ServerFailure(message: 'Failed to change password');
     }
   }
 
@@ -199,8 +193,6 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     final random = Random();
     return (100000 + random.nextInt(900000)).toString(); // 6-digit OTP
   }
-
-
 }
 
 class _OtpSession {

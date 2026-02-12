@@ -1,4 +1,4 @@
-import 'package:fpdart/fpdart.dart';
+import 'package:dartz/dartz.dart';
 
 import '../../../core/error/failures.dart';
 import '../../repositories/auth_repository.dart';
@@ -9,12 +9,8 @@ class OtpUseCase {
   OtpUseCase(this.repository);
 
   /// Request OTP (Forgot / Change password)
-  Future<Either<Failure, void>> requestOtp({
-    required String phone,
-  }) async {
-    return repository.requestOtp(
-      phone: phone,
-    );
+  Future<Either<Failure, void>> requestOtp({required String phone}) async {
+    return repository.requestOtp(phone: phone);
   }
 
   /// Verify OTP
@@ -22,9 +18,6 @@ class OtpUseCase {
     required String phone,
     required String otp,
   }) async {
-    return repository.verifyOtp(
-      phone: phone,
-      otp: otp,
-    );
+    return repository.verifyOtp(phone: phone, otp: otp);
   }
 }

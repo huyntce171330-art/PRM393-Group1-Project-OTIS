@@ -23,8 +23,13 @@ class ProductRepositoryImpl implements ProductRepository {
   });
 
   @override
-  Future<Either<Failure, ({List<Product> products, int totalCount, int totalPages, bool hasMore})>>
-      getProductsWithMetadata({
+  Future<
+    Either<
+      Failure,
+      ({List<Product> products, int totalCount, int totalPages, bool hasMore})
+    >
+  >
+  getProductsWithMetadata({
     required ProductFilter filter,
     required int page,
     required int limit,
@@ -66,8 +71,8 @@ class ProductRepositoryImpl implements ProductRepository {
         totalPages: productList.totalPages,
         hasMore: productList.hasMore,
       ));
-    } on ServerException {
-      return Left(ServerFailure());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Server error'));
     } on CacheException {
       return Left(CacheFailure());
     } on Exception catch (e) {
@@ -95,7 +100,9 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, Product>> getProductDetail({required String productId}) async {
+  Future<Either<Failure, Product>> getProductDetail({
+    required String productId,
+  }) async {
     // Check network connectivity
     if (!(await networkInfo.isConnected)) {
       return Left(NetworkFailure());
@@ -103,7 +110,9 @@ class ProductRepositoryImpl implements ProductRepository {
 
     try {
       // Fetch product detail from data source
-      final result = await productRemoteDatasource.getProductDetail(productId: productId);
+      final result = await productRemoteDatasource.getProductDetail(
+        productId: productId,
+      );
 
       if (result.products.isEmpty) {
         return Left(ServerFailure(message: 'Product not found'));
@@ -125,8 +134,8 @@ class ProductRepositoryImpl implements ProductRepository {
       );
 
       return Right(product);
-    } on ServerException {
-      return Left(ServerFailure());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Server error'));
     } on CacheException {
       return Left(CacheFailure());
     } catch (e) {

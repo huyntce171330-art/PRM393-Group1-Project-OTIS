@@ -4,8 +4,12 @@
 // Follows the testing guidelines from the Cursor Rules.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_event.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
@@ -17,8 +21,11 @@ import 'package:bloc_test/bloc_test.dart';
 class MockProductBloc extends MockBloc<ProductEvent, ProductState>
     implements ProductBloc {}
 
+class MockCartBloc extends MockBloc<CartEvent, CartState> implements CartBloc {}
+
 void main() {
-  late MockProductBloc mockBloc;
+  late MockProductBloc mockProductBloc;
+  late MockCartBloc mockCartBloc;
   const testProductId = '1';
   final testProduct = Product(
     id: '1',
@@ -32,13 +39,15 @@ void main() {
   );
 
   setUp(() {
-    mockBloc = MockProductBloc();
+    mockProductBloc = MockProductBloc();
+    mockCartBloc = MockCartBloc();
     // Register the mock bloc with GetIt so ProductDetailScreen can find it
-    get_it.GetIt.instance.registerSingleton<ProductBloc>(mockBloc);
+    get_it.GetIt.instance.registerSingleton<ProductBloc>(mockProductBloc);
   });
 
   tearDown(() {
-    mockBloc.close();
+    mockProductBloc.close();
+    mockCartBloc.close();
     // Unregister the mock bloc after each test
     if (get_it.GetIt.instance.isRegistered<ProductBloc>()) {
       get_it.GetIt.instance.unregister<ProductBloc>();
@@ -46,29 +55,34 @@ void main() {
   });
 
   Widget createWidgetUnderTest() {
-    return MaterialApp(home: ProductDetailScreen(productId: testProductId));
+    return MultiBlocProvider(
+      providers: [BlocProvider<CartBloc>.value(value: mockCartBloc)],
+      child: MaterialApp(home: ProductDetailScreen(productId: testProductId)),
+    );
   }
 
   testWidgets('should trigger GetProductDetailEvent on init', (tester) async {
     // Arrange
-    when(() => mockBloc.state).thenReturn(const ProductInitial());
+    when(() => mockProductBloc.state).thenReturn(const ProductInitial());
+    when(() => mockCartBloc.state).thenReturn(CartInitial());
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
 
     // Assert
     verify(
-      () => mockBloc.add(const GetProductDetailEvent(id: testProductId)),
+      () => mockProductBloc.add(const GetProductDetailEvent(id: testProductId)),
     ).called(1);
   });
 
   testWidgets('shows loading indicator when state is loading', (tester) async {
     // Arrange
     whenListen(
-      mockBloc,
+      mockProductBloc,
       Stream.value(const ProductLoading()),
-      initialState: const ProductInitial(),
+      initialState: const ProductLoading(),
     );
+    when(() => mockCartBloc.state).thenReturn(CartInitial());
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
@@ -82,10 +96,11 @@ void main() {
   testWidgets('shows product name when state is detailLoaded', (tester) async {
     // Arrange
     whenListen(
-      mockBloc,
+      mockProductBloc,
       Stream.value(ProductDetailLoaded(product: testProduct)),
-      initialState: const ProductInitial(),
+      initialState: const ProductLoading(),
     );
+    when(() => mockCartBloc.state).thenReturn(CartInitial());
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
@@ -100,10 +115,11 @@ void main() {
     (tester) async {
       // Arrange
       whenListen(
-        mockBloc,
+        mockProductBloc,
         Stream.value(ProductDetailLoaded(product: testProduct)),
-        initialState: const ProductInitial(),
+        initialState: const ProductLoading(),
       );
+      when(() => mockCartBloc.state).thenReturn(CartInitial());
 
       // Act
       await tester.pumpWidget(createWidgetUnderTest());
@@ -118,10 +134,11 @@ void main() {
   testWidgets('shows In Stock badge when product is in stock', (tester) async {
     // Arrange
     whenListen(
-      mockBloc,
+      mockProductBloc,
       Stream.value(ProductDetailLoaded(product: testProduct)),
-      initialState: const ProductInitial(),
+      initialState: const ProductLoading(),
     );
+    when(() => mockCartBloc.state).thenReturn(CartInitial());
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
@@ -137,10 +154,11 @@ void main() {
     // Arrange
     final outOfStockProduct = testProduct.copyWith(stockQuantity: 0);
     whenListen(
-      mockBloc,
+      mockProductBloc,
       Stream.value(ProductDetailLoaded(product: outOfStockProduct)),
-      initialState: const ProductInitial(),
+      initialState: const ProductLoading(),
     );
+    when(() => mockCartBloc.state).thenReturn(CartInitial());
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
@@ -154,10 +172,11 @@ void main() {
     // Arrange
     const errorMessage = 'Product not found';
     whenListen(
-      mockBloc,
+      mockProductBloc,
       Stream.value(const ProductError(message: errorMessage)),
-      initialState: const ProductInitial(),
+      initialState: const ProductLoading(),
     );
+    when(() => mockCartBloc.state).thenReturn(CartInitial());
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
@@ -174,10 +193,11 @@ void main() {
     // Arrange
     const errorMessage = 'Product not found';
     whenListen(
-      mockBloc,
+      mockProductBloc,
       Stream.value(const ProductError(message: errorMessage)),
-      initialState: const ProductInitial(),
+      initialState: const ProductLoading(),
     );
+    when(() => mockCartBloc.state).thenReturn(CartInitial());
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
@@ -187,7 +207,7 @@ void main() {
 
     // Assert - Should trigger the event again
     verify(
-      () => mockBloc.add(const GetProductDetailEvent(id: testProductId)),
+      () => mockProductBloc.add(const GetProductDetailEvent(id: testProductId)),
     ).called(2);
   });
 
@@ -196,10 +216,11 @@ void main() {
   ) async {
     // Arrange
     whenListen(
-      mockBloc,
+      mockProductBloc,
       Stream.value(const ProductLoading()),
-      initialState: const ProductInitial(),
+      initialState: const ProductLoading(),
     );
+    when(() => mockCartBloc.state).thenReturn(CartInitial());
 
     // Act
     await tester.pumpWidget(createWidgetUnderTest());
@@ -207,7 +228,7 @@ void main() {
 
     // Assert
     expect(find.byType(AppBar), findsOneWidget);
-    expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_back_ios_new), findsOneWidget);
     expect(find.byIcon(Icons.shopping_cart), findsOneWidget);
   });
 }

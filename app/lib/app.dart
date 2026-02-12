@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'core/injections/auth_injection.dart';
+import 'core/injections/injection_container.dart' as di;
 import 'presentation/screens/home_screen.dart';
 import 'presentation/bloc/auth/auth_bloc.dart';
 
@@ -11,7 +11,7 @@ class OtisApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<AuthBloc>(
-      create: (_) => AuthInjection.provideAuthBloc(),
+      create: (_) => di.sl<AuthBloc>(),
       child: MaterialApp(
         title: 'OTIS Project',
         theme: ThemeData(

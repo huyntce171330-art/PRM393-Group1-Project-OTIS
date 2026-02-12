@@ -6,7 +6,7 @@
 // 3. Define a `call` method taking `LoginParams` (containing email, password) and returning `Future<Either<Failure, User>>`.
 // 4. In `call`, invoke `repository.login(params.email, params.password)`.
 
-import 'package:fpdart/fpdart.dart';
+import 'package:dartz/dartz.dart';
 
 import '../../../core/error/failures.dart';
 import '../../entities/user.dart';
@@ -21,9 +21,6 @@ class LoginUsecase {
     required String phone,
     required String password,
   }) {
-    return repository.login(
-      phone: phone,
-      password: password,
-    );
+    return repository.login(phone: phone, password: password);
   }
 }

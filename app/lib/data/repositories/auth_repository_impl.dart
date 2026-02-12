@@ -14,7 +14,7 @@
 //    - Call `remoteDatasource.logout`.
 //    - Return `Right(null)`.
 
-import 'package:fpdart/fpdart.dart';
+import 'package:dartz/dartz.dart';
 import 'package:frontend_otis/domain/entities/user.dart';
 import 'package:frontend_otis/domain/repositories/auth_repository.dart';
 import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart';
@@ -38,7 +38,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on Failure catch (failure) {
       return Left(failure);
     } catch (_) {
-      return Left(ServerFailure('Login failed'));
+      return Left(ServerFailure(message: 'Login failed'));
     }
   }
 
@@ -59,7 +59,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on Failure catch (failure) {
       return Left(failure);
     } catch (_) {
-      return Left(ServerFailure('Register failed'));
+      return Left(ServerFailure(message: 'Register failed'));
     }
   }
 
@@ -72,7 +72,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on Failure catch (failure) {
       return Left(failure);
     } catch (_) {
-      return Left(ServerFailure('Logout failed'));
+      return Left(ServerFailure(message: 'Logout failed'));
     }
   }
 
@@ -81,16 +81,14 @@ class AuthRepositoryImpl implements AuthRepository {
   // ─────────────────────────────────────────────
 
   @override
-  Future<Either<Failure, void>> requestOtp({
-    required String phone,
-  }) async {
+  Future<Either<Failure, void>> requestOtp({required String phone}) async {
     try {
       await remoteDatasource.requestOtp(phone);
       return const Right(null);
     } on Failure catch (failure) {
       return Left(failure);
     } catch (_) {
-      return Left(ServerFailure('Request OTP failed'));
+      return Left(ServerFailure(message: 'Request OTP failed'));
     }
   }
 
@@ -105,7 +103,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on Failure catch (failure) {
       return Left(failure);
     } catch (_) {
-      return Left(ServerFailure('Verify OTP failed'));
+      return Left(ServerFailure(message: 'Verify OTP failed'));
     }
   }
 
@@ -124,7 +122,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on Failure catch (failure) {
       return Left(failure);
     } catch (_) {
-      return Left(ServerFailure('Reset password failed'));
+      return Left(ServerFailure(message: 'Reset password failed'));
     }
   }
 
@@ -139,7 +137,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on Failure catch (failure) {
       return Left(failure);
     } catch (_) {
-      return Left(ServerFailure('Change password failed'));
+      return Left(ServerFailure(message: 'Change password failed'));
     }
   }
 }

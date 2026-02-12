@@ -87,7 +87,7 @@ void main() {
 
     test('should return failure when repository fails', () async {
       // Arrange
-      const tFailure = ServerFailure(message: 'Server error');
+      final tFailure = ServerFailure(message: 'Server error');
       when(
         () => mockRepository.getProductsWithMetadata(
           filter: any(named: 'filter'),
@@ -268,7 +268,7 @@ void main() {
       });
 
       // Act - Empty query
-      // final result = await usecase('');
+      final result = await usecase('');
 
       // Assert - Empty query should set null searchQuery
       expect(capturedFilter, isNotNull);

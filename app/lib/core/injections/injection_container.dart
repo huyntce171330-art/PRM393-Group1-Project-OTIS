@@ -11,10 +11,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:get_it/get_it.dart';
-import '../../data/datasources/auth/auth_remote_datasource.dart';
-import '../../data/datasources/auth/auth_remote_datasource_impl.dart';
-import './database_helper.dart';
 import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/core/network/network_info.dart';
 import 'package:frontend_otis/core/network/network_info_impl.dart';
@@ -54,6 +50,19 @@ import 'package:frontend_otis/domain/usecases/order/get_orders_usecase.dart';
 import 'package:frontend_otis/domain/usecases/order/update_order_status_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 
+// AUTH IMPORTS
+import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/repositories/auth_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/auth_repository.dart';
+import 'package:frontend_otis/domain/usecases/auth/login_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/register_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/logout_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/otp_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/forgot_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/change_usecase.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -61,13 +70,6 @@ Future<void> init() async {
   // Database instance (singleton)
   final database = await DatabaseHelper.database;
   sl.registerLazySingleton<Database>(() => database);
-
-  // AUTH DATASOURCE (still called "remote" by design)
-  sl.registerLazySingleton<AuthRemoteDatasource>(
-    () => AuthRemoteDatasourceImpl(sl()),
-  );
-
-  print("SQLite Connected Successfully");
 
   // Connectivity checker
   sl.registerLazySingleton<Connectivity>(() => Connectivity());
@@ -102,6 +104,11 @@ Future<void> init() async {
     () => OrderRemoteDatasourceImpl(),
   );
 
+  // Auth Data Source
+  sl.registerLazySingleton<AuthRemoteDatasource>(
+    () => AuthRemoteDatasourceImpl(sl()),
+  );
+
   // ========== 4. REPOSITORIES ==========
   // Product Repository
   sl.registerLazySingleton<ProductRepository>(
@@ -124,18 +131,17 @@ Future<void> init() async {
     () => OrderRepositoryImpl(remoteDatasource: sl()),
   );
 
+  // Auth Repository
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
+
   // ========== 5. USE CASES ==========
   // Product Use Cases
   sl.registerLazySingleton<GetProductsUsecase>(
     () => GetProductsUsecase(productRepository: sl()),
   );
-
-  // Search Products Use Case
   sl.registerLazySingleton<SearchProductsUsecase>(
     () => SearchProductsUsecase(productRepository: sl()),
   );
-
-  // Get Product Detail Use Case
   sl.registerLazySingleton<GetProductDetailUsecase>(
     () => GetProductDetailUsecase(productRepository: sl()),
   );
@@ -176,6 +182,18 @@ Future<void> init() async {
     () => UpdateOrderStatusUseCase(sl()),
   );
 
+  // Auth Use Cases
+  sl.registerLazySingleton<LoginUsecase>(() => LoginUsecase(sl()));
+  sl.registerLazySingleton<RegisterUsecase>(() => RegisterUsecase(sl()));
+  sl.registerLazySingleton<LogoutUsecase>(() => LogoutUsecase(sl()));
+  sl.registerLazySingleton<OtpUseCase>(() => OtpUseCase(sl()));
+  sl.registerLazySingleton<ForgotPasswordUseCase>(
+    () => ForgotPasswordUseCase(sl()),
+  );
+  sl.registerLazySingleton<ChangePasswordUseCase>(
+    () => ChangePasswordUseCase(sl()),
+  );
+
   // ========== 6. BLOCS ==========
   // Product BLoC
   sl.registerLazySingleton<ProductBloc>(
@@ -209,6 +227,18 @@ Future<void> init() async {
       getOrderDetailUseCase: sl(),
       createOrderUseCase: sl(),
       updateOrderStatusUseCase: sl(),
+    ),
+  );
+
+  // Auth BLoC
+  sl.registerFactory<AuthBloc>(
+    () => AuthBloc(
+      loginUsecase: sl(),
+      registerUsecase: sl(),
+      logoutUsecase: sl(),
+      otpUseCase: sl(),
+      forgotPasswordUseCase: sl(),
+      changePasswordUseCase: sl(),
     ),
   );
 

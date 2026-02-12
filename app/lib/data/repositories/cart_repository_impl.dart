@@ -33,8 +33,8 @@ class CartRepositoryImpl implements CartRepository {
       );
       final cartItems = cartModels.map((e) => e.toDomain()).toList();
       return Right(cartItems);
-    } on ServerException {
-      return Left(ServerFailure());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Failed to add to cart'));
     }
   }
 
@@ -50,8 +50,8 @@ class CartRepositoryImpl implements CartRepository {
       );
       final cartItems = cartModels.map((e) => e.toDomain()).toList();
       return Right(cartItems);
-    } on ServerException {
-      return Left(ServerFailure());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Failed to update cart'));
     }
   }
 
@@ -63,8 +63,10 @@ class CartRepositoryImpl implements CartRepository {
       final cartModels = await cartRemoteDatasource.removeFromCart(productId);
       final cartItems = cartModels.map((e) => e.toDomain()).toList();
       return Right(cartItems);
-    } on ServerException {
-      return Left(ServerFailure());
+    } on ServerException catch (e) {
+      return Left(
+        ServerFailure(message: e.message ?? 'Failed to remove from cart'),
+      );
     }
   }
 

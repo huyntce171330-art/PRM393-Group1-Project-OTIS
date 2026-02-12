@@ -6,7 +6,7 @@
 // 3. Define a `call` method taking `RegisterParams` (name, email, password, phone, etc.) and returning `Future<Either<Failure, User>>`.
 // 4. In `call`, invoke `repository.register(...)`.
 
-import 'package:fpdart/fpdart.dart';
+import 'package:dartz/dartz.dart';
 
 import '../../../core/error/failures.dart';
 import '../../entities/user.dart';
@@ -29,4 +29,3 @@ class RegisterUsecase {
     );
   }
 }
-

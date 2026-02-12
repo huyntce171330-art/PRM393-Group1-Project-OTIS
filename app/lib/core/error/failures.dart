@@ -1,21 +1,21 @@
-// This file defines failure handling classes.
-//
-// Steps to implement:
-// 1. Define an abstract class `Failure` with properties like message.
-// 2. Extend it for specific failures:
-//    - `ServerFailure`
-//    - `CacheFailure`
-//    - `NetworkFailure`
+import 'package:equatable/equatable.dart';
 
-abstract class Failure {
+abstract class Failure extends Equatable {
   final String message;
-  Failure(this.message);
+  const Failure(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
 
 class ServerFailure extends Failure {
-  ServerFailure(String message) : super(message);
+  const ServerFailure({String message = 'Server Failure'}) : super(message);
 }
 
 class CacheFailure extends Failure {
-  CacheFailure(String message) : super(message);
+  const CacheFailure({String message = 'Cache Failure'}) : super(message);
+}
+
+class NetworkFailure extends Failure {
+  const NetworkFailure({String message = 'Network Failure'}) : super(message);
 }

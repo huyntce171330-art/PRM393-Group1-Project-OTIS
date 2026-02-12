@@ -89,7 +89,7 @@ void main() {
 
     test('should return failure when repository fails', () async {
       // Arrange
-      const tFailure = ServerFailure(message: 'Server error');
+      final tFailure = ServerFailure(message: 'Server error');
       when(
         () => mockRepository.getProductsWithMetadata(
           filter: any(named: 'filter'),

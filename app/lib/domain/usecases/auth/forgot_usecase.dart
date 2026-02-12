@@ -1,4 +1,4 @@
-import 'package:fpdart/fpdart.dart';
+import 'package:dartz/dartz.dart';
 
 import '../../../core/error/failures.dart';
 import '../../repositories/auth_repository.dart';
@@ -13,9 +13,6 @@ class ForgotPasswordUseCase {
     required String phone,
     required String newPassword,
   }) async {
-    return repository.resetPassword(
-      phone: phone,
-      newPassword: newPassword,
-    );
+    return repository.resetPassword(phone: phone, newPassword: newPassword);
   }
 }

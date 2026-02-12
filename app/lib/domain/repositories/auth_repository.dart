@@ -9,7 +9,7 @@
 // 5. Define `Future<Either<Failure, void>> logout();`
 //    - This might clear local tokens.
 
-import 'package:fpdart/fpdart.dart';
+import 'package:dartz/dartz.dart';
 
 import '../../core/error/failures.dart';
 import '../entities/user.dart';
@@ -40,9 +40,7 @@ abstract class AuthRepository {
 
   /// Request OTP for a phone number.
   /// OTP delivery is handled by data layer (console for now).
-  Future<Either<Failure, void>> requestOtp({
-    required String phone,
-  });
+  Future<Either<Failure, void>> requestOtp({required String phone});
 
   /// Verify OTP for a phone number.
   Future<Either<Failure, void>> verifyOtp({
@@ -68,4 +66,3 @@ abstract class AuthRepository {
     required String newPassword,
   });
 }
-

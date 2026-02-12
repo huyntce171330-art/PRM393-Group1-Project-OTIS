@@ -104,9 +104,9 @@ void main() {
       build: () => productBloc,
       act: (bloc) {
         const filter = ProductFilter(page: 1, limit: 10);
-        when(() => mockGetProductsUsecase(filter)).thenAnswer(
-          (_) async => const Left(ServerFailure(message: 'Server error')),
-        );
+        when(
+          () => mockGetProductsUsecase(filter),
+        ).thenAnswer((_) async => Left(ServerFailure(message: 'Server error')));
         bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
@@ -153,12 +153,12 @@ void main() {
           () => mockGetProductsUsecase(
             const ProductFilter(page: 1, searchQuery: 'Test'),
           ),
-        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        ).thenAnswer((_) async => Left(NetworkFailure()));
         bloc.add(const SearchProductsEvent(query: 'Test'));
       },
       expect: () => [
         const ProductLoading(),
-        const ProductError(message: 'No internet connection'),
+        const ProductError(message: 'Network Failure'),
       ],
     );
 
@@ -183,9 +183,9 @@ void main() {
       build: () => productBloc,
       act: (bloc) {
         const productId = '1';
-        when(() => mockGetProductDetailUsecase(productId)).thenAnswer(
-          (_) async => const Left(ServerFailure(message: 'Not found')),
-        );
+        when(
+          () => mockGetProductDetailUsecase(productId),
+        ).thenAnswer((_) async => Left(ServerFailure(message: 'Not found')));
         bloc.add(const GetProductDetailEvent(id: productId));
       },
       expect: () => [
@@ -200,7 +200,7 @@ void main() {
       act: (bloc) {
         const productId = '999';
         when(() => mockGetProductDetailUsecase(productId)).thenAnswer(
-          (_) async => const Left(ServerFailure(message: 'Product not found')),
+          (_) async => Left(ServerFailure(message: 'Product not found')),
         );
         bloc.add(const GetProductDetailEvent(id: productId));
       },
