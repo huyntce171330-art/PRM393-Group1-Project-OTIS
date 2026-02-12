@@ -271,6 +271,7 @@ void main() {
       final result = await usecase('');
 
       // Assert - Empty query should set null searchQuery
+      expect(result.isRight(), true);
       expect(capturedFilter, isNotNull);
       expect(capturedFilter!.searchQuery, isNull);
     });
