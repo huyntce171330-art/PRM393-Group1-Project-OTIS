@@ -770,7 +770,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             Expanded(child: leftButton),
             const SizedBox(width: 8),
           ],
-          if (rightButton != null) Expanded(child: rightButton),
+          Expanded(child: rightButton),
           const SizedBox(width: 8),
           Expanded(
             flex: 0,
