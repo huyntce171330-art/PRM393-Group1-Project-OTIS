@@ -22,8 +22,17 @@ import 'package:frontend_otis/domain/usecases/product/create_product_usecase.dar
 import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/permanent_delete_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/restore_product_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_event.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_state.dart';
+
+/// Filter status for showing active/inactive products
+enum FilterStatus {
+  active, // Show only active products (is_active = 1)
+  inactive, // Show only inactive products (is_active = 0)
+  all, // Show all products (no filter)
+}
 
 /// BLoC for managing Admin Product Inventory state and business logic.
 ///
@@ -35,6 +44,13 @@ import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_stat
 /// Dependency Injection:
 /// All use cases are injected via constructor for testability.
 class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
+  // Track the currently loading product ID to prevent duplicate calls
+  String? _currentlyLoadingProductId;
+
+  // Track the last loaded product ID
+  String? _lastLoadedProductId;
+
+  // ... existing code ...
   /// Use case for fetching paginated admin product list with brand/stock filters
   final GetAdminProductsUsecase getAdminProductsUsecase;
 
@@ -47,8 +63,17 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
   /// Use case for creating a product
   final CreateProductUsecase createProductUsecase;
 
+  /// Use case for restoring a deleted product
+  final RestoreProductUsecase restoreProductUsecase;
+
+  /// Use case for permanently deleting a product
+  final PermanentDeleteProductUsecase permanentDeleteProductUsecase;
+
   /// Current filter state for pagination and filtering
   AdminProductFilter _currentFilter = const AdminProductFilter();
+
+  /// Current showInactive filter status (default: active only)
+  bool? _currentShowInactive = false;
 
   /// Cache for products when navigating to detail screen
   /// This preserves products so List screen can show cached data when back navigation
@@ -63,11 +88,15 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
   /// [getProductDetailUsecase]: Required use case for fetching product details
   /// [deleteProductUsecase]: Required use case for deleting products
   /// [createProductUsecase]: Required use case for creating products
+  /// [restoreProductUsecase]: Required use case for restoring deleted products
+  /// [permanentDeleteProductUsecase]: Required use case for permanent deletion
   AdminProductBloc({
     required this.getAdminProductsUsecase,
     required this.getProductDetailUsecase,
     required this.deleteProductUsecase,
     required this.createProductUsecase,
+    required this.restoreProductUsecase,
+    required this.permanentDeleteProductUsecase,
   }) : super(AdminProductState.initial()) {
     // Register event handlers
     _registerEventHandlers();
@@ -78,7 +107,11 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
     on<GetAdminProductsEvent>((event, emit) async {
       print('=== DEBUG BLOC: GetAdminProductsEvent ===');
       print('DEBUG: event.filter: ${event.filter}');
-      print('DEBUG: _currentFilter BEFORE: brandName=${_currentFilter.brandName}, stockStatus=${_currentFilter.stockStatus}');
+      print('DEBUG: event.showInactive: ${event.showInactive}');
+      print(
+        'DEBUG: _currentFilter BEFORE: brandName=${_currentFilter.brandName}, stockStatus=${_currentFilter.stockStatus}',
+      );
+      print('DEBUG: _currentShowInactive BEFORE: $_currentShowInactive');
       print('DEBUG: _cachedProducts count: ${_cachedProducts.length}');
       print('DEBUG: _cachedFilter: $_cachedFilter');
       print('DEBUG: state type: ${state.runtimeType}');
@@ -86,8 +119,7 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
       // Check if we should use cached products (back navigation from detail)
       // Use cache if: event.filter is null AND we have cached products AND coming from detail state
       // OR: we have cached products AND _currentFilter is preserved (back navigation with filter)
-      final useCache = event.filter == null &&
-          _cachedProducts.isNotEmpty;
+      final useCache = event.filter == null && _cachedProducts.isNotEmpty;
 
       print('DEBUG: useCache=$useCache');
       print('DEBUG: _cachedProducts.length=${_cachedProducts.length}');
@@ -96,12 +128,12 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
 
       if (useCache) {
         print('DEBUG: USING CACHED PRODUCTS!');
-        
+
         // If we have cachedFilter, restore it. Otherwise, use currentFilter.
         final filterToUse = _cachedFilter ?? _currentFilter;
         _currentFilter = filterToUse;
-        _cachedFilter = null;  // Clear after use
-        
+        _cachedFilter = null; // Clear after use
+
         // Emit loaded state with cached products immediately (no API call!)
         emit(
           AdminProductState.loaded(
@@ -116,7 +148,7 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
             isLoadingMore: false,
           ),
         );
-        
+
         // Clear cache after using
         _cachedProducts = [];
         print('DEBUG: Cache cleared');
@@ -139,9 +171,19 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
       }
       // else: DO NOTHING - keep existing _currentFilter
 
-      print('DEBUG: _currentFilter AFTER: brandName=${_currentFilter.brandName}, stockStatus=${_currentFilter.stockStatus}');
+      // Update showInactive if provided
+      if (event.showInactive != null) {
+        _currentShowInactive = event.showInactive;
+        print('DEBUG: Updated _currentShowInactive to: $_currentShowInactive');
+      }
+
+      print(
+        'DEBUG: _currentFilter AFTER: brandName=${_currentFilter.brandName}, stockStatus=${_currentFilter.stockStatus}',
+      );
+      print('DEBUG: _currentShowInactive AFTER: $_currentShowInactive');
 
       final filter = _currentFilter;
+      final showInactive = _currentShowInactive;
       final isLoadMore = filter.page > 1;
 
       // Preserve products when emitting loading state
@@ -156,7 +198,11 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
       }
 
       // Use getAdminProductsUsecase to support brandName and stockStatus filters
-      final result = await getAdminProductsUsecase(filter);
+      // Pass showInactive to filter by active status
+      final result = await getAdminProductsUsecase(
+        filter,
+        showInactive: showInactive,
+      );
       result.fold(
         (failure) {
           // On failure, emit error and reset loading more flag
@@ -174,20 +220,23 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
             // APPEND products when loading more pages
             final currentState = state as AdminProductLoaded;
             final existingIds = currentState.products.map((p) => p.id).toSet();
-            final newProducts =
-                products.where((p) => !existingIds.contains(p.id)).toList();
+            final newProducts = products
+                .where((p) => !existingIds.contains(p.id))
+                .toList();
 
-            emit(currentState.copyWith(
-              products: [...currentState.products, ...newProducts],
-              filter: filter,
-              selectedBrand: filter.brandName,
-              stockStatus: filter.stockStatus,
-              currentPage: filter.page,
-              totalPages: metadata.totalPages,
-              hasMore: hasMore,
-              totalCount: metadata.totalCount,
-              isLoadingMore: false,
-            ));
+            emit(
+              currentState.copyWith(
+                products: [...currentState.products, ...newProducts],
+                filter: filter,
+                selectedBrand: filter.brandName,
+                stockStatus: filter.stockStatus,
+                currentPage: filter.page,
+                totalPages: metadata.totalPages,
+                hasMore: hasMore,
+                totalCount: metadata.totalCount,
+                isLoadingMore: false,
+              ),
+            );
           } else {
             // First page - replace products
             emit(
@@ -212,7 +261,9 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
     on<FilterByBrandEvent>((event, emit) async {
       print('=== DEBUG BLOC: FilterByBrandEvent ===');
       print('DEBUG: event.brandName: ${event.brandName}');
-      print('DEBUG: _currentFilter BEFORE: brandName=${_currentFilter.brandName}');
+      print(
+        'DEBUG: _currentFilter BEFORE: brandName=${_currentFilter.brandName}',
+      );
 
       // Create new filter with brand, reset to page 1
       // If brandName is null, explicitly clear the brand filter
@@ -232,8 +283,14 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
       print('DEBUG: Emitted loading state');
 
       // Use getAdminProductsUsecase to support brandName filter
-      final result = await getAdminProductsUsecase(newFilter);
-      print('DEBUG: Repository result: ${result.isRight() ? 'success' : 'failure'}');
+      // Preserve current showInactive filter
+      final result = await getAdminProductsUsecase(
+        newFilter,
+        showInactive: _currentShowInactive,
+      );
+      print(
+        'DEBUG: Repository result: ${result.isRight() ? 'success' : 'failure'}',
+      );
       result.fold(
         (failure) => emit(AdminProductState.error(message: failure.message)),
         (metadata) {
@@ -265,7 +322,11 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
       emit(AdminProductState.loading());
 
       // Use getAdminProductsUsecase to support stockStatus filter
-      final result = await getAdminProductsUsecase(newFilter);
+      // Preserve current showInactive filter
+      final result = await getAdminProductsUsecase(
+        newFilter,
+        showInactive: _currentShowInactive,
+      );
       result.fold(
         (failure) => emit(AdminProductState.error(message: failure.message)),
         (metadata) {
@@ -296,7 +357,11 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
       emit(AdminProductState.loading());
 
       // Use getAdminProductsUsecase to preserve brand/stock filters
-      final result = await getAdminProductsUsecase(searchFilter);
+      // Preserve current showInactive filter
+      final result = await getAdminProductsUsecase(
+        searchFilter,
+        showInactive: _currentShowInactive,
+      );
       result.fold(
         (failure) => emit(AdminProductState.error(message: failure.message)),
         (metadata) {
@@ -325,7 +390,11 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
       emit(AdminProductState.loading());
 
       // Use getAdminProductsUsecase to preserve brand/stock filters
-      final result = await getAdminProductsUsecase(clearedFilter);
+      // Preserve current showInactive filter
+      final result = await getAdminProductsUsecase(
+        clearedFilter,
+        showInactive: _currentShowInactive,
+      );
       result.fold(
         (failure) => emit(AdminProductState.error(message: failure.message)),
         (metadata) {
@@ -359,7 +428,11 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
         // Do NOT emit loading() - keeps current products visible
 
         // Use getAdminProductsUsecase to preserve brand/stock filters
-        final result = await getAdminProductsUsecase(refreshFilter);
+        // Preserve current showInactive filter
+        final result = await getAdminProductsUsecase(
+          refreshFilter,
+          showInactive: _currentShowInactive,
+        );
         result.fold(
           (failure) {
             // On failure, just clear refresh flag
@@ -388,7 +461,11 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
         emit(AdminProductState.loading());
 
         // Use getAdminProductsUsecase to preserve brand/stock filters
-        final result = await getAdminProductsUsecase(refreshFilter);
+        // Preserve current showInactive filter
+        final result = await getAdminProductsUsecase(
+          refreshFilter,
+          showInactive: _currentShowInactive,
+        );
         result.fold(
           (failure) => emit(AdminProductState.error(message: failure.message)),
           (metadata) {
@@ -411,10 +488,16 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
 
     // Handle DeleteProductEvent - Delete a product
     on<DeleteProductEvent>((event, emit) async {
+      print('=== DEBUG BLOC: DeleteProductEvent ===');
+      print('DEBUG: productId: ${event.productId}');
+
       // Emit deleting state
       emit(AdminProductState.deleting(productId: event.productId));
+      print('DEBUG: Emitted deleting state');
 
       final result = await deleteProductUsecase(event.productId);
+      print('DEBUG: deleteProductUsecase result: $result');
+
       result.fold(
         (failure) {
           // Emit error state but stay on current page
@@ -428,10 +511,12 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
           }
         },
         (success) {
-          // Emit deleted state briefly, then reload
+          // Emit deleted state briefly
           emit(AdminProductState.deleted(productId: event.productId));
+          print('DEBUG: Emitted deleted state');
 
-          // Remove deleted product from current list
+          // Remove deleted product from current list in memory
+          // Don't trigger refresh here - navigation will handle the refresh
           if (state is AdminProductDeleted) {
             final deletedState = state as AdminProductDeleted;
             final currentState = _getPreviousState();
@@ -440,15 +525,18 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
                   .where((p) => p.id != deletedState.productId)
                   .toList();
 
-              emit(currentState.copyWith(
-                products: updatedProducts,
-                totalCount: updatedProducts.length,
-              ));
+              emit(
+                currentState.copyWith(
+                  products: updatedProducts,
+                  totalCount: updatedProducts.length,
+                ),
+              );
             }
           }
 
-          // Reload to refresh data
-          add(RefreshAdminProductsEvent());
+          // NOTE: Don't call add(RefreshAdminProductsEvent()) here
+          // The navigation will be handled by the UI layer (BlocListener)
+          // and the List screen will refresh when it receives the navigation result
         },
       );
     });
@@ -456,31 +544,55 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
     // Handle GetProductDetailEvent - Get single product details
     on<GetProductDetailEvent>((event, emit) async {
       print('=== DEBUG BLOC: GetProductDetailEvent ===');
+      print('DEBUG: productId: ${event.productId}');
       print('DEBUG: current state: ${state.runtimeType}');
-      print('DEBUG: _currentFilter.brandName: ${_currentFilter.brandName}');
-      
+      print('DEBUG: _currentlyLoadingProductId: $_currentlyLoadingProductId');
+      print('DEBUG: _lastLoadedProductId: $_lastLoadedProductId');
+
+      // DEDUPLICATION: Skip if already loading or already loaded the same product
+      if (_currentlyLoadingProductId == event.productId) {
+        print('DEBUG: Skip - already loading product ${event.productId}');
+        return;
+      }
+
+      if (_lastLoadedProductId == event.productId &&
+          state is AdminProductDetailLoaded) {
+        final currentDetail = (state as AdminProductDetailLoaded).product;
+        if (currentDetail.id == event.productId) {
+          print('DEBUG: Skip - product ${event.productId} already loaded');
+          return;
+        }
+      }
+
+      // Start loading this product
+      _currentlyLoadingProductId = event.productId;
+
       // Cache current products and filter before navigating to detail
-      // CRITICAL: Use _currentFilter (which preserves brand filter) NOT state.filter
       if (state is AdminProductLoaded) {
         final currentState = state as AdminProductLoaded;
         _cachedProducts = List<Product>.from(currentState.products);
-        // Use _currentFilter to preserve the brand filter that user applied!
         _cachedFilter = _currentFilter;
         print('DEBUG: Cached ${_cachedProducts.length} products');
-        print('DEBUG: Cached filter: brandName=${_cachedFilter?.brandName}');
       } else if (state is AdminProductDetailLoaded) {
-        // Already in detail - don't clear cache, keep original List data
-        print('DEBUG: Already in detail, keeping cache (brandName=${_cachedFilter?.brandName})');
+        print('DEBUG: Already in detail, keeping cache');
       }
 
       // Emit loading state
       emit(AdminProductState.detailLoading());
 
       final result = await getProductDetailUsecase(event.productId);
+
+      // Clear loading flag
+      _currentlyLoadingProductId = null;
+
       result.fold(
-        (failure) => emit(AdminProductState.error(message: failure.message)),
+        (failure) {
+          print('DEBUG: Detail load failed: ${failure.message}');
+          emit(AdminProductState.error(message: failure.message));
+        },
         (product) {
-          print('DEBUG: Detail loaded for product: ${product.id}');
+          print('DEBUG: Detail loaded successfully for product: ${product.id}');
+          _lastLoadedProductId = product.id;
           emit(AdminProductState.detailLoaded(product: product));
         },
       );
@@ -496,7 +608,9 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
       emit(AdminProductState.creating());
 
       // Use createProductUsecase to create the product
-      final result = await createProductUsecase(CreateProductParams(product: event.product));
+      final result = await createProductUsecase(
+        CreateProductParams(product: event.product),
+      );
 
       result.fold(
         (failure) {
@@ -506,6 +620,105 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
         (product) {
           print('DEBUG: Product created successfully: ${product.id}');
           emit(AdminProductState.createSuccess(product: product));
+        },
+      );
+    });
+
+    // Handle GetTrashProductsEvent - Get all deleted products
+    on<GetTrashProductsEvent>((event, emit) async {
+      print('=== DEBUG BLOC: GetTrashProductsEvent ===');
+
+      // Emit loading state
+      emit(AdminProductState.loading());
+
+      // Use getAdminProductsUsecase with showInactive = true to get deleted products
+      final result = await getAdminProductsUsecase(
+        const AdminProductFilter(),
+        showInactive: true,
+      );
+
+      result.fold(
+        (failure) => emit(AdminProductState.error(message: failure.message)),
+        (metadata) {
+          print('DEBUG: Trash products loaded: ${metadata.products.length}');
+          emit(
+            AdminProductState.loaded(
+              products: metadata.products,
+              filter: const AdminProductFilter(),
+              selectedBrand: null,
+              stockStatus: StockStatus.all,
+              currentPage: 1,
+              totalPages: metadata.totalPages,
+              hasMore: metadata.hasMore,
+              totalCount: metadata.totalCount,
+            ),
+          );
+        },
+      );
+    });
+
+    // Handle RestoreProductEvent - Restore a deleted product
+    on<RestoreProductEvent>((event, emit) async {
+      print('=== DEBUG BLOC: RestoreProductEvent ===');
+      print('DEBUG: productId: ${event.productId}');
+
+      // Emit restoring state
+      emit(AdminProductState.restoring(productId: event.productId));
+
+      final result = await restoreProductUsecase(event.productId);
+
+      result.fold(
+        (failure) {
+          print('DEBUG: Restore failed: ${failure.message}');
+          emit(AdminProductState.error(message: failure.message));
+          // Re-emit loaded state to recover
+          if (state is AdminProductRestoring) {
+            final oldState = _getPreviousState();
+            if (oldState != null) {
+              emit(oldState);
+            }
+          }
+        },
+        (success) {
+          print('DEBUG: Product restored successfully');
+          // Emit restored state briefly, then reload trash
+          emit(AdminProductState.restored(productId: event.productId));
+
+          // Reload trash products
+          add(const GetTrashProductsEvent());
+        },
+      );
+    });
+
+    // Handle PermanentDeleteProductEvent - Permanently delete a product
+    on<PermanentDeleteProductEvent>((event, emit) async {
+      print('=== DEBUG BLOC: PermanentDeleteProductEvent ===');
+      print('DEBUG: productId: ${event.productId}');
+
+      // Emit deleting state
+      emit(AdminProductState.deleting(productId: event.productId));
+
+      final result = await permanentDeleteProductUsecase(event.productId);
+
+      result.fold(
+        (failure) {
+          print('DEBUG: Permanent delete failed: ${failure.message}');
+          emit(AdminProductState.error(message: failure.message));
+          // Re-emit loaded state to recover
+          if (state is AdminProductDeleting) {
+            final oldState = _getPreviousState();
+            if (oldState != null) {
+              emit(oldState);
+            }
+          }
+        },
+        (success) {
+          print('DEBUG: Product permanently deleted');
+          // Emit deleted state briefly, then reload trash
+          emit(AdminProductState.deleted(productId: event.productId));
+
+          // Reload trash products
+          add(const GetTrashProductsEvent());
         },
       );
     });
@@ -527,14 +740,21 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
 
   /// Check if currently searching
   bool get isSearching =>
-      _currentFilter.searchQuery != null && _currentFilter.searchQuery!.isNotEmpty;
+      _currentFilter.searchQuery != null &&
+      _currentFilter.searchQuery!.isNotEmpty;
 
   /// Check if any filters are active
   bool get hasFilters => _currentFilter.hasAdminFilters;
 
-  /// Load first page with default filter
+  /// Load first page with default filter (active only by default)
   void loadProducts() {
-    add(const GetAdminProductsEvent(filter: null));
+    // Default to showing active products only
+    if (_currentShowInactive == null) {
+      _currentShowInactive = false;
+    }
+    add(
+      GetAdminProductsEvent(filter: null, showInactive: _currentShowInactive),
+    );
   }
 
   /// Filter by brand name (null = show all brands)
@@ -545,6 +765,42 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
   /// Filter by stock status
   void filterByStockStatus(StockStatus status) {
     add(FilterByStockStatusEvent(status: status));
+  }
+
+  /// Filter by active status (show active, inactive, or all products)
+  void filterByActiveStatus(FilterStatus status) {
+    // Convert FilterStatus to showInactive parameter
+    // active -> false (show active only)
+    // inactive -> true (show inactive only)
+    // all -> null (show all)
+    bool? showInactive;
+    switch (status) {
+      case FilterStatus.active:
+        showInactive = false;
+        break;
+      case FilterStatus.inactive:
+        showInactive = true;
+        break;
+      case FilterStatus.all:
+        showInactive = null;
+        break;
+    }
+    // Reset to page 1 and reload with new filter
+    final newFilter = _currentFilter.withPage(1);
+    _currentFilter = newFilter;
+    _currentShowInactive = showInactive;
+    add(GetAdminProductsEvent(filter: newFilter, showInactive: showInactive));
+  }
+
+  /// Get current filter status
+  FilterStatus get currentFilterStatus {
+    if (_currentShowInactive == true) {
+      return FilterStatus.inactive;
+    } else if (_currentShowInactive == false) {
+      return FilterStatus.active;
+    } else {
+      return FilterStatus.all;
+    }
   }
 
   /// Search products by query (empty query clears search)
@@ -591,5 +847,20 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
   /// Create a new product
   void createProduct(ProductModel product) {
     add(CreateProductEvent(product: product));
+  }
+
+  /// Load trash products (deleted products)
+  void loadTrashProducts() {
+    add(const GetTrashProductsEvent());
+  }
+
+  /// Restore a deleted product
+  void restoreProduct(String productId) {
+    add(RestoreProductEvent(productId: productId));
+  }
+
+  /// Permanently delete a product
+  void permanentDeleteProduct(String productId) {
+    add(PermanentDeleteProductEvent(productId: productId));
   }
 }

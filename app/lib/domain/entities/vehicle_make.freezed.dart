@@ -18,9 +18,11 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$VehicleMake {
   /// Unique identifier for the vehicle make
+  @Assert('id.isNotEmpty', 'Vehicle make ID cannot be empty')
   String get id => throw _privateConstructorUsedError;
 
   /// Vehicle make name
+  @Assert('name.isNotEmpty', 'Vehicle make name cannot be empty')
   String get name => throw _privateConstructorUsedError;
 
   /// URL to vehicle make logo image
@@ -40,7 +42,11 @@ abstract class $VehicleMakeCopyWith<$Res> {
     $Res Function(VehicleMake) then,
   ) = _$VehicleMakeCopyWithImpl<$Res, VehicleMake>;
   @useResult
-  $Res call({String id, String name, String logoUrl});
+  $Res call({
+    @Assert('id.isNotEmpty', 'Vehicle make ID cannot be empty') String id,
+    @Assert('name.isNotEmpty', 'Vehicle make name cannot be empty') String name,
+    String logoUrl,
+  });
 }
 
 /// @nodoc
@@ -87,7 +93,11 @@ abstract class _$$VehicleMakeImplCopyWith<$Res>
   ) = __$$VehicleMakeImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String name, String logoUrl});
+  $Res call({
+    @Assert('id.isNotEmpty', 'Vehicle make ID cannot be empty') String id,
+    @Assert('name.isNotEmpty', 'Vehicle make name cannot be empty') String name,
+    String logoUrl,
+  });
 }
 
 /// @nodoc
@@ -127,17 +137,21 @@ class __$$VehicleMakeImplCopyWithImpl<$Res>
 
 class _$VehicleMakeImpl extends _VehicleMake {
   const _$VehicleMakeImpl({
+    @Assert('id.isNotEmpty', 'Vehicle make ID cannot be empty')
     required this.id,
+    @Assert('name.isNotEmpty', 'Vehicle make name cannot be empty')
     required this.name,
     required this.logoUrl,
   }) : super._();
 
   /// Unique identifier for the vehicle make
   @override
+  @Assert('id.isNotEmpty', 'Vehicle make ID cannot be empty')
   final String id;
 
   /// Vehicle make name
   @override
+  @Assert('name.isNotEmpty', 'Vehicle make name cannot be empty')
   final String name;
 
   /// URL to vehicle make logo image
@@ -173,7 +187,9 @@ class _$VehicleMakeImpl extends _VehicleMake {
 
 abstract class _VehicleMake extends VehicleMake {
   const factory _VehicleMake({
+    @Assert('id.isNotEmpty', 'Vehicle make ID cannot be empty')
     required final String id,
+    @Assert('name.isNotEmpty', 'Vehicle make name cannot be empty')
     required final String name,
     required final String logoUrl,
   }) = _$VehicleMakeImpl;
@@ -181,10 +197,12 @@ abstract class _VehicleMake extends VehicleMake {
 
   /// Unique identifier for the vehicle make
   @override
+  @Assert('id.isNotEmpty', 'Vehicle make ID cannot be empty')
   String get id;
 
   /// Vehicle make name
   @override
+  @Assert('name.isNotEmpty', 'Vehicle make name cannot be empty')
   String get name;
 
   /// URL to vehicle make logo image

@@ -36,8 +36,11 @@ part 'admin_product_event.freezed.dart';
 class AdminProductEvent with _$AdminProductEvent {
   /// Event to fetch a paginated list of products with admin filters
   /// Use this for initial load, pagination, and applying filters
+  /// [filter]: Filter criteria (brand, stock status, search)
+  /// [showInactive]: Filter by active status: true=inactive only, false=active only, null=all
   const factory AdminProductEvent.getProducts({
     AdminProductFilter? filter,
+    bool? showInactive,
   }) = GetAdminProductsEvent;
 
   /// Event to filter products by brand name
@@ -84,4 +87,20 @@ class AdminProductEvent with _$AdminProductEvent {
   const factory AdminProductEvent.createProduct({
     required ProductModel product,
   }) = CreateProductEvent;
+
+  /// Event to get trash products (deleted/inactive products)
+  /// Fetches products where is_active = 0
+  const factory AdminProductEvent.getTrashProducts() = GetTrashProductsEvent;
+
+  /// Event to restore a deleted product
+  /// Sets is_active = 1 for the product
+  const factory AdminProductEvent.restoreProduct({
+    required String productId,
+  }) = RestoreProductEvent;
+
+  /// Event to permanently delete a product
+  /// Removes product from database permanently
+  const factory AdminProductEvent.permanentDeleteProduct({
+    required String productId,
+  }) = PermanentDeleteProductEvent;
 }

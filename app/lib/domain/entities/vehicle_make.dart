@@ -4,16 +4,17 @@ part 'vehicle_make.freezed.dart';
 
 /// Domain entity representing a vehicle make in the system.
 /// This entity contains business logic and is immutable.
+@immutable
 @freezed
 class VehicleMake with _$VehicleMake {
   const VehicleMake._(); // Private constructor for adding custom methods
 
   const factory VehicleMake({
     /// Unique identifier for the vehicle make
-    required String id,
+    @Assert('id.isNotEmpty', 'Vehicle make ID cannot be empty') required String id,
 
     /// Vehicle make name
-    required String name,
+    @Assert('name.isNotEmpty', 'Vehicle make name cannot be empty') required String name,
 
     /// URL to vehicle make logo image
     required String logoUrl,

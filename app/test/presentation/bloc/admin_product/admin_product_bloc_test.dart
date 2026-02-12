@@ -1209,4 +1209,139 @@ void main() {
       ],
     );
   });
+
+  // ===========================================================================
+  // GROUP 6b: UC-07 - DELETE PRODUCT - EDGE CASES (NEW)
+  // ===========================================================================
+
+  group('UC-07: DeleteProductEvent - Edge Cases', () {
+    blocTest(
+      'should emit [Deleting, Error] when NetworkFailure',
+      setUp: () {
+        when(() => mockDeleteProductUsecase.call('1')).thenAnswer(
+          (_) async => Left(NetworkFailure(message: 'No internet connection')),
+        );
+        // Bloc will try to reload after error, so we need to mock that too
+        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+          (_) async => Right((
+            products: [tProduct1, tProduct2, tProduct3],
+            totalCount: 3,
+            totalPages: 1,
+            hasMore: false,
+          )),
+        );
+      },
+      build: () => AdminProductBloc(
+        getAdminProductsUsecase: mockGetAdminProductsUsecase,
+        getProductDetailUsecase: mockGetProductDetailUsecase,
+        deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
+      ),
+      act: (bloc) => bloc.add(const DeleteProductEvent(productId: '1')),
+      expect: () => [
+        predicate<AdminProductDeleting>((state) => state.productId == '1'),
+        predicate<AdminProductError>(
+          (state) => state.message.contains('internet'),
+        ),
+      ],
+    );
+
+    blocTest(
+      'should emit [Deleting, Deleted, Loading, Loaded] when delete returns false (product not found/already deleted)',
+      setUp: () {
+        when(() => mockDeleteProductUsecase.call('1')).thenAnswer(
+          (_) async => const Right(false),
+        );
+        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+          (_) async => Right((
+            products: [tProduct1, tProduct2, tProduct3],
+            totalCount: 3,
+            totalPages: 1,
+            hasMore: false,
+          )),
+        );
+      },
+      build: () => AdminProductBloc(
+        getAdminProductsUsecase: mockGetAdminProductsUsecase,
+        getProductDetailUsecase: mockGetProductDetailUsecase,
+        deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
+      ),
+      act: (bloc) => bloc.add(const DeleteProductEvent(productId: '1')),
+      expect: () => [
+        predicate<AdminProductDeleting>((state) => state.productId == '1'),
+        predicate<AdminProductDeleted>((state) => state.productId == '1'),
+        isA<AdminProductLoading>(),
+        isA<AdminProductLoaded>(),
+      ],
+    );
+
+    blocTest(
+      'should handle rapid delete taps (debounce protection)',
+      setUp: () {
+        when(() => mockDeleteProductUsecase.call('1')).thenAnswer(
+          (_) async => const Right(true),
+        );
+        when(() => mockDeleteProductUsecase.call('2')).thenAnswer(
+          (_) async => const Right(true),
+        );
+        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+          (_) async => Right((
+            products: [tProduct2, tProduct3],
+            totalCount: 2,
+            totalPages: 1,
+            hasMore: false,
+          )),
+        );
+      },
+      build: () => AdminProductBloc(
+        getAdminProductsUsecase: mockGetAdminProductsUsecase,
+        getProductDetailUsecase: mockGetProductDetailUsecase,
+        deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
+      ),
+      act: (bloc) {
+        bloc.add(const DeleteProductEvent(productId: '1'));
+        bloc.add(const DeleteProductEvent(productId: '2'));
+      },
+      verify: (_) {
+        // Verify delete was called for the first product
+        verify(() => mockDeleteProductUsecase.call('1')).called(1);
+      },
+    );
+
+    blocTest(
+      'should emit full delete flow: Deleting -> Deleted -> Loading -> Loaded',
+      setUp: () {
+        when(() => mockDeleteProductUsecase.call('specific-product-id'))
+            .thenAnswer(
+          (_) async => const Right(true),
+        );
+        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+          (_) async => Right((
+            products: [],
+            totalCount: 0,
+            totalPages: 1,
+            hasMore: false,
+          )),
+        );
+      },
+      build: () => AdminProductBloc(
+        getAdminProductsUsecase: mockGetAdminProductsUsecase,
+        getProductDetailUsecase: mockGetProductDetailUsecase,
+        deleteProductUsecase: mockDeleteProductUsecase,
+        createProductUsecase: mockCreateProductUsecase,
+      ),
+      act: (bloc) =>
+          bloc.add(const DeleteProductEvent(productId: 'specific-product-id')),
+      expect: () => [
+        predicate<AdminProductDeleting>(
+            (state) => state.productId == 'specific-product-id'),
+        predicate<AdminProductDeleted>(
+            (state) => state.productId == 'specific-product-id'),
+        isA<AdminProductLoading>(),
+        isA<AdminProductLoaded>(),
+      ],
+    );
+  });
 }

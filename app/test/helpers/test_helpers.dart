@@ -130,7 +130,7 @@ class TestProduct {
   }) {
     return create(
       tireSpec: TireSpec(
-        id: 'spec-${width}-${aspectRatio}-${rimDiameter}',
+        id: 'spec-$width-$aspectRatio-$rimDiameter',
         width: width,
         aspectRatio: aspectRatio,
         rimDiameter: rimDiameter,

@@ -21,6 +21,7 @@ mixin _$CartItem {
   String get productId => throw _privateConstructorUsedError;
 
   /// Quantity of the product in cart
+  @Assert('quantity > 0', 'Quantity must be greater than 0')
   int get quantity => throw _privateConstructorUsedError;
 
   /// The actual product object (resolved after repository lookup)
@@ -39,7 +40,11 @@ abstract class $CartItemCopyWith<$Res> {
   factory $CartItemCopyWith(CartItem value, $Res Function(CartItem) then) =
       _$CartItemCopyWithImpl<$Res, CartItem>;
   @useResult
-  $Res call({String productId, int quantity, Product? product});
+  $Res call({
+    String productId,
+    @Assert('quantity > 0', 'Quantity must be greater than 0') int quantity,
+    Product? product,
+  });
 
   $ProductCopyWith<$Res>? get product;
 }
@@ -106,7 +111,11 @@ abstract class _$$CartItemImplCopyWith<$Res>
   ) = __$$CartItemImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String productId, int quantity, Product? product});
+  $Res call({
+    String productId,
+    @Assert('quantity > 0', 'Quantity must be greater than 0') int quantity,
+    Product? product,
+  });
 
   @override
   $ProductCopyWith<$Res>? get product;
@@ -154,6 +163,7 @@ class __$$CartItemImplCopyWithImpl<$Res>
 class _$CartItemImpl extends _CartItem {
   const _$CartItemImpl({
     required this.productId,
+    @Assert('quantity > 0', 'Quantity must be greater than 0')
     required this.quantity,
     this.product,
   }) : super._();
@@ -164,6 +174,7 @@ class _$CartItemImpl extends _CartItem {
 
   /// Quantity of the product in cart
   @override
+  @Assert('quantity > 0', 'Quantity must be greater than 0')
   final int quantity;
 
   /// The actual product object (resolved after repository lookup)
@@ -203,6 +214,7 @@ class _$CartItemImpl extends _CartItem {
 abstract class _CartItem extends CartItem {
   const factory _CartItem({
     required final String productId,
+    @Assert('quantity > 0', 'Quantity must be greater than 0')
     required final int quantity,
     final Product? product,
   }) = _$CartItemImpl;
@@ -214,6 +226,7 @@ abstract class _CartItem extends CartItem {
 
   /// Quantity of the product in cart
   @override
+  @Assert('quantity > 0', 'Quantity must be greater than 0')
   int get quantity;
 
   /// The actual product object (resolved after repository lookup)

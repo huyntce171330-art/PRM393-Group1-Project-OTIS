@@ -104,6 +104,16 @@ class AdminProductState with _$AdminProductState {
     required String message,
   }) = AdminProductCreateError;
 
+  /// Restoring in progress state
+  const factory AdminProductState.restoring({
+    required String productId,
+  }) = AdminProductRestoring;
+
+  /// Restore success state
+  const factory AdminProductState.restored({
+    required String productId,
+  }) = AdminProductRestored;
+
   /// Helper: Check if state is initial
   bool get isInitial => this is AdminProductInitial;
 
@@ -343,4 +353,10 @@ class AdminProductState with _$AdminProductState {
   String? get createErrorMessage {
     return whenOrNull(createError: (message) => message);
   }
+
+  /// Helper: Check if restoring
+  bool get isRestoring => this is AdminProductRestoring;
+
+  /// Helper: Check if restored
+  bool get isRestored => this is AdminProductRestored;
 }

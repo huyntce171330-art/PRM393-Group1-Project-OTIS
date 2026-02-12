@@ -11,11 +11,15 @@ ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
   sku: safeStringFromJson(json['sku']),
   name: safeStringFromJson(json['name']),
   imageUrl: safeStringFromJson(json['image_url']),
-  brand: BrandModel.fromJson(json['brand'] as Map<String, dynamic>),
-  vehicleMake: VehicleMakeModel.fromJson(
-    json['vehicleMake'] as Map<String, dynamic>,
-  ),
-  tireSpec: TireSpecModel.fromJson(json['tireSpec'] as Map<String, dynamic>),
+  brand: json['brand'] == null
+      ? null
+      : BrandModel.fromJson(json['brand'] as Map<String, dynamic>),
+  vehicleMake: json['vehicleMake'] == null
+      ? null
+      : VehicleMakeModel.fromJson(json['vehicleMake'] as Map<String, dynamic>),
+  tireSpec: json['tireSpec'] == null
+      ? null
+      : TireSpecModel.fromJson(json['tireSpec'] as Map<String, dynamic>),
   price: safeDoubleFromJson(json['price']),
   stockQuantity: safeIntFromJson(json['stock_quantity']),
   isActive: safeBoolFromJson(json['is_active']),
@@ -28,9 +32,9 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'sku': safeStringToJson(instance.sku),
       'name': safeStringToJson(instance.name),
       'image_url': safeStringToJson(instance.imageUrl),
-      'brand': instance.brand,
-      'vehicleMake': instance.vehicleMake,
-      'tireSpec': instance.tireSpec,
+      if (instance.brand case final value?) 'brand': value,
+      if (instance.vehicleMake case final value?) 'vehicleMake': value,
+      if (instance.tireSpec case final value?) 'tireSpec': value,
       'price': safeDoubleToJson(instance.price),
       'stock_quantity': safeIntToJson(instance.stockQuantity),
       'is_active': safeBoolToJson(instance.isActive),

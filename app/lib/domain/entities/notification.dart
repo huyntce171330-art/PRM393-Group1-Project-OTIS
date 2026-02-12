@@ -4,6 +4,7 @@ part 'notification.freezed.dart';
 
 /// Domain entity representing a notification in the system.
 /// This entity contains business logic and is immutable.
+@immutable
 @freezed
 class Notification with _$Notification {
   const Notification._(); // Private constructor for adding custom methods
@@ -47,7 +48,7 @@ class Notification with _$Notification {
 
   /// Get formatted creation time
   String get formattedCreatedAtTime {
-    return '${formattedCreatedAt} ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
+    return '$formattedCreatedAt ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
   }
 
   /// Get relative time description (simplified)

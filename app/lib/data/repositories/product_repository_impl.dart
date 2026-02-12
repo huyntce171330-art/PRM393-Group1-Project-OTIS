@@ -4,7 +4,6 @@ import 'package:frontend_otis/core/error/failures.dart';
 import 'package:frontend_otis/core/network/network_info.dart';
 import 'package:frontend_otis/data/datasources/product/product_remote_datasource.dart';
 import 'package:frontend_otis/data/models/brand_model.dart';
-import 'package:frontend_otis/data/models/product_list_model.dart';
 import 'package:frontend_otis/data/models/product_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
@@ -28,8 +27,13 @@ class ProductRepositoryImpl implements ProductRepository {
   });
 
   @override
-  Future<Either<Failure, ({List<Product> products, int totalCount, int totalPages, bool hasMore})>>
-      getProductsWithMetadata({
+  Future<
+    Either<
+      Failure,
+      ({List<Product> products, int totalCount, int totalPages, bool hasMore})
+    >
+  >
+  getProductsWithMetadata({
     required ProductFilter filter,
     required int page,
     required int limit,
@@ -56,9 +60,9 @@ class ProductRepositoryImpl implements ProductRepository {
           imageUrl: model.imageUrl,
           price: model.price,
           stockQuantity: model.stockQuantity,
-          brand: model.brand.toDomain(),
-          vehicleMake: model.vehicleMake.toDomain(),
-          tireSpec: model.tireSpec.toDomain(),
+          brand: model.brand?.toDomain(),
+          vehicleMake: model.vehicleMake?.toDomain(),
+          tireSpec: model.tireSpec?.toDomain(),
           isActive: model.isActive,
           createdAt: model.createdAt,
         );
@@ -100,7 +104,9 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, Product>> getProductDetail({required String productId}) async {
+  Future<Either<Failure, Product>> getProductDetail({
+    required String productId,
+  }) async {
     // Check network connectivity
     if (!(await networkInfo.isConnected)) {
       return Left(NetworkFailure());
@@ -108,7 +114,9 @@ class ProductRepositoryImpl implements ProductRepository {
 
     try {
       // Fetch product detail from data source
-      final result = await productRemoteDatasource.getProductDetail(productId: productId);
+      final result = await productRemoteDatasource.getProductDetail(
+        productId: productId,
+      );
 
       if (result.products.isEmpty) {
         return Left(ServerFailure(message: 'Product not found'));
@@ -122,9 +130,9 @@ class ProductRepositoryImpl implements ProductRepository {
         imageUrl: productModel.imageUrl,
         price: productModel.price,
         stockQuantity: productModel.stockQuantity,
-        brand: productModel.brand.toDomain(),
-        vehicleMake: productModel.vehicleMake.toDomain(),
-        tireSpec: productModel.tireSpec.toDomain(),
+        brand: productModel.brand?.toDomain(),
+        vehicleMake: productModel.vehicleMake?.toDomain(),
+        tireSpec: productModel.tireSpec?.toDomain(),
         isActive: productModel.isActive,
         createdAt: productModel.createdAt,
       );
@@ -140,17 +148,26 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, ({List<Product> products, int totalCount, int totalPages, bool hasMore})>>
-      getAdminProducts({
+  Future<
+    Either<
+      Failure,
+      ({List<Product> products, int totalCount, int totalPages, bool hasMore})
+    >
+  >
+  getAdminProducts({
     required AdminProductFilter filter,
     required int page,
     required int limit,
+    bool? showInactive,
   }) async {
     print('=== DEBUG REPO: getAdminProducts ===');
     print('DEBUG: filter.brandName: ${filter.brandName}');
     print('DEBUG: filter.stockStatus: ${filter.stockStatus}');
-    print('DEBUG: filter.baseFilter.searchQuery: ${filter.baseFilter.searchQuery}');
+    print(
+      'DEBUG: filter.baseFilter.searchQuery: ${filter.baseFilter.searchQuery}',
+    );
     print('DEBUG: page: $page, limit: $limit');
+    print('DEBUG: showInactive: $showInactive');
     // Check network connectivity
     if (!(await networkInfo.isConnected)) {
       return Left(NetworkFailure());
@@ -162,9 +179,12 @@ class ProductRepositoryImpl implements ProductRepository {
         page: page,
         limit: limit,
         filter: filter,
+        showInactive: showInactive,
       );
 
-      print('DEBUG: DataSource returned ${productList.products.length} products, total: ${productList.total}');
+      print(
+        'DEBUG: DataSource returned ${productList.products.length} products, total: ${productList.total}',
+      );
 
       // Convert ProductModel list to Product domain entities
       final products = productList.products.map((model) {
@@ -175,9 +195,9 @@ class ProductRepositoryImpl implements ProductRepository {
           imageUrl: model.imageUrl,
           price: model.price,
           stockQuantity: model.stockQuantity,
-          brand: model.brand.toDomain(),
-          vehicleMake: model.vehicleMake.toDomain(),
-          tireSpec: model.tireSpec.toDomain(),
+          brand: model.brand?.toDomain(),
+          vehicleMake: model.vehicleMake?.toDomain(),
+          tireSpec: model.tireSpec?.toDomain(),
           isActive: model.isActive,
           createdAt: model.createdAt,
         );
@@ -200,7 +220,9 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> deleteProduct({required String productId}) async {
+  Future<Either<Failure, bool>> deleteProduct({
+    required String productId,
+  }) async {
     // Check network connectivity
     if (!(await networkInfo.isConnected)) {
       return Left(NetworkFailure());
@@ -208,7 +230,9 @@ class ProductRepositoryImpl implements ProductRepository {
 
     try {
       // Delete product from data source
-      final result = await productRemoteDatasource.deleteProduct(productId: productId);
+      final result = await productRemoteDatasource.deleteProduct(
+        productId: productId,
+      );
       return Right(result);
     } on ServerException {
       return Left(ServerFailure());
@@ -220,7 +244,57 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, Product>> createProduct({required ProductModel product}) async {
+  Future<Either<Failure, bool>> restoreProduct({
+    required String productId,
+  }) async {
+    // Check network connectivity
+    if (!(await networkInfo.isConnected)) {
+      return Left(NetworkFailure());
+    }
+
+    try {
+      // Restore product by setting is_active = 1
+      final result = await productRemoteDatasource.restoreProduct(
+        productId: productId,
+      );
+      return Right(result);
+    } on ServerException {
+      return Left(ServerFailure());
+    } on CacheException {
+      return Left(CacheFailure());
+    } on Exception catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> permanentDeleteProduct({
+    required String productId,
+  }) async {
+    // Check network connectivity
+    if (!(await networkInfo.isConnected)) {
+      return Left(NetworkFailure());
+    }
+
+    try {
+      // Permanently delete product from database
+      final result = await productRemoteDatasource.permanentDeleteProduct(
+        productId: productId,
+      );
+      return Right(result);
+    } on ServerException {
+      return Left(ServerFailure());
+    } on CacheException {
+      return Left(CacheFailure());
+    } on Exception catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Product>> createProduct({
+    required ProductModel product,
+  }) async {
     print('=== DEBUG REPO: createProduct ===');
     print('DEBUG: product.name: ${product.name}');
     print('DEBUG: product.sku: ${product.sku}');
@@ -232,7 +306,9 @@ class ProductRepositoryImpl implements ProductRepository {
 
     try {
       // Create product via data source
-      final productModel = await productRemoteDatasource.createProduct(product: product);
+      final productModel = await productRemoteDatasource.createProduct(
+        product: product,
+      );
 
       final createdProduct = Product(
         id: productModel.id,
@@ -241,14 +317,16 @@ class ProductRepositoryImpl implements ProductRepository {
         imageUrl: productModel.imageUrl,
         price: productModel.price,
         stockQuantity: productModel.stockQuantity,
-        brand: productModel.brand.toDomain(),
-        vehicleMake: productModel.vehicleMake.toDomain(),
-        tireSpec: productModel.tireSpec.toDomain(),
+        brand: productModel.brand?.toDomain(),
+        vehicleMake: productModel.vehicleMake?.toDomain(),
+        tireSpec: productModel.tireSpec?.toDomain(),
         isActive: productModel.isActive,
         createdAt: productModel.createdAt,
       );
 
-      print('DEBUG: Product created successfully with id: ${createdProduct.id}');
+      print(
+        'DEBUG: Product created successfully with id: ${createdProduct.id}',
+      );
       return Right(createdProduct);
     } on ValidationFailure {
       // Re-throw ValidationFailure to let the BLoC handle it specifically

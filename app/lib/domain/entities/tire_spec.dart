@@ -4,6 +4,7 @@ part 'tire_spec.freezed.dart';
 
 /// Domain entity representing tire specifications in the system.
 /// This entity contains business logic and is immutable.
+@immutable
 @freezed
 class TireSpec with _$TireSpec {
   const TireSpec._(); // Private constructor for adding custom methods
@@ -13,12 +14,14 @@ class TireSpec with _$TireSpec {
     required String id,
 
     /// Tire width in millimeters
-    required int width,
+    @Assert('width > 0', 'Width must be greater than 0') required int width,
 
     /// Tire aspect ratio (height/width percentage)
+    @Assert('aspectRatio > 0', 'Aspect ratio must be greater than 0')
     required int aspectRatio,
 
     /// Rim diameter in inches
+    @Assert('rimDiameter > 0', 'Rim diameter must be greater than 0')
     required int rimDiameter,
   }) = _TireSpec;
 
@@ -36,5 +39,5 @@ class TireSpec with _$TireSpec {
   String get aspectRatioString => '$aspectRatio%';
 
   /// Get rim diameter as string with unit
-  String get rimDiameterString => '${rimDiameter}"';
+  String get rimDiameterString => '$rimDiameter"';
 }

@@ -4,6 +4,7 @@ part 'chat_room.freezed.dart';
 
 /// Domain entity representing a chat room in the system.
 /// This entity contains business logic and is immutable.
+@immutable
 @freezed
 class ChatRoom with _$ChatRoom {
   const ChatRoom._(); // Private constructor for adding custom methods

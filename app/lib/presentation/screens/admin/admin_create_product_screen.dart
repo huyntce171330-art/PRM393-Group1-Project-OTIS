@@ -616,7 +616,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
         children: [
           // Brand Dropdown
           DropdownButtonFormField<BrandModel>(
-            value: _selectedBrand,
+            initialValue: _selectedBrand,
             decoration: _buildInputDecoration(
               'Thương hiệu',
               'Chọn thương hiệu',
@@ -853,7 +853,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
             onChanged: (value) {
               setState(() => _isActive = value);
             },
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),

@@ -18,9 +18,11 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$Brand {
   /// Unique identifier for the brand
+  @Assert('id.isNotEmpty', 'Brand ID cannot be empty')
   String get id => throw _privateConstructorUsedError;
 
   /// Brand name
+  @Assert('name.isNotEmpty', 'Brand name cannot be empty')
   String get name => throw _privateConstructorUsedError;
 
   /// URL to brand logo image
@@ -37,7 +39,11 @@ abstract class $BrandCopyWith<$Res> {
   factory $BrandCopyWith(Brand value, $Res Function(Brand) then) =
       _$BrandCopyWithImpl<$Res, Brand>;
   @useResult
-  $Res call({String id, String name, String logoUrl});
+  $Res call({
+    @Assert('id.isNotEmpty', 'Brand ID cannot be empty') String id,
+    @Assert('name.isNotEmpty', 'Brand name cannot be empty') String name,
+    String logoUrl,
+  });
 }
 
 /// @nodoc
@@ -83,7 +89,11 @@ abstract class _$$BrandImplCopyWith<$Res> implements $BrandCopyWith<$Res> {
   ) = __$$BrandImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String name, String logoUrl});
+  $Res call({
+    @Assert('id.isNotEmpty', 'Brand ID cannot be empty') String id,
+    @Assert('name.isNotEmpty', 'Brand name cannot be empty') String name,
+    String logoUrl,
+  });
 }
 
 /// @nodoc
@@ -123,17 +133,19 @@ class __$$BrandImplCopyWithImpl<$Res>
 
 class _$BrandImpl extends _Brand {
   const _$BrandImpl({
-    required this.id,
-    required this.name,
+    @Assert('id.isNotEmpty', 'Brand ID cannot be empty') required this.id,
+    @Assert('name.isNotEmpty', 'Brand name cannot be empty') required this.name,
     required this.logoUrl,
   }) : super._();
 
   /// Unique identifier for the brand
   @override
+  @Assert('id.isNotEmpty', 'Brand ID cannot be empty')
   final String id;
 
   /// Brand name
   @override
+  @Assert('name.isNotEmpty', 'Brand name cannot be empty')
   final String name;
 
   /// URL to brand logo image
@@ -169,7 +181,9 @@ class _$BrandImpl extends _Brand {
 
 abstract class _Brand extends Brand {
   const factory _Brand({
+    @Assert('id.isNotEmpty', 'Brand ID cannot be empty')
     required final String id,
+    @Assert('name.isNotEmpty', 'Brand name cannot be empty')
     required final String name,
     required final String logoUrl,
   }) = _$BrandImpl;
@@ -177,10 +191,12 @@ abstract class _Brand extends Brand {
 
   /// Unique identifier for the brand
   @override
+  @Assert('id.isNotEmpty', 'Brand ID cannot be empty')
   String get id;
 
   /// Brand name
   @override
+  @Assert('name.isNotEmpty', 'Brand name cannot be empty')
   String get name;
 
   /// URL to brand logo image

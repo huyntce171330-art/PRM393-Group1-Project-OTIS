@@ -7,6 +7,7 @@ part 'product.freezed.dart';
 
 /// Domain entity representing a product in the system.
 /// This entity contains business logic and is immutable.
+@immutable
 @freezed
 class Product with _$Product {
   const Product._(); // Private constructor for adding custom methods
@@ -34,9 +35,10 @@ class Product with _$Product {
     TireSpec? tireSpec,
 
     /// Product price
-    required double price,
+    @Assert('price >= 0', 'Price cannot be negative') required double price,
 
     /// Available stock quantity
+    @Assert('stockQuantity >= 0', 'Stock cannot be negative')
     required int stockQuantity,
 
     /// Whether the product is active/available
@@ -54,16 +56,12 @@ class Product with _$Product {
 
   /// Get formatted price with Vietnamese Dong currency
   String get formattedPrice {
-    return '${price.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    )} đ';
+    return '${price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
   }
 
   /// Get the product's display name (includes tire spec)
-  String get displayName => tireSpec != null
-      ? '$name (${tireSpec!.display})'
-      : name;
+  String get displayName =>
+      tireSpec != null ? '$name (${tireSpec!.display})' : name;
 
   /// Get the product's full specification string
   String get fullSpecification {

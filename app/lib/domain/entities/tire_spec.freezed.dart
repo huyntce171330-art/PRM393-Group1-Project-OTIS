@@ -21,12 +21,15 @@ mixin _$TireSpec {
   String get id => throw _privateConstructorUsedError;
 
   /// Tire width in millimeters
+  @Assert('width > 0', 'Width must be greater than 0')
   int get width => throw _privateConstructorUsedError;
 
   /// Tire aspect ratio (height/width percentage)
+  @Assert('aspectRatio > 0', 'Aspect ratio must be greater than 0')
   int get aspectRatio => throw _privateConstructorUsedError;
 
   /// Rim diameter in inches
+  @Assert('rimDiameter > 0', 'Rim diameter must be greater than 0')
   int get rimDiameter => throw _privateConstructorUsedError;
 
   /// Create a copy of TireSpec
@@ -41,7 +44,14 @@ abstract class $TireSpecCopyWith<$Res> {
   factory $TireSpecCopyWith(TireSpec value, $Res Function(TireSpec) then) =
       _$TireSpecCopyWithImpl<$Res, TireSpec>;
   @useResult
-  $Res call({String id, int width, int aspectRatio, int rimDiameter});
+  $Res call({
+    String id,
+    @Assert('width > 0', 'Width must be greater than 0') int width,
+    @Assert('aspectRatio > 0', 'Aspect ratio must be greater than 0')
+    int aspectRatio,
+    @Assert('rimDiameter > 0', 'Rim diameter must be greater than 0')
+    int rimDiameter,
+  });
 }
 
 /// @nodoc
@@ -97,7 +107,14 @@ abstract class _$$TireSpecImplCopyWith<$Res>
   ) = __$$TireSpecImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, int width, int aspectRatio, int rimDiameter});
+  $Res call({
+    String id,
+    @Assert('width > 0', 'Width must be greater than 0') int width,
+    @Assert('aspectRatio > 0', 'Aspect ratio must be greater than 0')
+    int aspectRatio,
+    @Assert('rimDiameter > 0', 'Rim diameter must be greater than 0')
+    int rimDiameter,
+  });
 }
 
 /// @nodoc
@@ -147,8 +164,10 @@ class __$$TireSpecImplCopyWithImpl<$Res>
 class _$TireSpecImpl extends _TireSpec {
   const _$TireSpecImpl({
     required this.id,
-    required this.width,
+    @Assert('width > 0', 'Width must be greater than 0') required this.width,
+    @Assert('aspectRatio > 0', 'Aspect ratio must be greater than 0')
     required this.aspectRatio,
+    @Assert('rimDiameter > 0', 'Rim diameter must be greater than 0')
     required this.rimDiameter,
   }) : super._();
 
@@ -158,14 +177,17 @@ class _$TireSpecImpl extends _TireSpec {
 
   /// Tire width in millimeters
   @override
+  @Assert('width > 0', 'Width must be greater than 0')
   final int width;
 
   /// Tire aspect ratio (height/width percentage)
   @override
+  @Assert('aspectRatio > 0', 'Aspect ratio must be greater than 0')
   final int aspectRatio;
 
   /// Rim diameter in inches
   @override
+  @Assert('rimDiameter > 0', 'Rim diameter must be greater than 0')
   final int rimDiameter;
 
   @override
@@ -202,8 +224,11 @@ class _$TireSpecImpl extends _TireSpec {
 abstract class _TireSpec extends TireSpec {
   const factory _TireSpec({
     required final String id,
+    @Assert('width > 0', 'Width must be greater than 0')
     required final int width,
+    @Assert('aspectRatio > 0', 'Aspect ratio must be greater than 0')
     required final int aspectRatio,
+    @Assert('rimDiameter > 0', 'Rim diameter must be greater than 0')
     required final int rimDiameter,
   }) = _$TireSpecImpl;
   const _TireSpec._() : super._();
@@ -214,14 +239,17 @@ abstract class _TireSpec extends TireSpec {
 
   /// Tire width in millimeters
   @override
+  @Assert('width > 0', 'Width must be greater than 0')
   int get width;
 
   /// Tire aspect ratio (height/width percentage)
   @override
+  @Assert('aspectRatio > 0', 'Aspect ratio must be greater than 0')
   int get aspectRatio;
 
   /// Rim diameter in inches
   @override
+  @Assert('rimDiameter > 0', 'Rim diameter must be greater than 0')
   int get rimDiameter;
 
   /// Create a copy of TireSpec

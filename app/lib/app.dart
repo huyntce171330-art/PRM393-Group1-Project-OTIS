@@ -3,13 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart' as di;
-import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
-import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
-import 'package:frontend_otis/domain/usecases/product/get_products_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_create_product_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_trash_screen.dart';
 import 'package:frontend_otis/presentation/screens/home_screen.dart';
 import 'package:frontend_otis/presentation/screens/product/product_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/product/product_detail_screen.dart';
@@ -82,6 +80,11 @@ final GoRouter router = GoRouter(
           builder: (context, state) => const AdminCreateProductScreen(),
         ),
         GoRoute(
+          path: '/admin/products/trash',
+          name: 'admin-trash',
+          builder: (context, state) => const AdminTrashScreen(),
+        ),
+        GoRoute(
           path: '/admin/products/:id',
           name: 'admin-product-detail',
           builder: (context, state) {
@@ -102,7 +105,7 @@ final GoRouter router = GoRouter(
           },
         ),
       ],
-    ),    // Customer Routes
+    ), // Customer Routes
     GoRoute(
       path: '/products',
       name: 'product-list',
@@ -123,11 +126,7 @@ final GoRouter router = GoRouter(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               'Page not found',

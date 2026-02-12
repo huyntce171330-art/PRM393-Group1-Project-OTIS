@@ -18,9 +18,9 @@ class ProductModel extends Equatable {
     required this.sku,
     required this.name,
     required this.imageUrl,
-    required this.brand,
-    required this.vehicleMake,
-    required this.tireSpec,
+    this.brand,
+    this.vehicleMake,
+    this.tireSpec,
     required this.price,
     required this.stockQuantity,
     required this.isActive,
@@ -52,13 +52,13 @@ class ProductModel extends Equatable {
   final String imageUrl;
 
   /// Product brand model
-  final BrandModel brand;
+  final BrandModel? brand;
 
   /// Vehicle make model
-  final VehicleMakeModel vehicleMake;
+  final VehicleMakeModel? vehicleMake;
 
   /// Tire specification model
-  final TireSpecModel tireSpec;
+  final TireSpecModel? tireSpec;
 
   /// Product price
   @JsonKey(fromJson: safeDoubleFromJson, toJson: safeDoubleToJson)
@@ -118,9 +118,9 @@ class ProductModel extends Equatable {
       sku: sku,
       name: name,
       imageUrl: imageUrl,
-      brand: brand.toDomain(),
-      vehicleMake: vehicleMake.toDomain(),
-      tireSpec: tireSpec.toDomain(),
+      brand: brand?.toDomain(),
+      vehicleMake: vehicleMake?.toDomain(),
+      tireSpec: tireSpec?.toDomain(),
       price: price,
       stockQuantity: stockQuantity,
       isActive: isActive,

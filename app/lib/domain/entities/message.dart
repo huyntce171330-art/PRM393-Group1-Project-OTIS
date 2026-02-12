@@ -4,6 +4,7 @@ part 'message.freezed.dart';
 
 /// Domain entity representing a message in a chat room.
 /// This entity contains business logic and is immutable.
+@immutable
 @freezed
 class Message with _$Message {
   const Message._(); // Private constructor for adding custom methods
@@ -64,7 +65,7 @@ class Message with _$Message {
 
   /// Get formatted creation date and time
   String get formattedCreatedAt {
-    return '${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')} ${formattedTime}';
+    return '${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')} $formattedTime';
   }
 
   /// Get relative time description

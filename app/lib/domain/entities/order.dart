@@ -7,6 +7,7 @@ part 'order.freezed.dart';
 /// Domain entity representing an order in the system.
 /// This entity contains business logic and is immutable.
 /// Uses composition with OrderItem entities.
+@immutable
 @freezed
 class Order with _$Order {
   const Order._(); // Private constructor for adding custom methods
@@ -64,10 +65,7 @@ class Order with _$Order {
 
   /// Get formatted total amount
   String get formattedTotalAmount {
-    return '${totalAmount.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    )} đ';
+    return '${totalAmount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
   }
 
   /// Get formatted creation date
@@ -77,7 +75,7 @@ class Order with _$Order {
 
   /// Get formatted creation date and time
   String get formattedCreatedAtTime {
-    return '${formattedCreatedAt} ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
+    return '$formattedCreatedAt ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
   }
 
   /// Check if the order contains valid items

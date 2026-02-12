@@ -58,16 +58,18 @@ class GetAdminProductsUsecase {
   /// Executes the use case to fetch admin products with metadata.
   ///
   /// [filter]: The admin filter criteria containing brand name, stock status, and pagination
+  /// [showInactive]: Filter by active status: true=inactive only, false=active only, null=all
   ///
   /// Returns a [Future] containing either a [Failure] or a tuple of
   /// (products, totalCount, totalPages, hasMore)
   Future<Either<Failure, ({List<Product> products, int totalCount, int totalPages, bool hasMore})>>
-      call(AdminProductFilter filter) {
+      call(AdminProductFilter filter, {bool? showInactive}) {
     // Delegate to repository with admin filter
     return productRepository.getAdminProducts(
       filter: filter,
       page: filter.page,
       limit: filter.limit,
+      showInactive: showInactive,
     );
   }
 }

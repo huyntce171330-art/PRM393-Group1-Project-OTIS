@@ -20,6 +20,7 @@ import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_even
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_state.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_filter_chip.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_product_card.dart';
+
 /// Admin Product List Screen for inventory management.
 class AdminProductListScreen extends StatefulWidget {
   const AdminProductListScreen({super.key});
@@ -85,13 +86,13 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
   void _onEditProduct(BuildContext context, String productId) async {
     // Navigate to edit product screen and wait for result
     final result = await context.push('/admin/products/$productId/edit');
-    
+
     // If product was updated, silently refresh to get fresh data
     if (result == true) {
       _adminProductBloc.silentRefresh();
       return;
     }
-    
+
     // CRITICAL FIX: Restore List state from cache when just viewing
     _adminProductBloc.add(
       GetAdminProductsEvent(filter: _adminProductBloc.currentFilter),
@@ -147,19 +148,35 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
   void _onProductTap(String productId) async {
     // 1. Wait for result from Detail page
     final result = await context.push('/admin/products/$productId');
-    
-    // 2. If product was updated/deleted, silently refresh to get fresh data
+
+    // 2. Only force reload if product was DELETED
     if (result == true) {
-      _adminProductBloc.silentRefresh();
+      print('DEBUG: Product was deleted, reloading list...');
+      final newFilter = _adminProductBloc.currentFilter.withPage(1);
+      _adminProductBloc.add(
+        GetAdminProductsEvent(filter: newFilter, showInactive: false),
+      );
       return;
     }
-    
-    // 3. CRITICAL FIX: Restore List state from cache
-    // When returning from Detail (result == null), Bloc is still in "DetailLoaded" state
-    // which causes blank screen. We restore List state using cached data.
-    _adminProductBloc.add(
-      GetAdminProductsEvent(filter: _adminProductBloc.currentFilter),
-    );
+
+    // 3. For normal navigation back - RESTORE FROM CACHE
+    // The Bloc cached products before navigating to detail
+    // Pass filter: null to trigger useCache logic in Bloc
+    final currentState = _adminProductBloc.state;
+    final isInListState = currentState is AdminProductLoaded;
+
+    if (!isInListState) {
+      // State is not loaded (e.g., DetailLoaded), restore from cache
+      // Pass null filter to use Bloc's cache
+      print('DEBUG: Restoring list state from cache...');
+      _adminProductBloc.add(
+        GetAdminProductsEvent(filter: null, showInactive: false),
+      );
+    } else {
+      print(
+        'DEBUG: Already in Loaded state with ${currentState.products.length} products',
+      );
+    }
   }
 
   void _onFilterByBrand(String? brandName) {
@@ -178,6 +195,16 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
     }
   }
 
+  void _onNavigateToTrash() async {
+    // Navigate to trash screen and wait for result
+    final result = await context.push('/admin/products/trash');
+
+    // If product was restored, refresh the list
+    if (result == true) {
+      _adminProductBloc.silentRefresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -187,35 +214,48 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
       child: Scaffold(
         body: BlocProvider<AdminProductBloc>.value(
           value: _adminProductBloc,
-          child: BlocBuilder<AdminProductBloc, AdminProductState>(
-            builder: (context, state) {
-              return Container(
-                color: isDarkMode
-                    ? AppColors.backgroundDark
-                    : AppColors.backgroundLight,
-                child: SafeArea(
-                  child: Column(
-                    children: [
-                      // Header Section
-                      _buildHeader(context, state),
-                      // Filter Chips Section
-                      _buildFilterChips(state),
-                      // Main Content - Product List
-                      Expanded(
-                        child: RefreshIndicator(
-                          onRefresh: _onRefresh,
-                          color: AppColors.primary,
-                          child: _buildProductList(context, state),
-                        ),
-                      ),
-                    ],
+          child: BlocListener<AdminProductBloc, AdminProductState>(
+            listenWhen: (previous, current) => current is AdminProductDeleted,
+            listener: (context, state) {
+              if (state is AdminProductDeleted) {
+                // Show success feedback
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Product deleted successfully'),
+                    backgroundColor: AppColors.success,
                   ),
-                ),
-              );
+                );
+              }
             },
+            child: BlocBuilder<AdminProductBloc, AdminProductState>(
+              builder: (context, state) {
+                return Container(
+                  color: isDarkMode
+                      ? AppColors.backgroundDark
+                      : AppColors.backgroundLight,
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        // Header Section
+                        _buildHeader(context, state),
+                        // Filter Chips Section
+                        _buildFilterChips(state),
+                        // Main Content - Product List
+                        Expanded(
+                          child: RefreshIndicator(
+                            onRefresh: _onRefresh,
+                            color: AppColors.primary,
+                            child: _buildProductList(context, state),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        // Floating Action Button - Add Product
+        ), // Floating Action Button - Add Product
         floatingActionButton: FloatingActionButton(
           onPressed: _onAddProduct,
           backgroundColor: AppColors.primary,
@@ -237,7 +277,7 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Menu, Title, Notifications, Avatar
+          // Top Row: Menu, Title, Trash Icon
           Row(
             children: [
               // Menu Button
@@ -261,18 +301,14 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
                 ),
               ),
               const Spacer(),
-              // Notifications Button
+              // Trash Icon Button
               IconButton(
-                onPressed: () {
-                  // Navigate to notifications
-                },
+                onPressed: _onNavigateToTrash,
                 icon: Icon(
-                  Icons.notifications,
+                  Icons.delete_outline,
                   color: isDarkMode ? Colors.white : AppColors.textPrimary,
                 ),
               ),
-              // Avatar
-              _buildAvatar(context),
             ],
           ),
           const SizedBox(height: 12),
@@ -305,21 +341,10 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
         style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(
           hintText: 'Search tire size, brand...',
-          hintStyle: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 14,
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: Colors.grey[400],
-            size: 20,
-          ),
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+          prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 20),
           suffixIcon: IconButton(
-            icon: Icon(
-              Icons.tune,
-              color: Colors.grey[400],
-              size: 20,
-            ),
+            icon: Icon(Icons.tune, color: Colors.grey[400], size: 20),
             onPressed: () {
               // Open advanced filters
             },
@@ -332,40 +357,6 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
             horizontal: 16,
             vertical: 12,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatar(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(9999),
-        border: Border.all(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? AppColors.surfaceDark
-              : AppColors.surfaceLight,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(9999),
-        child: Image.network(
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuDoMz-m7oRFdmKmL5PET_dO5sHFaZjichh44_wwwVs0PAlFU_gDPh2pCfn8-wMnRVEn4YXj4ItTQPDv__swxN9ylZtQQOFbIj6TbFNDn9zwJ3VV3vTbl_nnCo-_vfPEgtR9P53rP28VZiBJ8zkE02TwgGupNiEf58xm-fuGju55E8qh6KhYsbpejjngMZ9D6baAxvyDZS13XwktZGri0Jlg16X9JOO4FGMduD-jXuaeur1QTVJKbiHQbInfJ6CYEXOrR9jIfxAOgl8',
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.person, color: Colors.grey[400]);
-          },
         ),
       ),
     );
@@ -428,34 +419,24 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
           ),
         // Product List
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final product = currentProducts[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: AdminProductCard(
-                  product: product,
-                  onEdit: () => _onEditProduct(context, product.id),
-                  onDelete: () => _onDeleteProduct(context, product.id),
-                  onTap: () => _onProductTap(product.id),
-                ),
-              );
-            },
-            childCount: currentProducts.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final product = currentProducts[index];
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: AdminProductCard(
+                product: product,
+                onEdit: () => _onEditProduct(context, product.id),
+                onDelete: () => _onDeleteProduct(context, product.id),
+                onTap: () => _onProductTap(product.id),
+              ),
+            );
+          }, childCount: currentProducts.length),
         ),
         // Loading more indicator
         if (state is AdminProductLoaded && state.isLoadingMore)
-          SliverToBoxAdapter(
-            child: _buildLoadMoreIndicator(),
-          ),
+          SliverToBoxAdapter(child: _buildLoadMoreIndicator()),
         // Bottom padding
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 80),
-        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 80)),
       ],
     );
   }

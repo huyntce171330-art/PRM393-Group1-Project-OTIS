@@ -653,4 +653,143 @@ void main() {
       },
     );
   });
+
+  // ===========================================================================
+  // UC-07: DELETE PRODUCT FLOW TESTS (NEW)
+  // ===========================================================================
+
+  group('UC-07: Delete Product Flow', () {
+    const testProductId = 'prod-001';
+
+    testWidgets(
+      'should show confirmation dialog when Delete Product button is tapped',
+      (WidgetTester tester) async {
+        // Arrange
+        final detailLoadedState = AdminProductState.detailLoaded(
+          product: tProduct1,
+        );
+        whenListen(
+          mockBloc,
+          Stream.value(detailLoadedState),
+          initialState: const AdminProductState.initial(),
+        );
+
+        // Act
+        await tester
+            .pumpWidget(createDetailScreenUnderTest(productId: testProductId));
+        await tester.pump();
+        await tester.tap(find.text('Delete Product'));
+        await tester.pumpAndSettle();
+
+        // Assert
+        expect(find.text('Delete Product?'), findsOneWidget);
+        expect(
+            find.text(
+                'Are you sure you want to delete this product? This action cannot be undone.'),
+            findsOneWidget);
+        expect(find.text('Cancel'), findsOneWidget);
+        expect(find.text('Delete'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should display Delete button in confirmation dialog (danger action)',
+      (WidgetTester tester) async {
+        // Arrange
+        final detailLoadedState = AdminProductState.detailLoaded(
+          product: tProduct1,
+        );
+        whenListen(
+          mockBloc,
+          Stream.value(detailLoadedState),
+          initialState: const AdminProductState.initial(),
+        );
+
+        // Act
+        await tester
+            .pumpWidget(createDetailScreenUnderTest(productId: testProductId));
+        await tester.pump();
+        await tester.tap(find.text('Delete Product'));
+        await tester.pumpAndSettle();
+
+        // Assert - Verify Delete button exists in dialog
+        expect(find.text('Delete'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should show confirmation dialog with product name',
+      (WidgetTester tester) async {
+        // Arrange
+        final detailLoadedState = AdminProductState.detailLoaded(
+          product: tProduct1,
+        );
+        whenListen(
+          mockBloc,
+          Stream.value(detailLoadedState),
+          initialState: const AdminProductState.initial(),
+        );
+
+        // Act
+        await tester
+            .pumpWidget(createDetailScreenUnderTest(productId: testProductId));
+        await tester.pump();
+        await tester.tap(find.text('Delete Product'));
+        await tester.pumpAndSettle();
+
+        // Assert - Dialog should be visible with product context
+        expect(find.textContaining('Michelin'), findsAtLeastNWidgets(2));
+      },
+    );
+  });
+
+  group('UC-07: Delete from List Screen', () {
+    testWidgets(
+      'should have Delete Product button visible in detail screen',
+      (WidgetTester tester) async {
+        // Arrange
+        final detailLoadedState = AdminProductState.detailLoaded(
+          product: tProduct1,
+        );
+        whenListen(
+          mockBloc,
+          Stream.value(detailLoadedState),
+          initialState: const AdminProductState.initial(),
+        );
+
+        // Act
+        await tester
+            .pumpWidget(createDetailScreenUnderTest(productId: 'prod-001'));
+        await tester.pump();
+
+        // Assert - Delete button should be present
+        expect(find.text('Delete Product'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should display confirmation dialog title',
+      (WidgetTester tester) async {
+        // Arrange
+        final detailLoadedState = AdminProductState.detailLoaded(
+          product: tProduct1,
+        );
+        whenListen(
+          mockBloc,
+          Stream.value(detailLoadedState),
+          initialState: const AdminProductState.initial(),
+        );
+
+        // Act - Open delete dialog
+        await tester
+            .pumpWidget(createDetailScreenUnderTest(productId: 'prod-001'));
+        await tester.pump();
+        await tester.tap(find.text('Delete Product'));
+        await tester.pumpAndSettle();
+
+        // Assert - Dialog title should be visible
+        expect(find.text('Delete Product?'), findsOneWidget);
+      },
+    );
+  });
 }

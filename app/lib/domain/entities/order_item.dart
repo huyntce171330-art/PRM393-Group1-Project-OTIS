@@ -5,6 +5,7 @@ part 'order_item.freezed.dart';
 /// Domain entity representing an order item in an order.
 /// This entity contains business logic and is immutable.
 /// Represents a snapshot of a product at the time of purchase.
+@immutable
 @freezed
 class OrderItem with _$OrderItem {
   const OrderItem._(); // Private constructor for adding custom methods
@@ -14,9 +15,11 @@ class OrderItem with _$OrderItem {
     required String productId,
 
     /// Quantity ordered
+    @Assert('quantity > 0', 'Quantity must be greater than 0')
     required int quantity,
 
     /// Unit price at the time of purchase (snapshot)
+    @Assert('unitPrice >= 0', 'Unit price cannot be negative')
     required double unitPrice,
   }) = _OrderItem;
 
@@ -25,18 +28,12 @@ class OrderItem with _$OrderItem {
 
   /// Get formatted unit price
   String get formattedUnitPrice {
-    return '${unitPrice.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    )} đ';
+    return '${unitPrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
   }
 
   /// Get formatted total price
   String get formattedTotalPrice {
-    return '${totalPrice.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    )} đ';
+    return '${totalPrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} đ';
   }
 
   /// Check if the order item is valid

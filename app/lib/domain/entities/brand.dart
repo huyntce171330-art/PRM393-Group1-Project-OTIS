@@ -4,16 +4,17 @@ part 'brand.freezed.dart';
 
 /// Domain entity representing a brand in the system.
 /// This entity contains business logic and is immutable.
+@immutable
 @freezed
 class Brand with _$Brand {
   const Brand._(); // Private constructor for adding custom methods
 
   const factory Brand({
     /// Unique identifier for the brand
-    required String id,
+    @Assert('id.isNotEmpty', 'Brand ID cannot be empty') required String id,
 
     /// Brand name
-    required String name,
+    @Assert('name.isNotEmpty', 'Brand name cannot be empty') required String name,
 
     /// URL to brand logo image
     required String logoUrl,

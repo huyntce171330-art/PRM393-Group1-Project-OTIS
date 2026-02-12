@@ -63,6 +63,20 @@ abstract class ProductRemoteDatasource {
   /// Returns true if deletion was successful.
   Future<bool> deleteProduct({required String productId});
 
+  /// Restores a soft-deleted product by setting is_active = 1.
+  ///
+  /// [productId] - The product to restore
+  ///
+  /// Returns true if restore was successful.
+  Future<bool> restoreProduct({required String productId});
+
+  /// Permanently deletes a product from the database.
+  ///
+  /// [productId] - The product to permanently delete
+  ///
+  /// Returns true if deletion was successful.
+  Future<bool> permanentDeleteProduct({required String productId});
+
   /// Retrieves a paginated list of products for admin inventory management.
   ///
   /// Supports additional filtering by brand name and stock status.
@@ -70,12 +84,14 @@ abstract class ProductRemoteDatasource {
   /// [page] - The page number (1-indexed)
   /// [limit] - Number of items per page
   /// [filter] - Admin filter containing brand name and stock status
+  /// [showInactive] - Filter by active status: true=inactive only, false=active only, null=all
   ///
   /// Returns [ProductListModel] containing products and pagination metadata.
   Future<ProductListModel> getAdminProducts({
     required int page,
     required int limit,
     AdminProductFilter? filter,
+    bool? showInactive,
   });
 
   /// Retrieves a list of all brands.

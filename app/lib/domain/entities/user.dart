@@ -7,6 +7,7 @@ part 'user.freezed.dart';
 
 /// Domain entity representing a user in the system.
 /// This entity contains business logic and is immutable.
+@immutable
 @freezed
 class User with _$User {
   const User._(); // Private constructor for adding custom methods

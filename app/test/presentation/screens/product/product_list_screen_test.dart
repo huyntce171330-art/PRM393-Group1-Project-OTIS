@@ -8,7 +8,6 @@ import 'package:frontend_otis/presentation/bloc/product/product_event.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
 import 'package:frontend_otis/presentation/screens/product/product_list_screen.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_card.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

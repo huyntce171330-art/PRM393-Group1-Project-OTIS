@@ -44,26 +44,59 @@ class AdminProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    // Determine opacity based on product active status
+    // Inactive products appear faded
+    final opacity = product.isActive ? 1.0 : 0.5;
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: (isDarkMode ? Colors.grey[800]! : Colors.grey[100]!),
-          ),
-        ),
-        child: Row(
+      child: Opacity(
+        opacity: opacity,
+        child: Stack(
           children: [
-            // Product Image with Stock Status Dot
-            _buildProductImage(isDarkMode),
-            const SizedBox(width: 12),
-            // Product Information
-            _buildProductInfo(isDarkMode),
-            const SizedBox(width: 8),
-            // Action Buttons
-            _buildActionButtons(context),
+            // Main Card Content
+            Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: (isDarkMode ? Colors.grey[800]! : Colors.grey[100]!),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Product Image with Stock Status Dot
+                  _buildProductImage(isDarkMode),
+                  const SizedBox(width: 12),
+                  // Product Information
+                  _buildProductInfo(isDarkMode),
+                  const SizedBox(width: 8),
+                  // Action Buttons
+                  _buildActionButtons(context),
+                ],
+              ),
+            ),
+            // Badge for Inactive/Deleted Products
+            if (!product.isActive)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'ĐÃ XÓA',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

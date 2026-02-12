@@ -13,6 +13,7 @@
 
 import 'package:equatable/equatable.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
+import 'package:meta/meta.dart';
 
 // Sentinel value to distinguish between "not provided" and "explicitly null"
 class _Unset<T> {
@@ -65,6 +66,7 @@ extension StockStatusExtension on StockStatus {
 ///
 /// Combines ProductFilter's pagination/search capabilities with
 /// admin-specific filtering: brand name and stock status.
+@immutable
 class AdminProductFilter with EquatableMixin {
   /// Base filter for pagination, search, and general filtering
   final ProductFilter baseFilter;

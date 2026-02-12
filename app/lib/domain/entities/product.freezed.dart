@@ -39,9 +39,11 @@ mixin _$Product {
   TireSpec? get tireSpec => throw _privateConstructorUsedError;
 
   /// Product price
+  @Assert('price >= 0', 'Price cannot be negative')
   double get price => throw _privateConstructorUsedError;
 
   /// Available stock quantity
+  @Assert('stockQuantity >= 0', 'Stock cannot be negative')
   int get stockQuantity => throw _privateConstructorUsedError;
 
   /// Whether the product is active/available
@@ -69,8 +71,8 @@ abstract class $ProductCopyWith<$Res> {
     Brand? brand,
     VehicleMake? vehicleMake,
     TireSpec? tireSpec,
-    double price,
-    int stockQuantity,
+    @Assert('price >= 0', 'Price cannot be negative') double price,
+    @Assert('stockQuantity >= 0', 'Stock cannot be negative') int stockQuantity,
     bool isActive,
     DateTime createdAt,
   });
@@ -217,8 +219,8 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
     Brand? brand,
     VehicleMake? vehicleMake,
     TireSpec? tireSpec,
-    double price,
-    int stockQuantity,
+    @Assert('price >= 0', 'Price cannot be negative') double price,
+    @Assert('stockQuantity >= 0', 'Stock cannot be negative') int stockQuantity,
     bool isActive,
     DateTime createdAt,
   });
@@ -319,7 +321,8 @@ class _$ProductImpl extends _Product {
     this.brand,
     this.vehicleMake,
     this.tireSpec,
-    required this.price,
+    @Assert('price >= 0', 'Price cannot be negative') required this.price,
+    @Assert('stockQuantity >= 0', 'Stock cannot be negative')
     required this.stockQuantity,
     required this.isActive,
     required this.createdAt,
@@ -355,10 +358,12 @@ class _$ProductImpl extends _Product {
 
   /// Product price
   @override
+  @Assert('price >= 0', 'Price cannot be negative')
   final double price;
 
   /// Available stock quantity
   @override
+  @Assert('stockQuantity >= 0', 'Stock cannot be negative')
   final int stockQuantity;
 
   /// Whether the product is active/available
@@ -432,7 +437,9 @@ abstract class _Product extends Product {
     final Brand? brand,
     final VehicleMake? vehicleMake,
     final TireSpec? tireSpec,
+    @Assert('price >= 0', 'Price cannot be negative')
     required final double price,
+    @Assert('stockQuantity >= 0', 'Stock cannot be negative')
     required final int stockQuantity,
     required final bool isActive,
     required final DateTime createdAt,
@@ -469,10 +476,12 @@ abstract class _Product extends Product {
 
   /// Product price
   @override
+  @Assert('price >= 0', 'Price cannot be negative')
   double get price;
 
   /// Available stock quantity
   @override
+  @Assert('stockQuantity >= 0', 'Stock cannot be negative')
   int get stockQuantity;
 
   /// Whether the product is active/available

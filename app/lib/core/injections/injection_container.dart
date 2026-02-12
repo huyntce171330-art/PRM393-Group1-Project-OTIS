@@ -26,6 +26,8 @@ import 'package:frontend_otis/domain/usecases/product/get_vehicle_makes_usecase.
 import 'package:frontend_otis/domain/usecases/product/search_products_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/permanent_delete_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/restore_product_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 
@@ -100,6 +102,16 @@ Future<void> init() async {
     () => GetVehicleMakesUsecase(productRepository: sl()),
   );
 
+  // Restore Product Use Case
+  sl.registerLazySingleton<RestoreProductUsecase>(
+    () => RestoreProductUsecase(productRepository: sl()),
+  );
+
+  // Permanent Delete Product Use Case
+  sl.registerLazySingleton<PermanentDeleteProductUsecase>(
+    () => PermanentDeleteProductUsecase(productRepository: sl()),
+  );
+
   // ========== 6. BLOCS ==========
   // Product BLoC
   sl.registerLazySingleton<ProductBloc>(
@@ -116,6 +128,8 @@ Future<void> init() async {
       getProductDetailUsecase: sl(),
       deleteProductUsecase: sl(),
       createProductUsecase: sl(),
+      restoreProductUsecase: sl(),
+      permanentDeleteProductUsecase: sl(),
     ),
   );
 

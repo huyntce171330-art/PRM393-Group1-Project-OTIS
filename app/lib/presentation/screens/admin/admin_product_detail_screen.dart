@@ -43,8 +43,22 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
   void initState() {
     super.initState();
     // Use existing Bloc from parent BlocProvider (shared with list screen)
-    _bloc = BlocProvider.of<AdminProductBloc>(context)
-      ..add(GetProductDetailEvent(productId: widget.productId));
+    _bloc = BlocProvider.of<AdminProductBloc>(context);
+
+    // Only fetch detail if not already loaded for this product
+    final currentState = _bloc.state;
+    final alreadyLoaded =
+        currentState is AdminProductDetailLoaded &&
+        currentState.product.id == widget.productId;
+
+    if (!alreadyLoaded) {
+      print('DEBUG: Fetching detail for product ${widget.productId}...');
+      _bloc.add(GetProductDetailEvent(productId: widget.productId));
+    } else {
+      print(
+        'DEBUG: Product ${widget.productId} already loaded, skipping fetch',
+      );
+    }
   }
 
   @override
@@ -60,39 +74,54 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
       child: Scaffold(
         backgroundColor: AppColors.backgroundLight,
         appBar: _buildAppBar(context),
-        body: BlocBuilder<AdminProductBloc, AdminProductState>(
-          builder: (context, state) {
-            // Handle different states for detail view
-            return state.when(
-              initial: () => _buildLoadingState(),
-              loading: () => _buildLoadingState(),
-              loaded:
-                  (
-                    products,
-                    filter,
-                    selectedBrand,
-                    stockStatus,
-                    currentPage,
-                    totalPages,
-                    hasMore,
-                    totalCount,
-                    isLoadingMore,
-                    isRefreshing,
-                  ) {
-                    // When coming from List, show loading while fetching detail
-                    // or show cached info if available
-                    return _buildLoadingState();
-                  },
-              detailLoading: () => _buildLoadingState(),
-              detailLoaded: (product) => _buildContent(product, context),
-              deleting: (_) => _buildLoadingState(),
-              deleted: (_) => _buildLoadingState(),
-              error: (message) => _buildErrorState(message, context),
-              creating: () => _buildLoadingState(),
-              createSuccess: (_) => _buildLoadingState(),
-              createError: (message) => _buildErrorState(message, context),
-            );
+        body: BlocListener<AdminProductBloc, AdminProductState>(
+          listenWhen: (previous, current) => current is AdminProductDeleted,
+          listener: (context, state) {
+            print('=== DEBUG LISTENER: State changed to $state');
+            if (state is AdminProductDeleted) {
+              print('=== DEBUG LISTENER: Navigating back...');
+              // Navigate after the current frame completes to avoid rebuild issues
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pop(true);
+              });
+            }
           },
+          child: BlocBuilder<AdminProductBloc, AdminProductState>(
+            builder: (context, state) {
+              // Handle different states for detail view
+              return state.when(
+                initial: () => _buildLoadingState(),
+                loading: () => _buildLoadingState(),
+                loaded:
+                    (
+                      products,
+                      filter,
+                      selectedBrand,
+                      stockStatus,
+                      currentPage,
+                      totalPages,
+                      hasMore,
+                      totalCount,
+                      isLoadingMore,
+                      isRefreshing,
+                    ) {
+                      // When coming from List, show loading while fetching detail
+                      // or show cached info if available
+                      return _buildLoadingState();
+                    },
+                detailLoading: () => _buildLoadingState(),
+                detailLoaded: (product) => _buildContent(product, context),
+                deleting: (_) => _buildLoadingState(),
+                deleted: (_) => _buildLoadingState(),
+                error: (message) => _buildErrorState(message, context),
+                creating: () => _buildLoadingState(),
+                createSuccess: (_) => _buildLoadingState(),
+                createError: (message) => _buildErrorState(message, context),
+                restoring: (_) => _buildLoadingState(),
+                restored: (_) => _buildLoadingState(),
+              );
+            },
+          ),
         ),
         bottomNavigationBar: _buildBottomActions(context),
       ),
@@ -518,22 +547,31 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
   }
 
   /// Shows delete confirmation dialog.
-  void _showDeleteConfirmation(BuildContext context) {
+  void _showDeleteConfirmation(BuildContext screenContext) {
+    print(
+      '=== DEBUG UI: _showDeleteConfirmation called for product ${widget.productId}',
+    );
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+      context: screenContext,
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Product?'),
         content: const Text(
           'Are you sure you want to delete this product? This action cannot be undone.',
         ),
         actions: [
           TextButton(
-            onPressed: () => context.pop(false),
+            onPressed: () {
+              print('=== DEBUG UI: Cancel pressed');
+              Navigator.of(dialogContext).pop(false);
+            },
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              context.pop(true); // Return true to indicate deletion
+              print('=== DEBUG UI: Delete pressed, closing dialog...');
+              // Close dialog first
+              Navigator.of(dialogContext).pop(true);
+              // Then call Bloc event - navigation will be handled by BlocListener
               _bloc.add(DeleteProductEvent(productId: widget.productId));
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),

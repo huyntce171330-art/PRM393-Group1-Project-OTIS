@@ -4,16 +4,17 @@ part 'user_role.freezed.dart';
 
 /// Domain entity representing a user role in the system.
 /// This entity contains business logic and is immutable.
+@immutable
 @freezed
 class UserRole with _$UserRole {
   const UserRole._(); // Private constructor for adding custom methods
 
   const factory UserRole({
     /// Unique identifier for the role
-    required String id,
+    @Assert('id.isNotEmpty', 'Role ID cannot be empty') required String id,
 
     /// Role name (e.g., 'admin', 'customer')
-    required String name,
+    @Assert('name.isNotEmpty', 'Role name cannot be empty') required String name,
   }) = _UserRole;
 
   /// Check if this is an admin role

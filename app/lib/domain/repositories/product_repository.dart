@@ -60,6 +60,7 @@ abstract class ProductRepository {
   /// [filter] - Admin filter containing base filter, brand name, and stock status
   /// [page] - Page number (1-indexed)
   /// [limit] - Number of items per page
+  /// [showInactive] - Filter by active status: true=inactive only, false=active only, null=all
   ///
   /// Returns [Either<Failure, ({List<Product> products, int totalCount, int totalPages, bool hasMore})>].
   Future<Either<Failure, ({List<Product> products, int totalCount, int totalPages, bool hasMore})>>
@@ -67,6 +68,7 @@ abstract class ProductRepository {
     required AdminProductFilter filter,
     required int page,
     required int limit,
+    bool? showInactive,
   });
 
   /// Deletes a product by its ID.
@@ -75,6 +77,20 @@ abstract class ProductRepository {
   ///
   /// Returns [Either<Failure, bool>] - true if deletion was successful, or failure
   Future<Either<Failure, bool>> deleteProduct({required String productId});
+
+  /// Restores a soft-deleted product by setting is_active = 1.
+  ///
+  /// [productId] - The unique identifier of the product
+  ///
+  /// Returns [Either<Failure, bool>] - true if restore was successful, or failure
+  Future<Either<Failure, bool>> restoreProduct({required String productId});
+
+  /// Permanently deletes a product from the database.
+  ///
+  /// [productId] - The unique identifier of the product
+  ///
+  /// Returns [Either<Failure, bool>] - true if deletion was successful, or failure
+  Future<Either<Failure, bool>> permanentDeleteProduct({required String productId});
 
   /// Creates a new product.
   ///

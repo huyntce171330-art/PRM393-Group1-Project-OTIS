@@ -14,6 +14,7 @@
 // - categoryId='1', brandId='2' -> Filter by category and brand
 
 import 'package:equatable/equatable.dart';
+import 'package:meta/meta.dart';
 
 // Sentinel value to distinguish between "not provided" and "explicitly null"
 class _Unset<T> {
@@ -23,6 +24,9 @@ class _Unset<T> {
 
 const _Unset<dynamic> _unset = _Unset<dynamic>._();
 
+/// Filter parameters for product list pagination and search.
+/// Encapsulates pagination, search, and filter parameters when fetching product list.
+@immutable
 class ProductFilter with EquatableMixin {
   // Pagination parameters
   final int page;

@@ -21,9 +21,11 @@ mixin _$OrderItem {
   String get productId => throw _privateConstructorUsedError;
 
   /// Quantity ordered
+  @Assert('quantity > 0', 'Quantity must be greater than 0')
   int get quantity => throw _privateConstructorUsedError;
 
   /// Unit price at the time of purchase (snapshot)
+  @Assert('unitPrice >= 0', 'Unit price cannot be negative')
   double get unitPrice => throw _privateConstructorUsedError;
 
   /// Create a copy of OrderItem
@@ -38,7 +40,11 @@ abstract class $OrderItemCopyWith<$Res> {
   factory $OrderItemCopyWith(OrderItem value, $Res Function(OrderItem) then) =
       _$OrderItemCopyWithImpl<$Res, OrderItem>;
   @useResult
-  $Res call({String productId, int quantity, double unitPrice});
+  $Res call({
+    String productId,
+    @Assert('quantity > 0', 'Quantity must be greater than 0') int quantity,
+    @Assert('unitPrice >= 0', 'Unit price cannot be negative') double unitPrice,
+  });
 }
 
 /// @nodoc
@@ -89,7 +95,11 @@ abstract class _$$OrderItemImplCopyWith<$Res>
   ) = __$$OrderItemImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String productId, int quantity, double unitPrice});
+  $Res call({
+    String productId,
+    @Assert('quantity > 0', 'Quantity must be greater than 0') int quantity,
+    @Assert('unitPrice >= 0', 'Unit price cannot be negative') double unitPrice,
+  });
 }
 
 /// @nodoc
@@ -134,7 +144,9 @@ class __$$OrderItemImplCopyWithImpl<$Res>
 class _$OrderItemImpl extends _OrderItem {
   const _$OrderItemImpl({
     required this.productId,
+    @Assert('quantity > 0', 'Quantity must be greater than 0')
     required this.quantity,
+    @Assert('unitPrice >= 0', 'Unit price cannot be negative')
     required this.unitPrice,
   }) : super._();
 
@@ -144,10 +156,12 @@ class _$OrderItemImpl extends _OrderItem {
 
   /// Quantity ordered
   @override
+  @Assert('quantity > 0', 'Quantity must be greater than 0')
   final int quantity;
 
   /// Unit price at the time of purchase (snapshot)
   @override
+  @Assert('unitPrice >= 0', 'Unit price cannot be negative')
   final double unitPrice;
 
   @override
@@ -183,7 +197,9 @@ class _$OrderItemImpl extends _OrderItem {
 abstract class _OrderItem extends OrderItem {
   const factory _OrderItem({
     required final String productId,
+    @Assert('quantity > 0', 'Quantity must be greater than 0')
     required final int quantity,
+    @Assert('unitPrice >= 0', 'Unit price cannot be negative')
     required final double unitPrice,
   }) = _$OrderItemImpl;
   const _OrderItem._() : super._();
@@ -194,10 +210,12 @@ abstract class _OrderItem extends OrderItem {
 
   /// Quantity ordered
   @override
+  @Assert('quantity > 0', 'Quantity must be greater than 0')
   int get quantity;
 
   /// Unit price at the time of purchase (snapshot)
   @override
+  @Assert('unitPrice >= 0', 'Unit price cannot be negative')
   double get unitPrice;
 
   /// Create a copy of OrderItem

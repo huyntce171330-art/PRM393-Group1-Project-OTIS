@@ -658,7 +658,7 @@ void main() {
         ).thenAnswer((_) async => Right(tMetadata));
         bloc.add(
           const ProductEvent.getProducts(
-            filter: const ProductFilter(page: 1, limit: 10, categoryId: 'cat1'),
+            filter: ProductFilter(page: 1, limit: 10, categoryId: 'cat1'),
           ),
         );
       },

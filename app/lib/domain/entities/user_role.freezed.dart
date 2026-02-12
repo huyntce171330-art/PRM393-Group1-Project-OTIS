@@ -18,9 +18,11 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$UserRole {
   /// Unique identifier for the role
+  @Assert('id.isNotEmpty', 'Role ID cannot be empty')
   String get id => throw _privateConstructorUsedError;
 
   /// Role name (e.g., 'admin', 'customer')
+  @Assert('name.isNotEmpty', 'Role name cannot be empty')
   String get name => throw _privateConstructorUsedError;
 
   /// Create a copy of UserRole
@@ -35,7 +37,10 @@ abstract class $UserRoleCopyWith<$Res> {
   factory $UserRoleCopyWith(UserRole value, $Res Function(UserRole) then) =
       _$UserRoleCopyWithImpl<$Res, UserRole>;
   @useResult
-  $Res call({String id, String name});
+  $Res call({
+    @Assert('id.isNotEmpty', 'Role ID cannot be empty') String id,
+    @Assert('name.isNotEmpty', 'Role name cannot be empty') String name,
+  });
 }
 
 /// @nodoc
@@ -78,7 +83,10 @@ abstract class _$$UserRoleImplCopyWith<$Res>
   ) = __$$UserRoleImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String name});
+  $Res call({
+    @Assert('id.isNotEmpty', 'Role ID cannot be empty') String id,
+    @Assert('name.isNotEmpty', 'Role name cannot be empty') String name,
+  });
 }
 
 /// @nodoc
@@ -113,14 +121,19 @@ class __$$UserRoleImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$UserRoleImpl extends _UserRole {
-  const _$UserRoleImpl({required this.id, required this.name}) : super._();
+  const _$UserRoleImpl({
+    @Assert('id.isNotEmpty', 'Role ID cannot be empty') required this.id,
+    @Assert('name.isNotEmpty', 'Role name cannot be empty') required this.name,
+  }) : super._();
 
   /// Unique identifier for the role
   @override
+  @Assert('id.isNotEmpty', 'Role ID cannot be empty')
   final String id;
 
   /// Role name (e.g., 'admin', 'customer')
   @override
+  @Assert('name.isNotEmpty', 'Role name cannot be empty')
   final String name;
 
   @override
@@ -151,17 +164,21 @@ class _$UserRoleImpl extends _UserRole {
 
 abstract class _UserRole extends UserRole {
   const factory _UserRole({
+    @Assert('id.isNotEmpty', 'Role ID cannot be empty')
     required final String id,
+    @Assert('name.isNotEmpty', 'Role name cannot be empty')
     required final String name,
   }) = _$UserRoleImpl;
   const _UserRole._() : super._();
 
   /// Unique identifier for the role
   @override
+  @Assert('id.isNotEmpty', 'Role ID cannot be empty')
   String get id;
 
   /// Role name (e.g., 'admin', 'customer')
   @override
+  @Assert('name.isNotEmpty', 'Role name cannot be empty')
   String get name;
 
   /// Create a copy of UserRole
