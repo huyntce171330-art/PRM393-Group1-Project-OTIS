@@ -2,7 +2,14 @@ import 'package:json_annotation/json_annotation.dart';
 
 /// Order status in the system.
 /// Maps to database status: 'pending_payment', 'shipping', 'completed', 'canceled'
-enum OrderStatus { pendingPayment, paid, processing, completed, canceled }
+enum OrderStatus {
+  pendingPayment,
+  paid,
+  processing,
+  shipping,
+  completed,
+  canceled,
+}
 
 /// Payment method for orders.
 /// Maps to database payment_method: 'cash', 'transfer'
@@ -26,6 +33,8 @@ class OrderStatusConverter implements JsonConverter<OrderStatus, String> {
         return OrderStatus.paid;
       case 'processing':
         return OrderStatus.processing;
+      case 'shipping':
+        return OrderStatus.shipping;
       case 'completed':
         return OrderStatus.completed;
       case 'canceled':
@@ -44,6 +53,8 @@ class OrderStatusConverter implements JsonConverter<OrderStatus, String> {
         return 'paid';
       case OrderStatus.processing:
         return 'processing';
+      case OrderStatus.shipping:
+        return 'shipping';
       case OrderStatus.completed:
         return 'completed';
       case OrderStatus.canceled:
@@ -123,6 +134,8 @@ extension OrderStatusExtension on OrderStatus {
         return 'Paid';
       case OrderStatus.processing:
         return 'Processing';
+      case OrderStatus.shipping:
+        return 'Shipping';
       case OrderStatus.completed:
         return 'Completed';
       case OrderStatus.canceled:
@@ -139,7 +152,9 @@ extension OrderStatusExtension on OrderStatus {
 
   /// Check if the order is in progress
   bool get isInProgress =>
-      this == OrderStatus.processing || this == OrderStatus.paid;
+      this == OrderStatus.processing ||
+      this == OrderStatus.shipping ||
+      this == OrderStatus.paid;
 }
 
 /// Extension methods for PaymentMethod enum

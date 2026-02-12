@@ -18,6 +18,7 @@ class StatusBadge extends StatelessWidget {
       case OrderStatus.pendingPayment:
       case OrderStatus.paid:
       case OrderStatus.processing:
+      case OrderStatus.shipping:
         backgroundColor = isDarkMode
             ? Colors.orange[900]!.withValues(alpha: 0.2)
             : Colors.orange[50]!;

@@ -325,6 +325,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
         break;
       case OrderStatus.paid:
       case OrderStatus.processing:
+      case OrderStatus.shipping:
         statusBg = const Color(0xFFDBEAFE); // Blue 100
         statusText = const Color(0xFF1D4ED8); // Blue 700
         break;

@@ -91,12 +91,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     int currentStep = 0;
     if (order.status == OrderStatus.pendingPayment ||
-        order.status == OrderStatus.paid)
+        order.status == OrderStatus.paid) {
       currentStep = 0;
-    else if (order.status == OrderStatus.processing)
+    } else if (order.status == OrderStatus.processing ||
+        order.status == OrderStatus.shipping) {
       currentStep = 1;
-    else if (order.status == OrderStatus.completed)
+    } else if (order.status == OrderStatus.completed) {
       currentStep = 2;
+    }
 
     return Container(
       color: surfaceColor,
@@ -123,19 +125,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               Container(
                 height: 4,
                 width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 20),
+                margin: const EdgeInsets.symmetric(horizontal: 16),
                 color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
               ),
               LayoutBuilder(
                 builder: (context, constraints) {
                   double progressWidth = 0;
-                  if (currentStep == 1)
-                    progressWidth = (constraints.maxWidth - 40) / 2;
-                  else if (currentStep == 2)
-                    progressWidth = constraints.maxWidth - 40;
+                  if (currentStep == 1) {
+                    progressWidth = (constraints.maxWidth - 32) / 2;
+                  } else if (currentStep == 2) {
+                    progressWidth = constraints.maxWidth - 32;
+                  }
 
                   return Positioned(
-                    left: 20,
+                    left: 16,
                     child: Container(
                       height: 4,
                       width: progressWidth,
@@ -197,10 +200,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ? primaryColor
                 : (isDarkMode ? Colors.grey[800] : Colors.grey[200]),
             shape: BoxShape.circle,
-            border: Border.all(
-              color: isActive ? Colors.white : Colors.transparent,
-              width: 2,
-            ),
+            border: Border.all(color: Colors.transparent, width: 0),
           ),
           child: Icon(
             isActive && isCompleted && icon == Icons.check ? Icons.check : icon,
@@ -448,49 +448,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildFixedFooter(Order order, Color surfaceColor) {
+    // Only allow cancellation for pending payment or paid orders
     final bool canCancel =
         order.status == OrderStatus.pendingPayment ||
-        order.status == OrderStatus.processing ||
         order.status == OrderStatus.paid;
 
-    Widget actionButton;
-
-    if (canCancel) {
-      actionButton = ElevatedButton(
-        onPressed: () {
-          context.read<OrderBloc>().add(
-            UpdateOrderStatusEvent(order.id, 'canceled'),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          elevation: 0,
-        ),
-        child: const Text(
-          'Cancel Order',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      );
-    } else {
-      actionButton = ElevatedButton(
-        onPressed: () {
-          // Re-order logic
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          elevation: 0,
-        ),
-        child: const Text(
-          'Re-order',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      );
+    if (!canCancel) {
+      return const SizedBox.shrink();
     }
 
     return Container(
@@ -499,7 +463,32 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         color: surfaceColor,
         border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1))),
       ),
-      child: Row(children: [Expanded(child: actionButton)]),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () {
+                context.read<OrderBloc>().add(
+                  UpdateOrderStatusEvent(order.id, 'canceled'),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Cancel Order',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
