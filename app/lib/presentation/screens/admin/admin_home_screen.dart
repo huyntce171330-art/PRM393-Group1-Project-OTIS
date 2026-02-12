@@ -20,10 +20,11 @@ class AdminHomeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: backgroundColor,
+      appBar: const AdminHeader(),
       body: SafeArea(
         child: Column(
           children: [
-            const AdminHeader(),
+            // Header removed from body
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),

@@ -5,6 +5,7 @@ import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
+import 'package:frontend_otis/presentation/widgets/admin/admin_header.dart';
 import 'package:go_router/go_router.dart';
 
 class AdminOrdersScreen extends StatefulWidget {
@@ -84,59 +85,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(
-        backgroundColor: surfaceColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          'TP Tire Shop',
-          style: TextStyle(
-            color: primaryColor,
-            fontWeight: FontWeight.w900,
-            fontSize: 22,
-            letterSpacing: -0.5,
-          ),
-        ),
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.notifications_none, color: textMain),
-              ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: primaryColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: surfaceColor, width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16, left: 8),
-            child: CircleAvatar(
-              radius: 16,
-              backgroundImage: const NetworkImage(
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuAi4sYgmQPIM6M3CzGbezCW9ZxiPKCGcLd9SUZfxwsX4OmsAse7fPac0hAiWvf6eSSoFelIJmtVkBU3SgIUe8V2Tfu9kZzAkiONq36Y_eD8H0LjhFv3KamqwRujw67qzjSEn_213l1KQ66MEj6KN8nv5veXu_0fBJrkTW1wVlykVO7rV8A--pSS_hLoVdIE5QN5odc5EQtKJMijCK8NkkyxXQO3SAotJhCapl5SHbGiT9tlKtR_yT6PXdzSwWiux4e2DQmQ-tH4uQM',
-              ),
-              backgroundColor: Colors.grey[300]!,
-            ),
-          ),
-        ],
-        shape: Border(
-          bottom: BorderSide(
-            color: isDarkMode ? const Color(0xFF4A2A2A) : Colors.grey[100]!,
-            width: 1,
-          ),
-        ),
-      ),
+      appBar: const AdminHeader(),
       body: Column(
         children: [
           // Sticky Top Bar (Search & Tabs)
@@ -374,7 +323,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Order #${order.code.substring(order.code.length - 5)}',
+                      'Order #${order.code.length >= 5 ? order.code.substring(order.code.length - 5) : order.code}',
                       style: TextStyle(
                         color: textSub,
                         fontSize: 11,
@@ -475,7 +424,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     if (order.shippingAddress.contains(',')) {
       return order.shippingAddress.split(',').first;
     }
-    return 'Customer #${order.id.substring(order.id.length - 4)}';
+    return 'Customer #${order.id.length >= 4 ? order.id.substring(order.id.length - 4) : order.id}';
   }
 
   String _formatDateTime(DateTime date) {

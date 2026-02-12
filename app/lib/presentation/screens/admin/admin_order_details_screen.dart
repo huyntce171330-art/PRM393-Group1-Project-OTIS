@@ -247,6 +247,17 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
+                        Icon(Icons.call, size: 16, color: primaryColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          '+84 123 456 789', // Placeholder phone
+                          style: TextStyle(color: textSub, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
                         Icon(Icons.location_on, size: 16, color: primaryColor),
                         const SizedBox(width: 4),
                         Expanded(
@@ -256,17 +267,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(Icons.call, size: 16, color: primaryColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          '+84 123 456 789', // Placeholder phone
-                          style: TextStyle(color: textSub, fontSize: 13),
                         ),
                       ],
                     ),
@@ -705,6 +705,59 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
     Color surfaceColor,
     Color primaryColor,
   ) {
+    // Determine buttons based on status
+    Widget? leftButton;
+    Widget? rightButton;
+
+    switch (order.status) {
+      case OrderStatus.pendingPayment:
+      case OrderStatus.paid:
+        leftButton = _buildActionButton(
+          label: 'Cancel',
+          onPressed: () => _updateStatus(order.id, 'canceled'),
+          bgColor: Colors.transparent,
+          textColor: Colors.red[600]!,
+          borderColor: Colors.red[100]!,
+        );
+        rightButton = _buildActionButton(
+          label: 'Process Order',
+          onPressed: () => _updateStatus(order.id, 'processing'),
+          bgColor: primaryColor,
+          textColor: Colors.white,
+        );
+        break;
+
+      case OrderStatus.processing:
+        leftButton = _buildActionButton(
+          label: 'Cancel',
+          onPressed: () => _updateStatus(order.id, 'canceled'),
+          bgColor: Colors.transparent,
+          textColor: Colors.red[600]!,
+          borderColor: Colors.red[100]!,
+        );
+        rightButton = _buildActionButton(
+          label: 'Start Shipping',
+          onPressed: () => _updateStatus(order.id, 'shipping'),
+          bgColor: Colors.blue[600]!,
+          textColor: Colors.white,
+        );
+        break;
+
+      case OrderStatus.shipping:
+        // No cancel allowed in shipping (or maybe allowed? User restricted cancel for user, Admin might need it but typically it's too late)
+        rightButton = _buildActionButton(
+          label: 'Complete Order',
+          onPressed: () => _updateStatus(order.id, 'completed'),
+          bgColor: Colors.green[600]!,
+          textColor: Colors.white,
+        );
+        break;
+
+      case OrderStatus.completed:
+      case OrderStatus.canceled:
+        return const SizedBox.shrink();
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: BoxDecoration(
@@ -713,29 +766,17 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _buildActionButton(
-              label: 'Cancel',
-              onPressed: () {},
-              bgColor: Colors.transparent,
-              textColor: Colors.red[600]!,
-              borderColor: Colors.red[100]!,
-            ),
-          ),
+          if (leftButton != null) ...[
+            Expanded(child: leftButton),
+            const SizedBox(width: 8),
+          ],
+          if (rightButton != null) Expanded(child: rightButton),
           const SizedBox(width: 8),
           Expanded(
-            child: _buildActionButton(
-              label: 'Approve',
-              onPressed: () {},
-              bgColor: Colors.green[600]!,
-              textColor: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 1,
+            flex: 0,
             child: Container(
               height: 48,
+              width: 48,
               decoration: BoxDecoration(
                 color: primaryColor,
                 borderRadius: BorderRadius.circular(12),
@@ -748,7 +789,9 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                 ],
               ),
               child: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  // Print logic placeholder
+                },
                 icon: const Icon(
                   Icons.print_outlined,
                   color: Colors.white,
@@ -760,6 +803,10 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
         ],
       ),
     );
+  }
+
+  void _updateStatus(String orderId, String newStatus) {
+    context.read<OrderBloc>().add(UpdateOrderStatusEvent(orderId, newStatus));
   }
 
   Widget _buildActionButton({
@@ -885,7 +932,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
     if (order.shippingAddress.contains(',')) {
       return order.shippingAddress.split(',').first;
     }
-    return 'Customer #${order.id.substring(order.id.length - 4)}';
+    return 'Customer #${order.id.length >= 4 ? order.id.substring(order.id.length - 4) : order.id}';
   }
 }
 
