@@ -20,6 +20,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<AuthBloc>().state;
+      if (state is Authenticated) {
+        if (state.user.isAdmin) {
+          context.go('/admin/home');
+        } else {
+          context.go('/home');
+        }
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _phoneController.dispose();
     _passwordController.dispose();

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_header.dart';
-import 'package:frontend_otis/presentation/widgets/admin/admin_nav_bar.dart';
 
 class AdminHomeScreen extends StatelessWidget {
   const AdminHomeScreen({super.key});
@@ -66,7 +65,6 @@ class AdminHomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const AdminNavBar(currentIndex: 0),
     );
   }
 

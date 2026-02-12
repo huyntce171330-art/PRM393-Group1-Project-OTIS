@@ -249,13 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          // Admin Button (Temporary for demo)
-          IconButton(
-            icon: const Icon(Icons.admin_panel_settings),
-            color: isDarkMode ? Colors.white : AppColors.primary,
-            onPressed: () => context.push('/admin/orders'),
-          ),
-          const SizedBox(width: 8),
+
           // Avatar
           GestureDetector(
             onTap: () => context.push('/orders'),

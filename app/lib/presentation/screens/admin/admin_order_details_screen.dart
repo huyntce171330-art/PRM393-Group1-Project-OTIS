@@ -77,14 +77,21 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
               child: CircularProgressIndicator(color: Color(0xFFEC1313)),
             );
           } else if (state is OrderDetailLoaded) {
-            return _buildContent(
-              context,
-              state.order,
-              surfaceColor,
-              textMain,
-              textSub,
-              primaryColor,
-              isDarkMode,
+            return Column(
+              children: [
+                Expanded(
+                  child: _buildContent(
+                    context,
+                    state.order,
+                    surfaceColor,
+                    textMain,
+                    textSub,
+                    primaryColor,
+                    isDarkMode,
+                  ),
+                ),
+                _buildStickyBottomBar(state.order, surfaceColor, primaryColor),
+              ],
             );
           } else if (state is OrderError) {
             return Center(
@@ -92,18 +99,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                 state.message,
                 style: const TextStyle(color: Colors.red),
               ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
-      ),
-      bottomNavigationBar: BlocBuilder<OrderBloc, OrderState>(
-        builder: (context, state) {
-          if (state is OrderDetailLoaded) {
-            return _buildStickyBottomBar(
-              state.order,
-              surfaceColor,
-              primaryColor,
             );
           }
           return const SizedBox.shrink();
@@ -756,7 +751,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
     Color primaryColor,
   ) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: BoxDecoration(
         color: surfaceColor.withValues(alpha: 0.95),
         border: Border(top: BorderSide(color: Colors.grey[200]!)),

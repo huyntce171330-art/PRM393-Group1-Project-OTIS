@@ -45,15 +45,15 @@ class _SplashScreenState extends State<SplashScreen>
     // Navigate after animation completes
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        _navigateToHome();
+        _navigateToLogin();
       }
     });
   }
 
-  void _navigateToHome() {
+  void _navigateToLogin() {
     if (mounted) {
-      // Use GoRouter for navigation - push to maintain back stack
-      context.push('/home');
+      // Use GoRouter for navigation - go to replace splash in stack
+      context.go('/login');
     }
   }
 
@@ -193,7 +193,7 @@ class Logo extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(

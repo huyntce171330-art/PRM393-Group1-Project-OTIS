@@ -295,7 +295,6 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNav(surfaceColor, textSub, primaryColor),
     );
   }
 
@@ -347,10 +346,16 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
         ],
       ),
       child: InkWell(
-        onTap: () => context.pushNamed(
-          'admin-order-detail',
-          pathParameters: {'orderId': order.id},
-        ),
+        onTap: () => context
+            .pushNamed(
+              'admin-order-detail',
+              pathParameters: {'orderId': order.id},
+            )
+            .then((_) {
+              if (context.mounted) {
+                context.read<OrderBloc>().add(const GetOrdersEvent());
+              }
+            }),
         child: Column(
           children: [
             Row(
@@ -480,77 +485,5 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year} • ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
-  Widget _buildBottomNav(
-    Color surfaceColor,
-    Color textSub,
-    Color primaryColor,
-  ) {
-    return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        color: surfaceColor.withValues(alpha: 0.95),
-        border: Border(top: BorderSide(color: Colors.grey[200]!, width: 1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            Icons.grid_view_outlined,
-            'Home',
-            false,
-            textSub,
-            primaryColor,
-          ),
-          _buildNavItem(Icons.list_alt, 'Orders', true, textSub, primaryColor),
-          _buildNavItem(
-            Icons.inventory_2_outlined,
-            'Products',
-            false,
-            textSub,
-            primaryColor,
-          ),
-          _buildNavItem(
-            Icons.group_outlined,
-            'Users',
-            false,
-            textSub,
-            primaryColor,
-          ),
-          _buildNavItem(
-            Icons.settings_outlined,
-            'Settings',
-            false,
-            textSub,
-            primaryColor,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-    IconData icon,
-    String label,
-    bool isActive,
-    Color textSub,
-    Color primaryColor,
-  ) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: isActive ? primaryColor : textSub, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: isActive ? primaryColor : textSub,
-            fontSize: 10,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-          ),
-        ),
-      ],
-    );
   }
 }
