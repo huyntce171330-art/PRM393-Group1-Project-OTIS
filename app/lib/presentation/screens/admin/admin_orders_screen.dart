@@ -239,12 +239,15 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
           Expanded(
             child: BlocBuilder<OrderBloc, OrderState>(
               builder: (context, state) {
-                if (state is OrderLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFEC1313)),
-                  );
-                } else if (state is OrderLoaded) {
-                  final filteredOrders = _getFilteredOrders(state.orders);
+                List<Order>? currentOrders;
+                if (state is OrderLoaded) {
+                  currentOrders = state.orders;
+                } else if (state is OrderDetailLoaded) {
+                  currentOrders = state.cachedList;
+                }
+
+                if (currentOrders != null) {
+                  final filteredOrders = _getFilteredOrders(currentOrders);
 
                   if (filteredOrders.isEmpty) {
                     return Center(
@@ -280,6 +283,11 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                         primaryColor,
                       );
                     },
+                  );
+                } else if (state is OrderLoading ||
+                    state is OrderDetailLoaded) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFEC1313)),
                   );
                 } else if (state is OrderError) {
                   return Center(

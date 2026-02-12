@@ -96,7 +96,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _navigateToProductDetail(Product product) {
     // Use push() to maintain back stack, allowing user to navigate back
-    context.push('/product/${product.id}');
+    context.push('/product/${product.id}').then((_) {
+      if (mounted) {
+        _productBloc.add(const RestoreProductListEvent());
+      }
+    });
   }
 
   void _onAddToCart(Product product) {
@@ -580,10 +584,7 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isSmallScreen,
   ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    List<Product> allProducts = [];
-    if (state is ProductLoaded && state.products.isNotEmpty) {
-      allProducts = state.products;
-    }
+    List<Product> allProducts = state.products ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,7 +644,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           )
-        else if (state is ProductLoaded && state.products.isNotEmpty)
+        else if (allProducts.isNotEmpty)
           SizedBox(
             height: isSmallScreen ? 190 : 210,
             child: ListView.separated(

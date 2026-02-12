@@ -22,10 +22,11 @@ class OrderLoaded extends OrderState {
 
 class OrderDetailLoaded extends OrderState {
   final Order order;
-  const OrderDetailLoaded(this.order);
+  final List<Order>? cachedList;
+  const OrderDetailLoaded(this.order, {this.cachedList});
 
   @override
-  List<Object?> get props => [order];
+  List<Object?> get props => [order, cachedList];
 }
 
 class OrderCreated extends OrderState {

@@ -91,7 +91,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   void _navigateToProductDetail(BuildContext context, String productId) {
     // Navigate to product detail using GoRouter with push to maintain back stack
-    context.push('/product/$productId');
+    context.push('/product/$productId').then((_) {
+      if (mounted) {
+        _productBloc.add(const RestoreProductListEvent());
+      }
+    });
   }
 
   void _navigateBack() {

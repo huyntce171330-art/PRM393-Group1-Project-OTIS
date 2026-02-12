@@ -143,12 +143,15 @@ class _OrderListScreenState extends State<OrderListScreen> {
       ),
       body: BlocBuilder<OrderBloc, OrderState>(
         builder: (context, state) {
-          if (state is OrderLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF135BEC)),
-            );
-          } else if (state is OrderLoaded) {
-            final filteredOrders = _filterOrders(state.orders);
+          List<Order>? currentOrders;
+          if (state is OrderLoaded) {
+            currentOrders = state.orders;
+          } else if (state is OrderDetailLoaded) {
+            currentOrders = state.cachedList;
+          }
+
+          if (currentOrders != null) {
+            final filteredOrders = _filterOrders(currentOrders);
 
             if (filteredOrders.isEmpty) {
               return _buildEmptyState(isDarkMode, _activeTab);
@@ -161,9 +164,17 @@ class _OrderListScreenState extends State<OrderListScreen> {
                 final order = filteredOrders[index];
                 return OrderCard(
                   order: order,
-                  onTap: () => context.push('/order/${order.id}'),
+                  onTap: () => context.push('/order/${order.id}').then((_) {
+                    if (context.mounted) {
+                      context.read<OrderBloc>().add(GetOrdersEvent());
+                    }
+                  }),
                 );
               },
+            );
+          } else if (state is OrderLoading || state is OrderDetailLoaded) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF135BEC)),
             );
           } else if (state is OrderError) {
             return Center(

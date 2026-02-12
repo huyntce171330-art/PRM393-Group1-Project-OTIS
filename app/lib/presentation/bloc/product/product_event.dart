@@ -53,3 +53,9 @@ class GetProductDetailEvent extends ProductEvent {
 class RefreshProductsEvent extends ProductEvent {
   const RefreshProductsEvent();
 }
+
+/// Event to restore the previous product list state
+/// Use when returning from detail view to preserve scroll position/list
+class RestoreProductListEvent extends ProductEvent {
+  const RestoreProductListEvent();
+}

@@ -4,6 +4,7 @@ import 'package:frontend_otis/domain/usecases/order/get_order_detail_usecase.dar
 import 'package:frontend_otis/domain/usecases/order/get_orders_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
+import 'package:frontend_otis/domain/entities/order.dart';
 
 import 'package:frontend_otis/domain/usecases/order/update_order_status_usecase.dart';
 
@@ -29,7 +30,20 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     GetOrdersEvent event,
     Emitter<OrderState> emit,
   ) async {
-    emit(OrderLoading());
+    final currentState = state;
+    bool hasData = false;
+    if (currentState is OrderLoaded && currentState.orders.isNotEmpty) {
+      hasData = true;
+    } else if (currentState is OrderDetailLoaded &&
+        currentState.cachedList != null &&
+        currentState.cachedList!.isNotEmpty) {
+      hasData = true;
+    }
+
+    if (!hasData) {
+      emit(OrderLoading());
+    }
+
     final result = await getOrdersUseCase.call();
     result.fold(
       (failure) => emit(OrderError(failure.message)),
@@ -41,11 +55,19 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     GetOrderDetailEvent event,
     Emitter<OrderState> emit,
   ) async {
+    List<Order>? cachedList;
+    final currentState = state;
+    if (currentState is OrderLoaded) {
+      cachedList = currentState.orders;
+    } else if (currentState is OrderDetailLoaded) {
+      cachedList = currentState.cachedList;
+    }
+
     emit(OrderLoading());
     final result = await getOrderDetailUseCase.call(event.orderId);
     result.fold(
       (failure) => emit(OrderError(failure.message)),
-      (order) => emit(OrderDetailLoaded(order)),
+      (order) => emit(OrderDetailLoaded(order, cachedList: cachedList)),
     );
   }
 
@@ -83,7 +105,9 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         }).toList();
         emit(OrderLoaded(updatedList));
       } else if (currentState is OrderDetailLoaded) {
-        emit(OrderDetailLoaded(updatedOrder));
+        emit(
+          OrderDetailLoaded(updatedOrder, cachedList: currentState.cachedList),
+        );
       } else {
         // If we were in some other state (e.g. initial), just emit details?
         // Or create a new list with just this order?

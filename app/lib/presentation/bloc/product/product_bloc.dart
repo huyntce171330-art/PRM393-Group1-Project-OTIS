@@ -188,13 +188,36 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
 
     // Handle GetProductDetailEvent - Fetch single product
     on<GetProductDetailEvent>((event, emit) async {
+      // Capture current list state if available
+      ProductLoaded? cachedState;
+      if (state is ProductLoaded) {
+        cachedState = state as ProductLoaded;
+      } else if (state is ProductDetailLoaded) {
+        cachedState = (state as ProductDetailLoaded).cachedState;
+      }
+
       emit(const ProductLoading());
 
       final result = await getProductDetailUsecase(event.id);
       result.fold(
         (failure) => emit(ProductError(message: failure.message)),
-        (product) => emit(ProductDetailLoaded(product: product)),
+        (product) => emit(
+          ProductDetailLoaded(product: product, cachedState: cachedState),
+        ),
       );
+    });
+
+    // Handle RestoreProductListEvent - Restore cached list state
+    on<RestoreProductListEvent>((event, emit) {
+      if (state is ProductDetailLoaded) {
+        final cachedState = (state as ProductDetailLoaded).cachedState;
+        if (cachedState != null) {
+          emit(cachedState);
+        } else {
+          // Fallback to initial load if no cache
+          add(const GetProductsEvent(filter: ProductFilter()));
+        }
+      }
     });
   }
 

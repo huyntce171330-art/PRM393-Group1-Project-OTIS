@@ -13,25 +13,68 @@ abstract class ProductState extends Equatable {
   bool get isLoaded => this is ProductLoaded;
   bool get isError => this is ProductError;
 
-  List<Product>? get products =>
-      this is ProductLoaded ? (this as ProductLoaded).products : null;
+  List<Product>? get products {
+    if (this is ProductLoaded) return (this as ProductLoaded).products;
+    if (this is ProductDetailLoaded) {
+      return (this as ProductDetailLoaded).cachedState?.products;
+    }
+    return null;
+  }
+
   Product? get product => this is ProductDetailLoaded
       ? (this as ProductDetailLoaded).product
       : null;
+
   String? get errorMessage =>
       this is ProductError ? (this as ProductError).message : null;
-  ProductFilter? get filter =>
-      this is ProductLoaded ? (this as ProductLoaded).filter : null;
-  bool get isLoadingMore =>
-      this is ProductLoaded ? (this as ProductLoaded).isLoadingMore : false;
-  bool get hasMore =>
-      this is ProductLoaded ? (this as ProductLoaded).hasMore : false;
-  int get currentPage =>
-      this is ProductLoaded ? (this as ProductLoaded).currentPage : 1;
-  int get totalCount =>
-      this is ProductLoaded ? (this as ProductLoaded).totalCount : 0;
-  int get totalPages =>
-      this is ProductLoaded ? (this as ProductLoaded).totalPages : 0;
+
+  ProductFilter? get filter {
+    if (this is ProductLoaded) return (this as ProductLoaded).filter;
+    if (this is ProductDetailLoaded) {
+      return (this as ProductDetailLoaded).cachedState?.filter;
+    }
+    return null;
+  }
+
+  bool get isLoadingMore {
+    if (this is ProductLoaded) return (this as ProductLoaded).isLoadingMore;
+    if (this is ProductDetailLoaded) {
+      return (this as ProductDetailLoaded).cachedState?.isLoadingMore ?? false;
+    }
+    return false;
+  }
+
+  bool get hasMore {
+    if (this is ProductLoaded) return (this as ProductLoaded).hasMore;
+    if (this is ProductDetailLoaded) {
+      return (this as ProductDetailLoaded).cachedState?.hasMore ?? false;
+    }
+    return false;
+  }
+
+  int get currentPage {
+    if (this is ProductLoaded) return (this as ProductLoaded).currentPage;
+    if (this is ProductDetailLoaded) {
+      return (this as ProductDetailLoaded).cachedState?.currentPage ?? 1;
+    }
+    return 1;
+  }
+
+  int get totalCount {
+    if (this is ProductLoaded) return (this as ProductLoaded).totalCount;
+    if (this is ProductDetailLoaded) {
+      return (this as ProductDetailLoaded).cachedState?.totalCount ?? 0;
+    }
+    return 0;
+  }
+
+  int get totalPages {
+    if (this is ProductLoaded) return (this as ProductLoaded).totalPages;
+    if (this is ProductDetailLoaded) {
+      return (this as ProductDetailLoaded).cachedState?.totalPages ?? 0;
+    }
+    return 0;
+  }
 }
 
 class ProductInitial extends ProductState {
@@ -95,11 +138,12 @@ class ProductLoaded extends ProductState {
 
 class ProductDetailLoaded extends ProductState {
   final Product product;
+  final ProductLoaded? cachedState;
 
-  const ProductDetailLoaded({required this.product});
+  const ProductDetailLoaded({required this.product, this.cachedState});
 
   @override
-  List<Object?> get props => [product];
+  List<Object?> get props => [product, cachedState];
 }
 
 class ProductError extends ProductState {
