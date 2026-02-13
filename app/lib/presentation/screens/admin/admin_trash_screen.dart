@@ -472,16 +472,8 @@ class _AdminTrashScreenState extends State<AdminTrashScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _onNavigateBack,
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Quay lại Inventory'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-            ),
+            // Removed redundant "Quay lại Inventory" button
+            // User can use AppBar back button or swipe gesture
           ],
         ),
       ),

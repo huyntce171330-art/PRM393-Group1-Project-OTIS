@@ -1,12 +1,13 @@
 // Admin filter chip widget for brand and stock status filtering.
 //
 // Features:
-// - Brand filter chips (All, Michelin, Bridgestone, etc.)
+// - Brand filter chips (All, dynamic brands from database)
 // - Stock status chip (Low Stock with red indicator)
 // - Active/inactive state styling per Thai Phung design
 // - Ripple effect on tap
 import 'package:flutter/material.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
+import 'package:frontend_otis/data/models/brand_model.dart';
 /// Filter chip for admin product inventory.
 ///
 /// Supports:
@@ -143,8 +144,8 @@ class AdminBrandFilters {
   /// All brands option
   static const String all = 'All';
 
-  /// Brand options
-  static const List<String> brands = [
+  /// Default hardcoded brands (fallback when no database brands available)
+  static const List<String> defaultBrands = [
     all,
     'Michelin',
     'Bridgestone',
@@ -161,12 +162,19 @@ class AdminBrandFilters {
     return brandName;
   }
 
-  /// Create filter chips for brands
+  /// Create filter chips for brands from database
+  /// If [brands] is empty or null, falls back to default hardcoded brands
   static List<AdminFilterChip> createBrandChips({
+    required List<BrandModel>? brands,
     required String? selectedBrand,
     required void Function(String?) onSelect,
   }) {
-    return brands.map((brand) {
+    // Use dynamic brands from database, or fallback to default
+    final brandList = (brands == null || brands.isEmpty)
+        ? defaultBrands
+        : [all, ...brands.map((b) => b.name)];
+
+    return brandList.map((brand) {
       final isSelected = selectedBrand == null
           ? brand == all
           : brand == selectedBrand;

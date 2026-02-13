@@ -14,7 +14,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
+import 'package:frontend_otis/core/injections/injection_container.dart';
+import 'package:frontend_otis/data/models/brand_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
+import 'package:frontend_otis/domain/usecases/product/get_brands_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_event.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_state.dart';
@@ -35,6 +38,9 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
+  // Brands loaded from database for filter chips
+  List<BrandModel> _brands = [];
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +50,23 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
     _adminProductBloc.add(const GetAdminProductsEvent(filter: null));
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
+    // Load brands for filter chips
+    _loadBrands();
+  }
+
+  Future<void> _loadBrands() async {
+    final getBrandsUsecase = GetBrandsUsecase(productRepository: sl());
+    final result = await getBrandsUsecase();
+    result.fold(
+      (failure) {
+        print('DEBUG: Failed to load brands: $failure');
+      },
+      (brands) {
+        if (mounted) {
+          setState(() => _brands = brands);
+        }
+      },
+    );
   }
 
   @override
@@ -197,12 +220,14 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
 
   void _onNavigateToTrash() async {
     // Navigate to trash screen and wait for result
-    final result = await context.push('/admin/products/trash');
+    await context.push('/admin/products/trash');
 
-    // If product was restored, refresh the list
-    if (result == true) {
-      _adminProductBloc.silentRefresh();
-    }
+    // CRITICAL FIX: Always refresh the list when returning from Trash screen
+    // The BLoC is still in "trash" state (showing deleted products) after returning
+    // We must restore it to normal "active products" state
+    _adminProductBloc.add(
+      GetAdminProductsEvent(filter: _adminProductBloc.currentFilter, showInactive: false),
+    );
   }
 
   @override
@@ -372,8 +397,9 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // Brand filter chips
+          // Brand filter chips - use dynamic brands from database
           ...AdminBrandFilters.createBrandChips(
+            brands: _brands,
             selectedBrand: selectedBrand,
             onSelect: _onFilterByBrand,
           ),

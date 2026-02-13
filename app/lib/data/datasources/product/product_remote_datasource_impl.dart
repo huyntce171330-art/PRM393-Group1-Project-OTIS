@@ -548,7 +548,7 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
   @override
   Future<List<BrandModel>> getBrands() async {
     final result = await database.rawQuery(
-      'SELECT brand_id as id, name, logo_url FROM brands ORDER BY name ASC',
+      'SELECT brand_id, name, logo_url FROM brands ORDER BY name ASC',
     );
 
     return result.map((row) {
