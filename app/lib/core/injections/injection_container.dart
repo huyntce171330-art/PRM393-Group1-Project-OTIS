@@ -18,9 +18,17 @@ import 'package:frontend_otis/data/datasources/product/product_remote_datasource
 import 'package:frontend_otis/data/datasources/product/product_remote_datasource_impl.dart';
 import 'package:frontend_otis/data/repositories/product_repository_impl.dart';
 import 'package:frontend_otis/domain/repositories/product_repository.dart';
+import 'package:frontend_otis/domain/usecases/product/create_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/get_brands_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_products_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/get_vehicle_makes_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/search_products_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/permanent_delete_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/restore_product_usecase.dart';
+import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/core/network/api_client.dart';
@@ -146,6 +154,41 @@ Future<void> init() async {
     () => GetProductDetailUsecase(productRepository: sl()),
   );
 
+  // Delete Product Use Case
+  sl.registerLazySingleton<DeleteProductUsecase>(
+    () => DeleteProductUsecase(productRepository: sl()),
+  );
+
+  // Get Admin Products Use Case
+  sl.registerLazySingleton<GetAdminProductsUsecase>(
+    () => GetAdminProductsUsecase(productRepository: sl()),
+  );
+
+  // Create Product Use Case
+  sl.registerLazySingleton<CreateProductUsecase>(
+    () => CreateProductUsecase(productRepository: sl()),
+  );
+
+  // Get Brands Use Case
+  sl.registerLazySingleton<GetBrandsUsecase>(
+    () => GetBrandsUsecase(productRepository: sl()),
+  );
+
+  // Get Vehicle Makes Use Case
+  sl.registerLazySingleton<GetVehicleMakesUsecase>(
+    () => GetVehicleMakesUsecase(productRepository: sl()),
+  );
+
+  // Restore Product Use Case
+  sl.registerLazySingleton<RestoreProductUsecase>(
+    () => RestoreProductUsecase(productRepository: sl()),
+  );
+
+  // Permanent Delete Product Use Case
+  sl.registerLazySingleton<PermanentDeleteProductUsecase>(
+    () => PermanentDeleteProductUsecase(productRepository: sl()),
+  );
+
   // Cart Use Cases
   sl.registerLazySingleton<GetCartUsecase>(
     () => GetCartUsecase(cartRepository: sl()),
@@ -239,6 +282,30 @@ Future<void> init() async {
       otpUseCase: sl(),
       forgotPasswordUseCase: sl(),
       changePasswordUseCase: sl(),
+    ),
+  );
+
+  // Admin Product BLoC
+  sl.registerLazySingleton<AdminProductBloc>(
+    () => AdminProductBloc(
+      getAdminProductsUsecase: sl(),
+      getProductDetailUsecase: sl(),
+      deleteProductUsecase: sl(),
+      createProductUsecase: sl(),
+      restoreProductUsecase: sl(),
+      permanentDeleteProductUsecase: sl(),
+    ),
+  );
+
+  // Admin Product BLoC
+  sl.registerLazySingleton<AdminProductBloc>(
+    () => AdminProductBloc(
+      getAdminProductsUsecase: sl(),
+      getProductDetailUsecase: sl(),
+      deleteProductUsecase: sl(),
+      createProductUsecase: sl(),
+      restoreProductUsecase: sl(),
+      permanentDeleteProductUsecase: sl(),
     ),
   );
 

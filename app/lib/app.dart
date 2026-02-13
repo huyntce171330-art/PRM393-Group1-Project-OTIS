@@ -3,6 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart' as di;
+import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_create_product_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_product_detail_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_product_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_trash_screen.dart';
+import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
@@ -41,8 +47,34 @@ import 'package:frontend_otis/presentation/screens/notification/notification_lis
 /// - Deep linking
 /// - Route guards
 final GoRouter router = GoRouter(
-  initialLocation: '/',
+  // Thay đổi dòng dưới để test: '/' = customer, '/admin/products' = admin
+  initialLocation: '/admin/products',
   routes: [
+    GoRoute(
+      path: '/debug',
+      name: 'debug',
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(title: const Text('🧪 Debug Menu')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => context.push('/products'),
+                icon: const Icon(Icons.shopping_bag),
+                label: const Text('🛒 Customer Products'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => context.push('/admin/products'),
+                icon: const Icon(Icons.admin_panel_settings),
+                label: const Text('📦 Admin Products'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
     GoRoute(
       path: '/',
       name: 'splash',
@@ -53,6 +85,53 @@ final GoRouter router = GoRouter(
       name: 'home',
       builder: (context, state) => const HomeScreen(),
     ),
+    // Admin Routes - Wrap with BlocProvider to share state between List and Detail
+    // Use BlocProvider.value with singleton from GetIt to preserve state across navigation
+    ShellRoute(
+      builder: (context, state, child) {
+        return BlocProvider<AdminProductBloc>.value(
+          value: di.sl<AdminProductBloc>(),
+          child: child,
+        );
+      },
+      routes: [
+        GoRoute(
+          path: '/admin/products',
+          name: 'admin-product-list',
+          builder: (context, state) => const AdminProductListScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/create',
+          name: 'admin-product-create',
+          builder: (context, state) => const AdminCreateProductScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/trash',
+          name: 'admin-trash',
+          builder: (context, state) => const AdminTrashScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/:id',
+          name: 'admin-product-detail',
+          builder: (context, state) {
+            final productId = state.pathParameters['id']!;
+            return AdminProductDetailScreen(productId: productId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/products/:id/edit',
+          name: 'admin-product-edit',
+          builder: (context, state) {
+            final productId = state.pathParameters['id']!;
+            return Scaffold(
+              body: Center(
+                child: Text('Edit Product: $productId - To be implemented'),
+              ),
+            );
+          },
+        ),
+      ],
+    ), // Customer Routes
     GoRoute(
       path: '/login',
       name: 'login',

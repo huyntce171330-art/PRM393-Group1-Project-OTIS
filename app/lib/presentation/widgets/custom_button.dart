@@ -158,13 +158,12 @@ class CustomButton extends StatelessWidget {
 class SecondaryButton extends CustomButton {
   const SecondaryButton({
     super.key,
-    required String text,
+    required super.text,
     super.onPressed,
     super.isLoading,
     super.icon,
     super.width,
   }) : super(
-    text: text,
     variant: ButtonVariant.secondary,
   );
 }
@@ -173,13 +172,12 @@ class SecondaryButton extends CustomButton {
 class OutlineButton extends CustomButton {
   const OutlineButton({
     super.key,
-    required String text,
+    required super.text,
     super.onPressed,
     super.isLoading,
     super.icon,
     super.width,
   }) : super(
-    text: text,
     variant: ButtonVariant.outline,
   );
 }
@@ -188,13 +186,12 @@ class OutlineButton extends CustomButton {
 class DangerButton extends CustomButton {
   const DangerButton({
     super.key,
-    required String text,
+    required super.text,
     super.onPressed,
     super.isLoading,
     super.icon,
     super.width,
   }) : super(
-    text: text,
     variant: ButtonVariant.danger,
   );
 }
