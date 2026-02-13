@@ -26,6 +26,8 @@ import 'package:frontend_otis/domain/usecases/product/create_product_usecase.dar
 import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/permanent_delete_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/restore_product_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_event.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_state.dart';
@@ -40,6 +42,11 @@ class MockGetProductDetailUsecase extends Mock
     implements GetProductDetailUsecase {}
 
 class MockCreateProductUsecase extends Mock implements CreateProductUsecase {}
+
+class MockRestoreProductUsecase extends Mock implements RestoreProductUsecase {}
+
+class MockPermanentDeleteProductUsecase extends Mock
+    implements PermanentDeleteProductUsecase {}
 
 class FakeProductFilter extends Fake implements ProductFilter {}
 
@@ -57,6 +64,8 @@ void main() {
   late MockDeleteProductUsecase mockDeleteProductUsecase;
   late MockGetProductDetailUsecase mockGetProductDetailUsecase;
   late MockCreateProductUsecase mockCreateProductUsecase;
+  late MockRestoreProductUsecase mockRestoreProductUsecase;
+  late MockPermanentDeleteProductUsecase mockPermanentDeleteProductUsecase;
 
   // Test data
   final tProduct1 = Product(
@@ -130,11 +139,27 @@ void main() {
     mockDeleteProductUsecase = MockDeleteProductUsecase();
     mockGetProductDetailUsecase = MockGetProductDetailUsecase();
     mockCreateProductUsecase = MockCreateProductUsecase();
+    mockRestoreProductUsecase = MockRestoreProductUsecase();
+    mockPermanentDeleteProductUsecase = MockPermanentDeleteProductUsecase();
+
+    // Add fallback stub for GetAdminProductsUsecase as it's now called automatically after deletions
+    when(
+      () => mockGetAdminProductsUsecase.call(
+        any(),
+        showInactive: any(named: 'showInactive'),
+      ),
+    ).thenAnswer(
+      (_) async =>
+          Right((products: [], totalCount: 0, totalPages: 1, hasMore: false)),
+    );
+
     bloc = AdminProductBloc(
       getAdminProductsUsecase: mockGetAdminProductsUsecase,
       getProductDetailUsecase: mockGetProductDetailUsecase,
       deleteProductUsecase: mockDeleteProductUsecase,
       createProductUsecase: mockCreateProductUsecase,
+      restoreProductUsecase: mockRestoreProductUsecase,
+      permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
     );
   });
 
@@ -175,7 +200,12 @@ void main() {
     blocTest(
       'should emit [Loading, Loaded] with products when API succeeds',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: tProductList,
             totalCount: tProductList.length,
@@ -189,6 +219,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetAdminProductsEvent(filter: null)),
       expect: () => [
@@ -198,14 +230,24 @@ void main() {
         ),
       ],
       verify: (_) {
-        verify(() => mockGetAdminProductsUsecase.call(any())).called(1);
+        verify(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).called(1);
       },
     );
 
     blocTest(
       'should emit [Loading, Loaded] with empty list when no products exist',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: <Product>[],
             totalCount: 0,
@@ -219,6 +261,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetAdminProductsEvent(filter: null)),
       expect: () => [
@@ -232,7 +276,12 @@ void main() {
     blocTest(
       'should emit [Loading, Error] when API fails with ServerFailure',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async =>
               Left(ServerFailure(message: '500 Internal Server Error')),
         );
@@ -242,6 +291,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetAdminProductsEvent(filter: null)),
       expect: () => [
@@ -253,7 +304,12 @@ void main() {
     blocTest(
       'should emit [Loading, Error] when API fails with NetworkFailure',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Left(NetworkFailure(message: 'No internet connection')),
         );
       },
@@ -262,6 +318,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetAdminProductsEvent(filter: null)),
       expect: () => [
@@ -275,7 +333,12 @@ void main() {
     blocTest(
       'should emit correct pagination metadata',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: tProductList,
             totalCount: 25,
@@ -289,6 +352,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetAdminProductsEvent(filter: null)),
       expect: () => [
@@ -312,7 +377,12 @@ void main() {
     blocTest(
       'should emit loaded state with filtered products when search succeeds',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [tProduct1],
             totalCount: 1,
@@ -326,6 +396,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) =>
           bloc.add(const SearchAdminProductsEvent(query: 'Michelin')),
@@ -336,14 +408,24 @@ void main() {
         ),
       ],
       verify: (_) {
-        verify(() => mockGetAdminProductsUsecase.call(any())).called(1);
+        verify(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).called(1);
       },
     );
 
     blocTest(
       'should emit empty list when search returns no results',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: <Product>[],
             totalCount: 0,
@@ -357,6 +439,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) =>
           bloc.add(const SearchAdminProductsEvent(query: 'NonExistentProduct')),
@@ -369,7 +453,12 @@ void main() {
     blocTest(
       'should handle search with empty query as clear search',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: tProductList,
             totalCount: tProductList.length,
@@ -383,6 +472,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const SearchAdminProductsEvent(query: '')),
       expect: () => [isA<AdminProductLoading>(), isA<AdminProductLoaded>()],
@@ -397,7 +488,12 @@ void main() {
     blocTest(
       'should emit loaded state with filtered products when brand filter is applied',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [tProduct1],
             totalCount: 1,
@@ -411,6 +507,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const FilterByBrandEvent(brandName: 'Michelin')),
       expect: () => [
@@ -424,7 +522,12 @@ void main() {
     blocTest(
       'should emit loaded state with all products when brand is null (All brands)',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: tProductList,
             totalCount: tProductList.length,
@@ -438,6 +541,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const FilterByBrandEvent(brandName: null)),
       expect: () => [
@@ -449,7 +554,12 @@ void main() {
     blocTest(
       'should reset to page 1 when filtering by brand',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [tProduct1],
             totalCount: 1,
@@ -463,6 +573,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) =>
           bloc.add(const FilterByBrandEvent(brandName: 'Bridgestone')),
@@ -481,7 +593,12 @@ void main() {
     blocTest(
       'should emit loaded state with low stock filter applied',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [tProduct2],
             totalCount: 1,
@@ -495,6 +612,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(
         const FilterByStockStatusEvent(status: StockStatus.lowStock),
@@ -510,7 +629,12 @@ void main() {
     blocTest(
       'should emit loaded state with out of stock filter applied',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [tProduct3],
             totalCount: 1,
@@ -524,6 +648,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(
         const FilterByStockStatusEvent(status: StockStatus.outOfStock),
@@ -539,7 +665,12 @@ void main() {
     blocTest(
       'should emit loaded state with all stock status when reset',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: tProductList,
             totalCount: tProductList.length,
@@ -553,6 +684,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) =>
           bloc.add(const FilterByStockStatusEvent(status: StockStatus.all)),
@@ -571,36 +704,41 @@ void main() {
 
   group('UC-07: DeleteProductEvent', () {
     blocTest(
-      'should emit [Deleting, Deleted, Loading, Loaded] and reload when delete succeeds',
+      'should emit [Deleting, Deleted, Loaded] when delete succeeds (optimistic update)',
       setUp: () {
         when(
           () => mockDeleteProductUsecase.call('1'),
         ).thenAnswer((_) async => const Right(true));
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
-          (_) async => Right((
-            products: [tProduct2, tProduct3],
-            totalCount: 2,
-            totalPages: 1,
-            hasMore: false,
-          )),
-        );
       },
       build: () => AdminProductBloc(
         getAdminProductsUsecase: mockGetAdminProductsUsecase,
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
+      ),
+      seed: () => AdminProductLoaded(
+        products: tProductList,
+        filter: const AdminProductFilter(),
+        totalCount: tProductList.length,
+        totalPages: 1,
+        hasMore: false,
+        selectedBrand: null,
+        stockStatus: StockStatus.all,
+        currentPage: 1,
       ),
       act: (bloc) => bloc.add(const DeleteProductEvent(productId: '1')),
       expect: () => [
         predicate<AdminProductDeleting>((state) => state.productId == '1'),
         predicate<AdminProductDeleted>((state) => state.productId == '1'),
-        isA<AdminProductLoading>(),
-        isA<AdminProductLoaded>().having(
-          (state) => state.products.length,
-          'products after delete',
-          2,
-        ),
+        isA<AdminProductLoaded>(), // Optimistic update
+        predicate<AdminProductLoaded>(
+          (state) => state.isRefreshing,
+        ), // Refresh started
+        predicate<AdminProductLoaded>(
+          (state) => !state.isRefreshing,
+        ), // Refresh done
       ],
       verify: (_) {
         verify(() => mockDeleteProductUsecase.call('1')).called(1);
@@ -613,7 +751,12 @@ void main() {
         when(() => mockDeleteProductUsecase.call('1')).thenAnswer(
           (_) async => Left(ServerFailure(message: 'Failed to delete')),
         );
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: tProductList,
             totalCount: tProductList.length,
@@ -627,6 +770,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const DeleteProductEvent(productId: '1')),
       expect: () => [
@@ -646,7 +791,12 @@ void main() {
     blocTest(
       'should reload products and emit loaded state on refresh',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: tProductList,
             totalCount: tProductList.length,
@@ -660,11 +810,18 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const RefreshAdminProductsEvent()),
       expect: () => [isA<AdminProductLoading>(), isA<AdminProductLoaded>()],
       verify: (_) {
-        verify(() => mockGetAdminProductsUsecase.call(any())).called(1);
+        verify(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).called(1);
       },
     );
   });
@@ -687,7 +844,12 @@ void main() {
           isActive: true,
           createdAt: DateTime(2024, 1, 1),
         );
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [productWithNulls],
             totalCount: 1,
@@ -701,6 +863,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const GetAdminProductsEvent(filter: null)),
       expect: () => [
@@ -714,7 +878,12 @@ void main() {
     blocTest(
       'should handle pagination with load more',
       setUp: () {
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [tProduct1],
             totalCount: 3,
@@ -728,6 +897,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) {
         bloc.add(const GetAdminProductsEvent(filter: null));
@@ -781,6 +952,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(CreateProductEvent(product: tProductModel)),
       expect: () => [
@@ -807,6 +980,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(CreateProductEvent(product: tProductModel)),
       expect: () => [
@@ -838,6 +1013,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(CreateProductEvent(product: tProductModel)),
       expect: () => [
@@ -860,6 +1037,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(CreateProductEvent(product: tProductModel)),
       expect: () => [
@@ -886,6 +1065,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(CreateProductEvent(product: tProductModel)),
       expect: () => [
@@ -912,6 +1093,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(CreateProductEvent(product: tProductModel)),
       expect: () => [
@@ -935,6 +1118,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(CreateProductEvent(product: tProductModel)),
       expect: () => [
@@ -991,6 +1176,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) {
         final minimalProduct = ProductModel(
@@ -1050,6 +1237,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) {
         final zeroPriceProduct = ProductModel(
@@ -1092,6 +1281,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) {
         final emptySkuProduct = ProductModel(
@@ -1135,6 +1326,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) {
         final longName = 'A' * 201; // 201 characters
@@ -1179,6 +1372,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) {
         final negativeStockProduct = ProductModel(
@@ -1222,7 +1417,12 @@ void main() {
           (_) async => Left(NetworkFailure(message: 'No internet connection')),
         );
         // Bloc will try to reload after error, so we need to mock that too
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [tProduct1, tProduct2, tProduct3],
             totalCount: 3,
@@ -1236,6 +1436,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const DeleteProductEvent(productId: '1')),
       expect: () => [
@@ -1249,10 +1451,15 @@ void main() {
     blocTest(
       'should emit [Deleting, Deleted, Loading, Loaded] when delete returns false (product not found/already deleted)',
       setUp: () {
-        when(() => mockDeleteProductUsecase.call('1')).thenAnswer(
-          (_) async => const Right(false),
-        );
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockDeleteProductUsecase.call('1'),
+        ).thenAnswer((_) async => const Right(false));
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [tProduct1, tProduct2, tProduct3],
             totalCount: 3,
@@ -1266,6 +1473,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) => bloc.add(const DeleteProductEvent(productId: '1')),
       expect: () => [
@@ -1279,13 +1488,18 @@ void main() {
     blocTest(
       'should handle rapid delete taps (debounce protection)',
       setUp: () {
-        when(() => mockDeleteProductUsecase.call('1')).thenAnswer(
-          (_) async => const Right(true),
-        );
-        when(() => mockDeleteProductUsecase.call('2')).thenAnswer(
-          (_) async => const Right(true),
-        );
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockDeleteProductUsecase.call('1'),
+        ).thenAnswer((_) async => const Right(true));
+        when(
+          () => mockDeleteProductUsecase.call('2'),
+        ).thenAnswer((_) async => const Right(true));
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [tProduct2, tProduct3],
             totalCount: 2,
@@ -1299,6 +1513,8 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) {
         bloc.add(const DeleteProductEvent(productId: '1'));
@@ -1313,11 +1529,15 @@ void main() {
     blocTest(
       'should emit full delete flow: Deleting -> Deleted -> Loading -> Loaded',
       setUp: () {
-        when(() => mockDeleteProductUsecase.call('specific-product-id'))
-            .thenAnswer(
-          (_) async => const Right(true),
-        );
-        when(() => mockGetAdminProductsUsecase.call(any())).thenAnswer(
+        when(
+          () => mockDeleteProductUsecase.call('specific-product-id'),
+        ).thenAnswer((_) async => const Right(true));
+        when(
+          () => mockGetAdminProductsUsecase.call(
+            any(),
+            showInactive: any(named: 'showInactive'),
+          ),
+        ).thenAnswer(
           (_) async => Right((
             products: [],
             totalCount: 0,
@@ -1331,14 +1551,18 @@ void main() {
         getProductDetailUsecase: mockGetProductDetailUsecase,
         deleteProductUsecase: mockDeleteProductUsecase,
         createProductUsecase: mockCreateProductUsecase,
+        restoreProductUsecase: mockRestoreProductUsecase,
+        permanentDeleteProductUsecase: mockPermanentDeleteProductUsecase,
       ),
       act: (bloc) =>
           bloc.add(const DeleteProductEvent(productId: 'specific-product-id')),
       expect: () => [
         predicate<AdminProductDeleting>(
-            (state) => state.productId == 'specific-product-id'),
+          (state) => state.productId == 'specific-product-id',
+        ),
         predicate<AdminProductDeleted>(
-            (state) => state.productId == 'specific-product-id'),
+          (state) => state.productId == 'specific-product-id',
+        ),
         isA<AdminProductLoading>(),
         isA<AdminProductLoaded>(),
       ],

@@ -1,0 +1,826 @@
+00:00 +0: loading D:/04_Semester_08/01_PRM393/03_Projects/PRM393-OTIS-Project/app/test/presentation/bloc/admin_product/admin_product_bloc_test.dart
+00:00 +0: AdminProductBloc - Initial State initial state should be AdminProductInitial
+00:00 +1: AdminProductBloc - Initial State should have correct default values
+00:00 +2: AdminProductBloc - Initial State should have correct default helper values
+00:00 +3: UC-01: GetAdminProductsEvent should emit [Loading, Loaded] with products when API succeeds
+=== DEBUG BLOC: GetAdminProductsEvent ===
+DEBUG: event.filter: null
+DEBUG: event.showInactive: null
+DEBUG: _currentFilter BEFORE: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive BEFORE: false
+DEBUG: _cachedProducts count: 0
+DEBUG: _cachedFilter: null
+DEBUG: state type: AdminProductInitial
+DEBUG: useCache=false
+DEBUG: _cachedProducts.length=0
+DEBUG: _cachedFilter?.brandName=null
+DEBUG: _currentFilter.brandName=null
+DEBUG: _currentFilter AFTER: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive AFTER: false
+00:00 +3 -1: UC-01: GetAdminProductsEvent should emit [Loading, Loaded] with products when API succeeds [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 202:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 107:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 200:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -1: UC-01: GetAdminProductsEvent should emit [Loading, Loaded] with empty list when no products exist
+=== DEBUG BLOC: GetAdminProductsEvent ===
+DEBUG: event.filter: null
+DEBUG: event.showInactive: null
+DEBUG: _currentFilter BEFORE: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive BEFORE: false
+DEBUG: _cachedProducts count: 0
+DEBUG: _cachedFilter: null
+DEBUG: state type: AdminProductInitial
+DEBUG: useCache=false
+DEBUG: _cachedProducts.length=0
+DEBUG: _cachedFilter?.brandName=null
+DEBUG: _currentFilter.brandName=null
+DEBUG: _currentFilter AFTER: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive AFTER: false
+00:00 +3 -2: UC-01: GetAdminProductsEvent should emit [Loading, Loaded] with empty list when no products exist [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 202:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 107:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 232:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -2: UC-01: GetAdminProductsEvent should emit [Loading, Error] when API fails with ServerFailure
+=== DEBUG BLOC: GetAdminProductsEvent ===
+DEBUG: event.filter: null
+DEBUG: event.showInactive: null
+DEBUG: _currentFilter BEFORE: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive BEFORE: false
+DEBUG: _cachedProducts count: 0
+DEBUG: _cachedFilter: null
+DEBUG: state type: AdminProductInitial
+DEBUG: useCache=false
+DEBUG: _cachedProducts.length=0
+DEBUG: _cachedFilter?.brandName=null
+DEBUG: _currentFilter.brandName=null
+DEBUG: _currentFilter AFTER: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive AFTER: false
+00:00 +3 -3: UC-01: GetAdminProductsEvent should emit [Loading, Error] when API fails with ServerFailure [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 202:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 107:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 257:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -3: UC-01: GetAdminProductsEvent should emit [Loading, Error] when API fails with NetworkFailure
+=== DEBUG BLOC: GetAdminProductsEvent ===
+DEBUG: event.filter: null
+DEBUG: event.showInactive: null
+DEBUG: _currentFilter BEFORE: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive BEFORE: false
+DEBUG: _cachedProducts count: 0
+DEBUG: _cachedFilter: null
+DEBUG: state type: AdminProductInitial
+DEBUG: useCache=false
+DEBUG: _cachedProducts.length=0
+DEBUG: _cachedFilter?.brandName=null
+DEBUG: _currentFilter.brandName=null
+DEBUG: _currentFilter AFTER: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive AFTER: false
+00:00 +3 -4: UC-01: GetAdminProductsEvent should emit [Loading, Error] when API fails with NetworkFailure [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 202:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 107:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 279:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -4: UC-01: GetAdminProductsEvent should emit correct pagination metadata
+=== DEBUG BLOC: GetAdminProductsEvent ===
+DEBUG: event.filter: null
+DEBUG: event.showInactive: null
+DEBUG: _currentFilter BEFORE: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive BEFORE: false
+DEBUG: _cachedProducts count: 0
+DEBUG: _cachedFilter: null
+DEBUG: state type: AdminProductInitial
+DEBUG: useCache=false
+DEBUG: _cachedProducts.length=0
+DEBUG: _cachedFilter?.brandName=null
+DEBUG: _currentFilter.brandName=null
+DEBUG: _currentFilter AFTER: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive AFTER: false
+00:00 +3 -5: UC-01: GetAdminProductsEvent should emit correct pagination metadata [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 202:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 107:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 308:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -5: UC-03: SearchAdminProductsEvent should emit loaded state with filtered products when search succeeds
+00:00 +3 -6: UC-03: SearchAdminProductsEvent should emit loaded state with filtered products when search succeeds [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 361:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 350:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 347:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -6: UC-03: SearchAdminProductsEvent should emit empty list when search returns no results
+00:00 +3 -7: UC-03: SearchAdminProductsEvent should emit empty list when search returns no results [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 361:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 350:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 380:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -7: UC-03: SearchAdminProductsEvent should handle search with empty query as clear search
+00:00 +3 -8: UC-03: SearchAdminProductsEvent should handle search with empty query as clear search [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 361:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 350:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 408:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -8: UC-04: FilterByBrandEvent should emit loaded state with filtered products when brand filter is applied
+=== DEBUG BLOC: FilterByBrandEvent ===
+DEBUG: event.brandName: Michelin
+DEBUG: _currentFilter BEFORE: brandName=null
+DEBUG: newFilter.brandName: Michelin
+DEBUG: newFilter.stockStatus: StockStatus.all
+DEBUG: Emitted loading state
+00:00 +3 -9: UC-04: FilterByBrandEvent should emit loaded state with filtered products when brand filter is applied [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 287:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 261:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 438:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -9: UC-04: FilterByBrandEvent should emit loaded state with all products when brand is null (All brands)
+=== DEBUG BLOC: FilterByBrandEvent ===
+DEBUG: event.brandName: null
+DEBUG: _currentFilter BEFORE: brandName=null
+DEBUG: newFilter.brandName: null
+DEBUG: newFilter.stockStatus: StockStatus.all
+DEBUG: Emitted loading state
+00:00 +3 -10: UC-04: FilterByBrandEvent should emit loaded state with all products when brand is null (All brands) [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 287:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 261:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 467:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -10: UC-04: FilterByBrandEvent should reset to page 1 when filtering by brand
+=== DEBUG BLOC: FilterByBrandEvent ===
+DEBUG: event.brandName: Bridgestone
+DEBUG: _currentFilter BEFORE: brandName=null
+DEBUG: newFilter.brandName: Bridgestone
+DEBUG: newFilter.stockStatus: StockStatus.all
+DEBUG: Emitted loading state
+00:00 +3 -11: UC-04: FilterByBrandEvent should reset to page 1 when filtering by brand [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 287:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 261:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 494:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -11: UC-04: FilterByStockStatusEvent should emit loaded state with low stock filter applied
+00:00 +3 -12: UC-04: FilterByStockStatusEvent should emit loaded state with low stock filter applied [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 326:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 314:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 528:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -12: UC-04: FilterByStockStatusEvent should emit loaded state with out of stock filter applied
+00:00 +3 -13: UC-04: FilterByStockStatusEvent should emit loaded state with out of stock filter applied [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 326:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 314:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 559:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -13: UC-04: FilterByStockStatusEvent should emit loaded state with all stock status when reset
+00:00 +3 -14: UC-04: FilterByStockStatusEvent should emit loaded state with all stock status when reset [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 326:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 314:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 590:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +3 -14: UC-07: DeleteProductEvent should emit [Deleting, Deleted, Loaded] when delete succeeds (optimistic update)
+=== DEBUG BLOC: DeleteProductEvent ===
+DEBUG: productId: 1
+DEBUG: Emitted deleting state
+DEBUG: deleteProductUsecase result: Right(true)
+DEBUG: Emitted deleted state
+00:00 +4 -14: UC-07: DeleteProductEvent should emit [Deleting, Error] when delete fails
+=== DEBUG BLOC: DeleteProductEvent ===
+DEBUG: productId: 1
+DEBUG: Emitted deleting state
+DEBUG: deleteProductUsecase result: Left(ServerFailure(Failed to delete))
+00:00 +5 -14: RefreshAdminProductsEvent should reload products and emit loaded state on refresh
+00:00 +5 -15: RefreshAdminProductsEvent should reload products and emit loaded state on refresh [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 465:53  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 418:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 704:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +5 -15: Edge Cases & Boundary Conditions should handle API response with null fields in product
+=== DEBUG BLOC: GetAdminProductsEvent ===
+DEBUG: event.filter: null
+DEBUG: event.showInactive: null
+DEBUG: _currentFilter BEFORE: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive BEFORE: false
+DEBUG: _cachedProducts count: 0
+DEBUG: _cachedFilter: null
+DEBUG: state type: AdminProductInitial
+DEBUG: useCache=false
+DEBUG: _cachedProducts.length=0
+DEBUG: _cachedFilter?.brandName=null
+DEBUG: _currentFilter.brandName=null
+DEBUG: _currentFilter AFTER: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive AFTER: false
+00:00 +5 -16: Edge Cases & Boundary Conditions should handle API response with null fields in product [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 202:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 107:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 747:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +5 -16: Edge Cases & Boundary Conditions should handle pagination with load more
+=== DEBUG BLOC: GetAdminProductsEvent ===
+DEBUG: event.filter: null
+DEBUG: event.showInactive: null
+DEBUG: _currentFilter BEFORE: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive BEFORE: false
+DEBUG: _cachedProducts count: 0
+DEBUG: _cachedFilter: null
+DEBUG: state type: AdminProductInitial
+DEBUG: useCache=false
+DEBUG: _cachedProducts.length=0
+DEBUG: _cachedFilter?.brandName=null
+DEBUG: _currentFilter.brandName=null
+DEBUG: _currentFilter AFTER: brandName=null, stockStatus=StockStatus.all
+DEBUG: _currentShowInactive AFTER: false
+00:00 +5 -17: Edge Cases & Boundary Conditions should handle pagination with load more [E]
+  type 'Null' is not a subtype of type 'Future<Either<Failure, ({bool hasMore, List<Product> products, int totalCount, int totalPages})>>'
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 36:7                MockGetAdminProductsUsecase.call
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 202:51  AdminProductBloc._registerEventHandlers.<fn>
+  package:bloc/src/bloc.dart 226:26                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43                                           _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerBinaryCallback
+  package:bloc/src/bloc.dart 226:13                                                     Bloc.on.<fn>.handleEvent
+  package:bloc/src/bloc.dart 237:9                                                      Bloc.on.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _ForwardingStream.listen
+  package:bloc/src/bloc.dart 341:40                                                     _FlatMapStreamTransformer.bind.<fn>
+  dart:async                                                                            _StreamImpl.listen
+  package:bloc/src/bloc.dart 240:7                                                      Bloc.on
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 107:5   AdminProductBloc._registerEventHandlers
+  package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart 102:5   new AdminProductBloc
+  test\presentation\bloc\admin_product\admin_product_bloc_test.dart 776:20              main.<fn>.<fn>
+  package:bloc_test/src/bloc_test.dart 201:25                                           testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                            _CustomZone.registerUnaryCallback
+  package:bloc_test/src/bloc_test.dart 199:7                                            testBloc.<fn>
+  package:bloc_test/src/bloc_test.dart 252:15                                           _runZonedGuarded.<fn>
+  dart:async                                                                            runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3                                            _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11                                           testBloc
+  package:bloc_test/src/bloc_test.dart 156:13                                           blocTest.<fn>
+  
+00:00 +5 -17: Bloc Helper Methods should return correct currentFilter when initialized
+00:00 +6 -17: Bloc Helper Methods should return null for currentSearchQuery when not searching
+00:00 +7 -17: Bloc Helper Methods should return false for isSearching when not searching
+00:00 +8 -17: Bloc Helper Methods should return false for hasFilters when no filters applied
+00:00 +9 -17: UC-05: CreateProductEvent - Happy Path should emit [Creating, CreateSuccess] when product creation succeeds
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Test Product
+DEBUG: product.sku: TEST-SKU-001
+DEBUG: Product created successfully: 100
+00:00 +10 -17: UC-05: CreateProductEvent - Happy Path should emit correct create success state with full product data
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Test Product
+DEBUG: product.sku: TEST-SKU-001
+DEBUG: Product created successfully: 100
+00:00 +11 -17: UC-05: CreateProductEvent - Failure Paths should emit [Creating, CreateError] when ServerFailure (500)
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Test Product
+DEBUG: product.sku: TEST-SKU-001
+DEBUG: Create failed: 500 Internal Server Error
+00:00 +12 -17: UC-05: CreateProductEvent - Failure Paths should emit [Creating, CreateError] when NetworkFailure
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Test Product
+DEBUG: product.sku: TEST-SKU-001
+DEBUG: Create failed: No internet connection
+00:00 +13 -17: UC-05: CreateProductEvent - Failure Paths should emit [Creating, CreateError] when Duplicate SKU
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Test Product
+DEBUG: product.sku: TEST-SKU-001
+DEBUG: Create failed: SKU already exists. Please use a different SKU
+00:00 +14 -17: UC-05: CreateProductEvent - Failure Paths should emit [Creating, CreateError] when Validation Error
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Test Product
+DEBUG: product.sku: TEST-SKU-001
+DEBUG: Create failed: Validation failed: Name must be 2-200 characters
+00:00 +15 -17: UC-05: CreateProductEvent - Failure Paths should emit [Creating, CreateError] when Cache Failure
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Test Product
+DEBUG: product.sku: TEST-SKU-001
+DEBUG: Create failed: Failed to save product data
+00:00 +16 -17: UC-05: CreateProductEvent - Edge Cases should handle product with minimal required fields
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Minimal
+DEBUG: product.sku: MIN-001
+DEBUG: Product created successfully: 101
+00:00 +17 -17: UC-05: CreateProductEvent - Edge Cases should handle product with zero price
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Free Product
+DEBUG: product.sku: ZERO-001
+DEBUG: Create failed: Price must be greater than 0
+00:00 +18 -17: UC-05: CreateProductEvent - Edge Cases should handle product with empty SKU
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: No SKU Product
+DEBUG: product.sku: 
+DEBUG: Create failed: SKU is required
+00:00 +19 -17: UC-05: CreateProductEvent - Edge Cases should handle product with very long name (200 chars)
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+DEBUG: product.sku: LONG-001
+DEBUG: Create failed: Name must be 2-200 characters
+00:00 +20 -17: UC-05: CreateProductEvent - Edge Cases should handle product with negative stock quantity
+=== DEBUG BLOC: CreateProductEvent ===
+DEBUG: product.name: Negative Stock
+DEBUG: product.sku: NEG-001
+DEBUG: Create failed: Stock quantity cannot be negative
+00:00 +21 -17: UC-07: DeleteProductEvent - Edge Cases should emit [Deleting, Error] when NetworkFailure
+=== DEBUG BLOC: DeleteProductEvent ===
+DEBUG: productId: 1
+DEBUG: Emitted deleting state
+DEBUG: deleteProductUsecase result: Left(NetworkFailure(No internet connection))
+00:00 +22 -17: UC-07: DeleteProductEvent - Edge Cases should emit [Deleting, Deleted, Loading, Loaded] when delete returns false (product not found/already deleted)
+=== DEBUG BLOC: DeleteProductEvent ===
+DEBUG: productId: 1
+DEBUG: Emitted deleting state
+DEBUG: deleteProductUsecase result: Right(false)
+DEBUG: Emitted deleted state
+00:00 +22 -18: UC-07: DeleteProductEvent - Edge Cases should emit [Deleting, Deleted, Loading, Loaded] when delete returns false (product not found/already deleted) [E]
+  Expected: [
+              <satisfies function>,
+              <satisfies function>,
+              <<Instance of 'AdminProductLoading'>>,
+              <<Instance of 'AdminProductLoaded'>>
+            ]
+    Actual: [
+              AdminProductDeleting:AdminProductDeleting(1),
+              AdminProductDeleted:AdminProductDeleted(1)
+            ]
+     Which: at location [2] is [
+              AdminProductDeleting:AdminProductDeleting(1),
+              AdminProductDeleted:AdminProductDeleted(1)
+            ] which shorter than expected
+  
+  package:matcher                              expect
+  package:bloc_test/src/bloc_test.dart 218:16  testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                   _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43  _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                   _CustomZone.registerBinaryCallback
+  package:bloc_test/src/bloc_test.dart 252:5   _runZonedGuarded.<fn>
+  dart:async                                   runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3   _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11  testBloc
+  package:bloc_test/src/bloc_test.dart 156:13  blocTest.<fn>
+  
+00:00 +22 -18: UC-07: DeleteProductEvent - Edge Cases should handle rapid delete taps (debounce protection)
+=== DEBUG BLOC: DeleteProductEvent ===
+DEBUG: productId: 1
+DEBUG: Emitted deleting state
+DEBUG: deleteProductUsecase result: Right(true)
+DEBUG: Emitted deleted state
+=== DEBUG BLOC: DeleteProductEvent ===
+DEBUG: productId: 2
+DEBUG: Emitted deleting state
+DEBUG: deleteProductUsecase result: Right(true)
+DEBUG: Emitted deleted state
+00:00 +23 -18: UC-07: DeleteProductEvent - Edge Cases should emit full delete flow: Deleting -> Deleted -> Loading -> Loaded
+=== DEBUG BLOC: DeleteProductEvent ===
+DEBUG: productId: specific-product-id
+DEBUG: Emitted deleting state
+DEBUG: deleteProductUsecase result: Right(true)
+DEBUG: Emitted deleted state
+00:00 +23 -19: UC-07: DeleteProductEvent - Edge Cases should emit full delete flow: Deleting -> Deleted -> Loading -> Loaded [E]
+  Expected: [
+              <satisfies function>,
+              <satisfies function>,
+              <<Instance of 'AdminProductLoading'>>,
+              <<Instance of 'AdminProductLoaded'>>
+            ]
+    Actual: [
+              AdminProductDeleting:AdminProductDeleting(specific-product-id),
+              AdminProductDeleted:AdminProductDeleted(specific-product-id)
+            ]
+     Which: at location [2] is [
+              AdminProductDeleting:AdminProductDeleting(specific-product-id),
+              AdminProductDeleted:AdminProductDeleted(specific-product-id)
+            ] which shorter than expected
+  
+  package:matcher                              expect
+  package:bloc_test/src/bloc_test.dart 218:16  testBloc.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                   _Completer.completeError
+  package:bloc_test/src/bloc_test.dart 255:43  _runZonedGuarded.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                   _CustomZone.registerBinaryCallback
+  package:bloc_test/src/bloc_test.dart 252:5   _runZonedGuarded.<fn>
+  dart:async                                   runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 251:3   _runZonedGuarded
+  package:bloc_test/src/bloc_test.dart 198:11  testBloc
+  package:bloc_test/src/bloc_test.dart 156:13  blocTest.<fn>
+  
+00:00 +23 -19: Some tests failed.

@@ -89,37 +89,14 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
           child: BlocBuilder<AdminProductBloc, AdminProductState>(
             builder: (context, state) {
               // Handle different states for detail view
-              return state.when(
-                initial: () => _buildLoadingState(),
-                loading: () => _buildLoadingState(),
-                loaded:
-                    (
-                      products,
-                      filter,
-                      selectedBrand,
-                      stockStatus,
-                      currentPage,
-                      totalPages,
-                      hasMore,
-                      totalCount,
-                      isLoadingMore,
-                      isRefreshing,
-                    ) {
-                      // When coming from List, show loading while fetching detail
-                      // or show cached info if available
-                      return _buildLoadingState();
-                    },
-                detailLoading: () => _buildLoadingState(),
-                detailLoaded: (product) => _buildContent(product, context),
-                deleting: (_) => _buildLoadingState(),
-                deleted: (_) => _buildLoadingState(),
-                error: (message) => _buildErrorState(message, context),
-                creating: () => _buildLoadingState(),
-                createSuccess: (_) => _buildLoadingState(),
-                createError: (message) => _buildErrorState(message, context),
-                restoring: (_) => _buildLoadingState(),
-                restored: (_) => _buildLoadingState(),
-              );
+              if (state is AdminProductDetailLoaded) {
+                return _buildContent(state.product, context);
+              } else if (state is AdminProductError) {
+                return _buildErrorState(state.message, context);
+              } else if (state is AdminProductCreateError) {
+                return _buildErrorState(state.message, context);
+              }
+              return _buildLoadingState();
             },
           ),
         ),

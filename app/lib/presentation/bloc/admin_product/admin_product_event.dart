@@ -1,106 +1,121 @@
-// Events for Admin Product Inventory management.
-//
-// Features:
-// - Get products with admin-specific filters
-// - Filter by brand name
-// - Filter by stock status
-// - Search products
-// - Delete product
-//
-// Steps:
-// 1. Define events: `GetAdminProductsEvent`, `FilterByBrandEvent`, etc.
-
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:equatable/equatable.dart';
 import 'package:frontend_otis/data/models/product_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 
-part 'admin_product_event.freezed.dart';
+abstract class AdminProductEvent extends Equatable {
+  const AdminProductEvent();
 
-/// Events that can occur in the Admin Product Inventory feature.
-///
-/// These events trigger state changes in the AdminProductBloc.
-/// Use Freezed for immutable event classes.
-///
-/// Usage:
-/// ```dart
-/// on<GetAdminProductsEvent>((event, emit) async {
-///   emit(AdminProductState.loading());
-///   final result = await getAdminProductsUsecase(event.filter);
-///   result.fold(
-///     (failure) => emit(AdminProductState.error(message: failure.message)),
-///     (metadata) => emit(AdminProductState.loaded(...)),
-///   );
-/// });
-/// ```
-@freezed
-class AdminProductEvent with _$AdminProductEvent {
-  /// Event to fetch a paginated list of products with admin filters
-  /// Use this for initial load, pagination, and applying filters
-  /// [filter]: Filter criteria (brand, stock status, search)
-  /// [showInactive]: Filter by active status: true=inactive only, false=active only, null=all
-  const factory AdminProductEvent.getProducts({
-    AdminProductFilter? filter,
-    bool? showInactive,
-  }) = GetAdminProductsEvent;
+  @override
+  List<Object?> get props => [];
+}
 
-  /// Event to filter products by brand name
-  /// Resets to page 1 when applying new brand filter
-  const factory AdminProductEvent.filterByBrand({
-    required String? brandName,
-  }) = FilterByBrandEvent;
+/// Event to fetch a paginated list of products with admin filters
+class GetAdminProductsEvent extends AdminProductEvent {
+  final AdminProductFilter? filter;
+  final bool? showInactive;
 
-  /// Event to filter products by stock status
-  /// Resets to page 1 when applying new stock status filter
-  const factory AdminProductEvent.filterByStockStatus({
-    required StockStatus status,
-  }) = FilterByStockStatusEvent;
+  const GetAdminProductsEvent({this.filter, this.showInactive});
 
-  /// Event to search products by query
-  /// Combines with current brand/stock filters
-  const factory AdminProductEvent.searchProducts({
-    required String query,
-  }) = SearchAdminProductsEvent;
+  @override
+  List<Object?> get props => [filter, showInactive];
+}
 
-  /// Event to clear search query
-  /// Preserves brand and stock filters
-  const factory AdminProductEvent.clearSearch() = ClearAdminSearchEvent;
+/// Event to filter products by brand name
+class FilterByBrandEvent extends AdminProductEvent {
+  final String? brandName;
 
-  /// Event to refresh the product list
-  /// Resets to page 1, preserves filters
-  /// [silent]: If true, refreshes in background without showing loading spinner
-  const factory AdminProductEvent.refreshProducts({
-    @Default(false) bool silent,
-  }) = RefreshAdminProductsEvent;
+  const FilterByBrandEvent({required this.brandName});
 
-  /// Event to delete a product by ID
-  const factory AdminProductEvent.deleteProduct({
-    required String productId,
-  }) = DeleteProductEvent;
+  @override
+  List<Object?> get props => [brandName];
+}
 
-  /// Event to get product details by ID
-  const factory AdminProductEvent.getProductDetail({
-    required String productId,
-  }) = GetProductDetailEvent;
+/// Event to filter products by stock status
+class FilterByStockStatusEvent extends AdminProductEvent {
+  final StockStatus status;
 
-  /// Event to create a new product
-  /// Triggers product creation and returns success/error state
-  const factory AdminProductEvent.createProduct({
-    required ProductModel product,
-  }) = CreateProductEvent;
+  const FilterByStockStatusEvent({required this.status});
 
-  /// Event to get trash products (deleted/inactive products)
-  /// Fetches products where is_active = 0
-  const factory AdminProductEvent.getTrashProducts() = GetTrashProductsEvent;
+  @override
+  List<Object?> get props => [status];
+}
 
-  /// Event to restore a deleted product
-  /// Sets is_active = 1 for the product
-  const factory AdminProductEvent.restoreProduct({
-    required String productId,
-  }) = RestoreProductEvent;
+/// Event to search products by query
+class SearchAdminProductsEvent extends AdminProductEvent {
+  final String query;
 
-  /// Event to permanently delete a product
-  /// Removes product from database permanently
-  const factory AdminProductEvent.permanentDeleteProduct({
-    required String productId,
-  }) = PermanentDeleteProductEvent;
+  const SearchAdminProductsEvent({required this.query});
+
+  @override
+  List<Object?> get props => [query];
+}
+
+/// Event to clear search query
+class ClearAdminSearchEvent extends AdminProductEvent {
+  const ClearAdminSearchEvent();
+}
+
+/// Event to refresh the product list
+class RefreshAdminProductsEvent extends AdminProductEvent {
+  final bool silent;
+
+  const RefreshAdminProductsEvent({this.silent = false});
+
+  @override
+  List<Object?> get props => [silent];
+}
+
+/// Event to delete a product by ID
+class DeleteProductEvent extends AdminProductEvent {
+  final String productId;
+
+  const DeleteProductEvent({required this.productId});
+
+  @override
+  List<Object?> get props => [productId];
+}
+
+/// Event to get product details by ID
+class GetProductDetailEvent extends AdminProductEvent {
+  final String productId;
+
+  const GetProductDetailEvent({required this.productId});
+
+  @override
+  List<Object?> get props => [productId];
+}
+
+/// Event to create a new product
+class CreateProductEvent extends AdminProductEvent {
+  final ProductModel product;
+
+  const CreateProductEvent({required this.product});
+
+  @override
+  List<Object?> get props => [product];
+}
+
+/// Event to get trash products (deleted/inactive products)
+class GetTrashProductsEvent extends AdminProductEvent {
+  const GetTrashProductsEvent();
+}
+
+/// Event to restore a deleted product
+class RestoreProductEvent extends AdminProductEvent {
+  final String productId;
+
+  const RestoreProductEvent({required this.productId});
+
+  @override
+  List<Object?> get props => [productId];
+}
+
+/// Event to permanently delete a product
+class PermanentDeleteProductEvent extends AdminProductEvent {
+  final String productId;
+
+  const PermanentDeleteProductEvent({required this.productId});
+
+  @override
+  List<Object?> get props => [productId];
 }

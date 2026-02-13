@@ -24,11 +24,11 @@ import 'package:mocktail/mocktail.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class MockAdminProductBloc extends MockBloc<AdminProductEvent, AdminProductState>
+class MockAdminProductBloc
+    extends MockBloc<AdminProductEvent, AdminProductState>
     implements AdminProductBloc {}
 
-class MockProductRepository extends Mock
-    implements ProductRepository {}
+class MockProductRepository extends Mock implements ProductRepository {}
 
 void main() {
   late MockAdminProductBloc mockBloc;
@@ -41,13 +41,16 @@ void main() {
     mockGetBrandsUsecase = GetBrandsUsecase(productRepository: mockRepository);
 
     // Stub the repository methods to return empty lists
-    when(() => mockRepository.getBrands())
-        .thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.getBrands(),
+    ).thenAnswer((_) async => const Right([]));
 
     // Register mock bloc with GetIt
     get_it.GetIt.instance.registerSingleton<AdminProductBloc>(mockBloc);
     get_it.GetIt.instance.registerSingleton<ProductRepository>(mockRepository);
-    get_it.GetIt.instance.registerSingleton<GetBrandsUsecase>(mockGetBrandsUsecase);
+    get_it.GetIt.instance.registerSingleton<GetBrandsUsecase>(
+      mockGetBrandsUsecase,
+    );
   });
 
   tearDown(() {
@@ -67,9 +70,7 @@ void main() {
   Widget createScreenUnderTest() {
     return BlocProvider<AdminProductBloc>.value(
       value: mockBloc,
-      child: const MaterialApp(
-        home: AdminCreateProductScreen(),
-      ),
+      child: const MaterialApp(home: AdminCreateProductScreen()),
     );
   }
 
@@ -78,147 +79,127 @@ void main() {
   // ===========================================================================
 
   group('AdminCreateProductScreen - Rendering', () {
-    testWidgets(
-      'renders all form sections',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
+    testWidgets('renders all form sections', (WidgetTester tester) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        expect(find.text('Thông tin cơ bản'), findsOneWidget);
-        expect(find.text('Danh mục & Thương hiệu'), findsOneWidget);
-        expect(find.text('Thông số lốp'), findsOneWidget);
-        expect(find.text('Hình ảnh'), findsOneWidget);
-        expect(find.text('Trạng thái'), findsOneWidget);
-      },
-    );
+      expect(find.text('Thông tin cơ bản'), findsOneWidget);
+      expect(find.text('Danh mục & Thương hiệu'), findsOneWidget);
+      expect(find.text('Thông số lốp'), findsOneWidget);
+      expect(find.text('Hình ảnh'), findsOneWidget);
+      expect(find.text('Trạng thái'), findsOneWidget);
+    });
 
-    testWidgets(
-      'renders all basic info fields',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
+    testWidgets('renders all basic info fields', (WidgetTester tester) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        expect(find.text('Tên sản phẩm'), findsOneWidget);
-        expect(find.text('SKU'), findsOneWidget);
-        expect(find.text('Giá (VND)'), findsOneWidget);
-        expect(find.text('Số lượng tồn kho'), findsOneWidget);
-      },
-    );
+      expect(find.text('Tên sản phẩm'), findsOneWidget);
+      expect(find.text('SKU'), findsOneWidget);
+      expect(find.text('Giá (VND)'), findsOneWidget);
+      expect(find.text('Số lượng tồn kho'), findsOneWidget);
+    });
 
-    testWidgets(
-      'renders submit button',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
+    testWidgets('renders submit button', (WidgetTester tester) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        expect(find.text('Tạo sản phẩm'), findsOneWidget);
-        expect(find.byType(ElevatedButton), findsOneWidget);
-      },
-    );
+      expect(find.text('Tạo sản phẩm'), findsOneWidget);
+      expect(find.byType(ElevatedButton), findsOneWidget);
+    });
 
-    testWidgets(
-      'renders app bar with title',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
+    testWidgets('renders app bar with title', (WidgetTester tester) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        expect(find.text('Thêm sản phẩm mới'), findsOneWidget);
-        expect(find.byType(AppBar), findsOneWidget);
-        expect(find.byIcon(Icons.close), findsOneWidget);
-      },
-    );
+      expect(find.text('Thêm sản phẩm mới'), findsOneWidget);
+      expect(find.byType(AppBar), findsOneWidget);
+      expect(find.byIcon(Icons.close), findsOneWidget);
+    });
 
-    testWidgets(
-      'renders tire specification fields',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
+    testWidgets('renders tire specification fields', (
+      WidgetTester tester,
+    ) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        expect(find.text('Chiều rộng lốp'), findsOneWidget);
-        expect(find.text('Tỷ lệ aspect'), findsOneWidget);
-        expect(find.text('Đường kính mâm'), findsOneWidget);
-      },
-    );
+      expect(find.text('Chiều rộng lốp'), findsOneWidget);
+      expect(find.text('Tỷ lệ aspect'), findsOneWidget);
+      expect(find.text('Đường kính mâm'), findsOneWidget);
+    });
 
-    testWidgets(
-      'renders status toggle with label',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
+    testWidgets('renders status toggle with label', (
+      WidgetTester tester,
+    ) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        expect(find.text('Kích hoạt sản phẩm'), findsOneWidget);
-        expect(find.byType(Switch), findsOneWidget);
-      },
-    );
+      expect(find.text('Kích hoạt sản phẩm'), findsOneWidget);
+      expect(find.byType(Switch), findsOneWidget);
+    });
 
-    testWidgets(
-      'renders brand dropdown',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
+    testWidgets('renders brand dropdown', (WidgetTester tester) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        expect(find.text('Thương hiệu'), findsOneWidget);
-        expect(find.byType(DropdownButtonFormField<BrandModel>), findsOneWidget);
-      },
-    );
+      expect(find.text('Thương hiệu'), findsOneWidget);
+      expect(find.byType(DropdownButtonFormField<BrandModel>), findsOneWidget);
+    });
 
-    testWidgets(
-      'renders image URL field',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
+    testWidgets('renders image URL field', (WidgetTester tester) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        expect(find.text('URL Hình ảnh'), findsOneWidget);
-      },
-    );
+      expect(find.text('URL Hình ảnh'), findsOneWidget);
+    });
   });
 
   // ===========================================================================
@@ -226,33 +207,29 @@ void main() {
   // ===========================================================================
 
   group('AdminCreateProductScreen - Bloc State Handling', () {
-    testWidgets(
-      'submit button enabled in initial state',
-      (WidgetTester tester) async {
-        when(() => mockBloc.state)
-            .thenReturn(const AdminProductState.initial());
+    testWidgets('submit button enabled in initial state', (
+      WidgetTester tester,
+    ) async {
+      when(() => mockBloc.state).thenReturn(const AdminProductInitial());
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        final button = find.widgetWithText(ElevatedButton, 'Tạo sản phẩm');
-        expect(tester.widget<ElevatedButton>(button).onPressed, isNotNull);
-      },
-    );
+      final button = find.widgetWithText(ElevatedButton, 'Tạo sản phẩm');
+      expect(tester.widget<ElevatedButton>(button).onPressed, isNotNull);
+    });
 
-    testWidgets(
-      'initial state properties are correct',
-      (WidgetTester tester) async {
-        when(() => mockBloc.state)
-            .thenReturn(const AdminProductState.initial());
+    testWidgets('initial state properties are correct', (
+      WidgetTester tester,
+    ) async {
+      when(() => mockBloc.state).thenReturn(const AdminProductInitial());
 
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        expect(mockBloc.state.isInitial, isTrue);
-        expect(mockBloc.state.isCreating, isFalse);
-      },
-    );
+      expect(mockBloc.state.isInitial, isTrue);
+      expect(mockBloc.state.isCreating, isFalse);
+    });
   });
 
   // ===========================================================================
@@ -260,149 +237,144 @@ void main() {
   // ===========================================================================
 
   group('AdminCreateProductScreen - User Interactions', () {
-    testWidgets(
-      'accepts text input in name field',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+    testWidgets('accepts text input in name field', (
+      WidgetTester tester,
+    ) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        await tester.enterText(
-          find.widgetWithText(TextFormField, 'Tên sản phẩm'),
-          'Michelin Pilot Sport 4S',
-        );
-        await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Tên sản phẩm'),
+        'Michelin Pilot Sport 4S',
+      );
+      await tester.pump();
 
-        expect(
-          find.widgetWithText(TextFormField, 'Michelin Pilot Sport 4S'),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(
+        find.widgetWithText(TextFormField, 'Michelin Pilot Sport 4S'),
+        findsOneWidget,
+      );
+    });
 
-    testWidgets(
-      'accepts text input in SKU field',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+    testWidgets('accepts text input in SKU field', (WidgetTester tester) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        await tester.enterText(
-          find.widgetWithText(TextFormField, 'SKU'),
-          'MICH-PS4S-20555R16',
-        );
-        await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'SKU'),
+        'MICH-PS4S-20555R16',
+      );
+      await tester.pump();
 
-        expect(
-          find.widgetWithText(TextFormField, 'MICH-PS4S-20555R16'),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(
+        find.widgetWithText(TextFormField, 'MICH-PS4S-20555R16'),
+        findsOneWidget,
+      );
+    });
 
-    testWidgets(
-      'accepts numeric input in tire spec fields',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+    testWidgets('accepts numeric input in tire spec fields', (
+      WidgetTester tester,
+    ) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        // Find all TextFormFields and enter text into specific ones by index
-        final textFields = find.byType(TextFormField);
-        expect(textFields, findsWidgets);
+      // Find all TextFormFields and enter text into specific ones by index
+      final textFields = find.byType(TextFormField);
+      expect(textFields, findsWidgets);
 
-        // Enter text into the tire spec fields (width, aspect, rim)
-        await tester.enterText(textFields.at(3), '205');
-        await tester.enterText(textFields.at(4), '55');
-        await tester.enterText(textFields.at(5), '16');
-        await tester.pump();
+      // Enter text into the tire spec fields (width, aspect, rim)
+      await tester.enterText(textFields.at(3), '205');
+      await tester.enterText(textFields.at(4), '55');
+      await tester.enterText(textFields.at(5), '16');
+      await tester.pump();
 
-        // Verify text was entered - just check that no error is thrown
-        // The actual text is in the TextFormField controllers
-      },
-    );
+      // Verify text was entered - just check that no error is thrown
+      // The actual text is in the TextFormField controllers
+    });
 
-    testWidgets(
-      'accepts valid https URL in image URL field',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+    testWidgets('accepts valid https URL in image URL field', (
+      WidgetTester tester,
+    ) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-        await tester.enterText(
-          find.widgetWithText(TextFormField, 'URL Hình ảnh'),
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'URL Hình ảnh'),
+        'https://example.com/images/tire.jpg',
+      );
+      await tester.pump();
+
+      expect(
+        find.widgetWithText(
+          TextFormField,
           'https://example.com/images/tire.jpg',
-        );
-        await tester.pump();
+        ),
+        findsOneWidget,
+      );
+    });
 
-        expect(
-          find.widgetWithText(TextFormField, 'https://example.com/images/tire.jpg'),
-          findsOneWidget,
-        );
-      },
-    );
+    testWidgets('accepts valid http URL in image URL field', (
+      WidgetTester tester,
+    ) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-    testWidgets(
-      'accepts valid http URL in image URL field',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'URL Hình ảnh'),
+        'http://localhost:8080/image.jpg',
+      );
+      await tester.pump();
 
-        await tester.enterText(
-          find.widgetWithText(TextFormField, 'URL Hình ảnh'),
-          'http://localhost:8080/image.jpg',
-        );
-        await tester.pump();
+      expect(
+        find.widgetWithText(TextFormField, 'http://localhost:8080/image.jpg'),
+        findsOneWidget,
+      );
+    });
 
-        expect(
-          find.widgetWithText(TextFormField, 'http://localhost:8080/image.jpg'),
-          findsOneWidget,
-        );
-      },
-    );
+    testWidgets('accepts empty URL (optional field)', (
+      WidgetTester tester,
+    ) async {
+      whenListen(
+        mockBloc,
+        Stream.value(const AdminProductInitial()),
+        initialState: const AdminProductInitial(),
+      );
+      await tester.pumpWidget(createScreenUnderTest());
+      await tester.pump();
 
-    testWidgets(
-      'accepts empty URL (optional field)',
-      (WidgetTester tester) async {
-        whenListen(
-          mockBloc,
-          Stream.value(const AdminProductState.initial()),
-          initialState: const AdminProductState.initial(),
-        );
-        await tester.pumpWidget(createScreenUnderTest());
-        await tester.pump();
+      // URL field should accept empty value (it's optional)
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'URL Hình ảnh'),
+        '',
+      );
+      await tester.pump();
 
-        // URL field should accept empty value (it's optional)
-        await tester.enterText(
-          find.widgetWithText(TextFormField, 'URL Hình ảnh'),
-          '',
-        );
-        await tester.pump();
-
-        // Empty URL should not show validation error
-        expect(find.text('URL hình ảnh không hợp lệ'), findsNothing);
-      },
-    );
+      // Empty URL should not show validation error
+      expect(find.text('URL hình ảnh không hợp lệ'), findsNothing);
+    });
   });
 }

@@ -48,9 +48,7 @@ void main() {
   setUpAll(() {
     // Register fallback values for mocktail
     registerFallbackValue(const ProductFilter(page: 1, limit: 10));
-    registerFallbackValue(
-      const ProductEvent.getProducts(filter: ProductFilter()),
-    );
+    registerFallbackValue(const GetProductsEvent(filter: ProductFilter()));
     registerFallbackValue(FakeProductFilter());
   });
 
@@ -72,7 +70,7 @@ void main() {
       'initial state should be ProductInitial',
       build: () => productBloc,
       verify: (_) {
-        expect(productBloc.state, equals(const ProductState.initial()));
+        expect(productBloc.state, equals(const ProductInitial()));
       },
     );
 
@@ -90,11 +88,11 @@ void main() {
         when(
           () => mockGetProductsUsecase(filter),
         ).thenAnswer((_) async => Right(tMetadata));
-        bloc.add(const ProductEvent.getProducts(filter: filter));
+        bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1, tProduct2],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -113,11 +111,11 @@ void main() {
         when(() => mockGetProductsUsecase(filter)).thenAnswer(
           (_) async => const Left(ServerFailure(message: 'Server error')),
         );
-        bloc.add(const ProductEvent.getProducts(filter: filter));
+        bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'Server error'),
+        const ProductLoading(),
+        const ProductError(message: 'Server error'),
       ],
     );
 
@@ -136,11 +134,11 @@ void main() {
             const ProductFilter(page: 1, searchQuery: 'Michelin'),
           ),
         ).thenAnswer((_) async => Right(tMetadata));
-        bloc.add(const ProductEvent.searchProducts(query: 'Michelin'));
+        bloc.add(const SearchProductsEvent(query: 'Michelin'));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, searchQuery: 'Michelin'),
           currentPage: 1,
@@ -160,11 +158,11 @@ void main() {
             const ProductFilter(page: 1, searchQuery: 'Test'),
           ),
         ).thenAnswer((_) async => const Left(NetworkFailure()));
-        bloc.add(const ProductEvent.searchProducts(query: 'Test'));
+        bloc.add(const SearchProductsEvent(query: 'Test'));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'No internet connection'),
+        const ProductLoading(),
+        const ProductError(message: 'Network Failure'),
       ],
     );
 
@@ -176,11 +174,11 @@ void main() {
         when(
           () => mockGetProductDetailUsecase(productId),
         ).thenAnswer((_) async => Right(tProduct1));
-        bloc.add(const ProductEvent.getProductDetail(id: productId));
+        bloc.add(const GetProductDetailEvent(id: productId));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.detailLoaded(product: tProduct1),
+        const ProductLoading(),
+        ProductDetailLoaded(product: tProduct1),
       ],
     );
 
@@ -192,11 +190,11 @@ void main() {
         when(
           () => mockGetProductDetailUsecase(productId),
         ).thenAnswer((_) async => Left(ServerFailure(message: 'Not found')));
-        bloc.add(const ProductEvent.getProductDetail(id: productId));
+        bloc.add(const GetProductDetailEvent(id: productId));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'Not found'),
+        const ProductLoading(),
+        const ProductError(message: 'Not found'),
       ],
     );
 
@@ -208,11 +206,11 @@ void main() {
         when(() => mockGetProductDetailUsecase(productId)).thenAnswer(
           (_) async => Left(ServerFailure(message: 'Product not found')),
         );
-        bloc.add(const ProductEvent.getProductDetail(id: productId));
+        bloc.add(const GetProductDetailEvent(id: productId));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'Product not found'),
+        const ProductLoading(),
+        const ProductError(message: 'Product not found'),
       ],
     );
 
@@ -232,11 +230,11 @@ void main() {
         when(
           () => mockGetProductsUsecase(filter),
         ).thenAnswer((_) async => Right(tMetadata));
-        bloc.add(const ProductEvent.getProducts(filter: filter));
+        bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -277,13 +275,13 @@ void main() {
 
         // Add both events
         bloc
-          ..add(const ProductEvent.getProducts(filter: filterPage1))
-          ..add(const ProductEvent.getProducts(filter: filterPage2));
+          ..add(const GetProductsEvent(filter: filterPage1))
+          ..add(const GetProductsEvent(filter: filterPage2));
       },
       expect: () => [
         // Page 1
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -292,7 +290,7 @@ void main() {
           totalCount: 2,
         ),
         // Intermediate state with isLoadingMore: true
-        ProductState.loaded(
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -302,7 +300,7 @@ void main() {
           isLoadingMore: true,
         ),
         // Page 2 - should append products
-        ProductState.loaded(
+        ProductLoaded(
           products: [tProduct1, tProduct2],
           filter: const ProductFilter(page: 2, limit: 10),
           currentPage: 2,
@@ -357,12 +355,12 @@ void main() {
         ).thenAnswer((_) async => Right(page2Metadata));
 
         bloc
-          ..add(const ProductEvent.getProducts(filter: filterPage1))
-          ..add(const ProductEvent.getProducts(filter: filterPage2));
+          ..add(const GetProductsEvent(filter: filterPage1))
+          ..add(const GetProductsEvent(filter: filterPage2));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -371,7 +369,7 @@ void main() {
           totalCount: 20,
         ),
         // During load more, should have isLoadingMore = true
-        ProductState.loaded(
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -381,7 +379,7 @@ void main() {
           isLoadingMore: true,
         ),
         // After loading more, products should be appended
-        ProductState.loaded(
+        ProductLoaded(
           products: [tProduct1, tProduct2],
           filter: const ProductFilter(page: 2, limit: 10),
           currentPage: 2,
@@ -415,12 +413,12 @@ void main() {
         );
 
         bloc
-          ..add(const ProductEvent.getProducts(filter: filterPage1))
-          ..add(const ProductEvent.getProducts(filter: filterPage2));
+          ..add(const GetProductsEvent(filter: filterPage1))
+          ..add(const GetProductsEvent(filter: filterPage2));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -430,7 +428,7 @@ void main() {
           isLoadingMore: false,
         ),
         // During load more, should have isLoadingMore = true
-        ProductState.loaded(
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -440,7 +438,7 @@ void main() {
           isLoadingMore: true,
         ),
         // After load more failure, isLoadingMore should be reset to false
-        ProductState.loaded(
+        ProductLoaded(
           products: [tProduct1],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -466,11 +464,11 @@ void main() {
         when(
           () => mockGetProductsUsecase(filter),
         ).thenAnswer((_) async => Right(emptyMetadata));
-        bloc.add(const ProductEvent.getProducts(filter: filter));
+        bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -495,11 +493,11 @@ void main() {
         when(
           () => mockGetProductsUsecase(filter),
         ).thenAnswer((_) async => Right(singlePageMetadata));
-        bloc.add(const ProductEvent.getProducts(filter: filter));
+        bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1, tProduct2],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -540,13 +538,13 @@ void main() {
         ).thenAnswer((_) async => Right(emptyMetadata));
 
         bloc
-          ..add(const ProductEvent.searchProducts(query: 'michelin'))
-          ..add(const ProductEvent.clearSearch());
+          ..add(const SearchProductsEvent(query: 'michelin'))
+          ..add(const ClearSearchEvent());
       },
       expect: () => [
-        const ProductState.loading(),
+        const ProductLoading(),
         isA<ProductLoaded>(),
-        const ProductState.loading(),
+        const ProductLoading(),
         isA<ProductLoaded>().having(
           (state) => state.filter.searchQuery,
           'searchQuery after clear',
@@ -562,11 +560,11 @@ void main() {
         when(
           () => mockGetProductsUsecase(any()),
         ).thenAnswer((_) async => const Left(NetworkFailure()));
-        bloc.add(const ProductEvent.clearSearch());
+        bloc.add(const ClearSearchEvent());
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'No internet connection'),
+        const ProductLoading(),
+        const ProductError(message: 'Network Failure'),
       ],
     );
 
@@ -584,11 +582,11 @@ void main() {
         when(
           () => mockGetProductsUsecase(filter),
         ).thenAnswer((_) async => Right(refreshMetadata));
-        bloc.add(const ProductEvent.refreshProducts());
+        bloc.add(const RefreshProductsEvent());
       },
       expect: () => [
-        const ProductState.loading(),
-        ProductState.loaded(
+        const ProductLoading(),
+        ProductLoaded(
           products: [tProduct1, tProduct2],
           filter: const ProductFilter(page: 1, limit: 10),
           currentPage: 1,
@@ -606,11 +604,11 @@ void main() {
         when(() => mockGetProductsUsecase(any())).thenAnswer(
           (_) async => const Left(ServerFailure(message: 'Connection timeout')),
         );
-        bloc.add(const ProductEvent.refreshProducts());
+        bloc.add(const RefreshProductsEvent());
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'Connection timeout'),
+        const ProductLoading(),
+        const ProductError(message: 'Connection timeout'),
       ],
     );
 
@@ -636,9 +634,9 @@ void main() {
             const ProductFilter(page: 1, searchQuery: 'michelin'),
           ),
         ).thenAnswer((_) async => Right(tMetadata));
-        bloc.add(const ProductEvent.searchProducts(query: 'michelin'));
+        bloc.add(const SearchProductsEvent(query: 'michelin'));
       },
-      expect: () => [const ProductState.loading(), isA<ProductLoaded>()],
+      expect: () => [const ProductLoading(), isA<ProductLoaded>()],
     );
 
     blocTest<ProductBloc, ProductState>(
@@ -657,7 +655,7 @@ void main() {
           ),
         ).thenAnswer((_) async => Right(tMetadata));
         bloc.add(
-          const ProductEvent.getProducts(
+          const GetProductsEvent(
             filter: ProductFilter(page: 1, limit: 10, categoryId: 'cat1'),
           ),
         );
@@ -666,7 +664,7 @@ void main() {
         // After loading with a category filter, hasFilters should be true
         expect(bloc.hasFilters, isTrue);
       },
-      expect: () => [const ProductState.loading(), isA<ProductLoaded>()],
+      expect: () => [const ProductLoading(), isA<ProductLoaded>()],
     );
 
     // ========== EDGE CASES ==========
@@ -679,11 +677,11 @@ void main() {
         when(
           () => mockGetProductsUsecase(filter),
         ).thenAnswer((_) async => const Left(NetworkFailure()));
-        bloc.add(const ProductEvent.getProducts(filter: filter));
+        bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'No internet connection'),
+        const ProductLoading(),
+        const ProductError(message: 'Network Failure'),
       ],
     );
 
@@ -695,11 +693,11 @@ void main() {
         when(
           () => mockGetProductsUsecase(filter),
         ).thenAnswer((_) async => const Left(CacheFailure()));
-        bloc.add(const ProductEvent.getProducts(filter: filter));
+        bloc.add(const GetProductsEvent(filter: filter));
       },
       expect: () => [
-        const ProductState.loading(),
-        const ProductState.error(message: 'Cache error occurred'),
+        const ProductLoading(),
+        const ProductError(message: 'Cache Failure'),
       ],
     );
 
@@ -732,9 +730,9 @@ void main() {
         when(
           () => mockGetProductsUsecase(any()),
         ).thenAnswer((_) async => Right(tMetadata));
-        bloc.add(const ProductEvent.searchProducts(query: ''));
+        bloc.add(const SearchProductsEvent(query: ''));
       },
-      expect: () => [const ProductState.loading(), isA<ProductLoaded>()],
+      expect: () => [const ProductLoading(), isA<ProductLoaded>()],
     );
 
     blocTest<ProductBloc, ProductState>(
@@ -750,9 +748,9 @@ void main() {
         when(
           () => mockGetProductsUsecase(any()),
         ).thenAnswer((_) async => Right(tMetadata));
-        bloc.add(const ProductEvent.searchProducts(query: '   '));
+        bloc.add(const SearchProductsEvent(query: '   '));
       },
-      expect: () => [const ProductState.loading(), isA<ProductLoaded>()],
+      expect: () => [const ProductLoading(), isA<ProductLoaded>()],
     );
   });
 }

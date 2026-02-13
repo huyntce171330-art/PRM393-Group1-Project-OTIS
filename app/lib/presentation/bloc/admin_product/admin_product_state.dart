@@ -1,362 +1,283 @@
-// States for Admin Product Inventory management.
-//
-// Features:
-// - Loading state during data fetch
-// - Loaded state with products and filter info
-// - Error state with message
-// - Deletion in progress state
-//
-// Steps:
-// 1. Define states: `AdminProductInitial`, `AdminProductLoading`, `AdminProductLoaded`, `AdminProductError`.
-
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:equatable/equatable.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 
-part 'admin_product_state.freezed.dart';
+abstract class AdminProductState extends Equatable {
+  const AdminProductState();
 
-/// States for the Admin Product Inventory feature.
-///
-/// Use Freezed for immutable state classes.
-/// Follows the pattern: Initial -> Loading -> Loaded/Error
-///
-/// Usage:
-/// ```dart
-/// BlocBuilder<AdminProductBloc, AdminProductState>(
-///   builder: (context, state) {
-///     return state.when(
-///       initial: () => SizedBox.shrink(),
-///       loading: () => CircularProgressIndicator(),
-///       loaded: (products, filter, ...) => ProductListView(products: products),
-///       error: (message) => ErrorWidget(message: message),
-///     );
-///   },
-/// );
-/// ```
-@freezed
-class AdminProductState with _$AdminProductState {
-  const AdminProductState._();
+  @override
+  List<Object?> get props => [];
+}
 
-  /// Initial state - no data loaded yet
-  const factory AdminProductState.initial() = AdminProductInitial;
+class AdminProductInitial extends AdminProductState {
+  const AdminProductInitial();
+}
 
-  /// Loading state - fetching data
-  const factory AdminProductState.loading() = AdminProductLoading;
+class AdminProductLoading extends AdminProductState {
+  const AdminProductLoading();
+}
 
-  /// Loaded state - data ready for display
-  ///
-  /// [products]: List of products to display
-  /// [filter]: Current filter state
-  /// [selectedBrand]: Currently selected brand filter (null = all)
-  /// [stockStatus]: Currently selected stock status filter
-  /// [currentPage]: Current page number (1-indexed)
-  /// [totalPages]: Total number of pages
-  /// [hasMore]: Whether there are more pages to load
-  /// [totalCount]: Total number of products matching filters
-  /// [isLoadingMore]: Whether more products are being loaded (pagination)
-  /// [isRefreshing]: Whether list is being silently refreshed in background
-  const factory AdminProductState.loaded({
-    required List<Product> products,
-    required AdminProductFilter filter,
-    required String? selectedBrand,
-    required StockStatus stockStatus,
-    required int currentPage,
-    required int totalPages,
-    required bool hasMore,
-    required int totalCount,
-    @Default(false) bool isLoadingMore,
-    @Default(false) bool isRefreshing,
-  }) = AdminProductLoaded;
+class AdminProductLoaded extends AdminProductState {
+  final List<Product> products;
+  final AdminProductFilter filter;
+  final String? selectedBrand;
+  final StockStatus stockStatus;
+  final int currentPage;
+  final int totalPages;
+  final bool hasMore;
+  final int totalCount;
+  final bool isLoadingMore;
+  final bool isRefreshing;
 
-  /// Error state - something went wrong
-  const factory AdminProductState.error({
-    required String message,
-  }) = AdminProductError;
+  const AdminProductLoaded({
+    required this.products,
+    required this.filter,
+    required this.selectedBrand,
+    required this.stockStatus,
+    required this.currentPage,
+    required this.totalPages,
+    required this.hasMore,
+    required this.totalCount,
+    this.isLoadingMore = false,
+    this.isRefreshing = false,
+  });
 
-  /// Deletion in progress state
-  const factory AdminProductState.deleting({
-    required String productId,
-  }) = AdminProductDeleting;
+  AdminProductLoaded copyWith({
+    List<Product>? products,
+    AdminProductFilter? filter,
+    String? selectedBrand,
+    StockStatus? stockStatus,
+    int? currentPage,
+    int? totalPages,
+    bool? hasMore,
+    int? totalCount,
+    bool? isLoadingMore,
+    bool? isRefreshing,
+  }) {
+    return AdminProductLoaded(
+      products: products ?? this.products,
+      filter: filter ?? this.filter,
+      selectedBrand: selectedBrand ?? this.selectedBrand,
+      stockStatus: stockStatus ?? this.stockStatus,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
+      hasMore: hasMore ?? this.hasMore,
+      totalCount: totalCount ?? this.totalCount,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+    );
+  }
 
-  /// Deletion success state
-  const factory AdminProductState.deleted({
-    required String productId,
-  }) = AdminProductDeleted;
+  @override
+  List<Object?> get props => [
+    products,
+    filter,
+    selectedBrand,
+    stockStatus,
+    currentPage,
+    totalPages,
+    hasMore,
+    totalCount,
+    isLoadingMore,
+    isRefreshing,
+  ];
+}
 
-  /// Detail loading state - fetching single product details
-  const factory AdminProductState.detailLoading() = AdminProductDetailLoading;
+class AdminProductError extends AdminProductState {
+  final String message;
 
-  /// Detail loaded state - single product ready for display
-  const factory AdminProductState.detailLoaded({
-    required Product product,
-  }) = AdminProductDetailLoaded;
+  const AdminProductError({required this.message});
 
-  /// Create product in progress state
-  const factory AdminProductState.creating() = AdminProductCreating;
+  @override
+  List<Object?> get props => [message];
+}
 
-  /// Create product success state
-  const factory AdminProductState.createSuccess({
-    required Product product,
-  }) = AdminProductCreateSuccess;
+class AdminProductDeleting extends AdminProductState {
+  final String productId;
 
-  /// Create product error state
-  const factory AdminProductState.createError({
-    required String message,
-  }) = AdminProductCreateError;
+  const AdminProductDeleting({required this.productId});
 
-  /// Restoring in progress state
-  const factory AdminProductState.restoring({
-    required String productId,
-  }) = AdminProductRestoring;
+  @override
+  List<Object?> get props => [productId];
+}
 
-  /// Restore success state
-  const factory AdminProductState.restored({
-    required String productId,
-  }) = AdminProductRestored;
+class AdminProductDeleted extends AdminProductState {
+  final String productId;
 
-  /// Helper: Check if state is initial
+  const AdminProductDeleted({required this.productId});
+
+  @override
+  List<Object?> get props => [productId];
+}
+
+class AdminProductDetailLoading extends AdminProductState {
+  const AdminProductDetailLoading();
+}
+
+class AdminProductDetailLoaded extends AdminProductState {
+  final Product product;
+
+  const AdminProductDetailLoaded({required this.product});
+
+  @override
+  List<Object?> get props => [product];
+}
+
+class AdminProductCreating extends AdminProductState {
+  const AdminProductCreating();
+}
+
+class AdminProductCreateSuccess extends AdminProductState {
+  final Product product;
+
+  const AdminProductCreateSuccess({required this.product});
+
+  @override
+  List<Object?> get props => [product];
+}
+
+class AdminProductCreateError extends AdminProductState {
+  final String message;
+
+  const AdminProductCreateError({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class AdminProductRestoring extends AdminProductState {
+  final String productId;
+
+  const AdminProductRestoring({required this.productId});
+
+  @override
+  List<Object?> get props => [productId];
+}
+
+class AdminProductRestored extends AdminProductState {
+  final String productId;
+
+  const AdminProductRestored({required this.productId});
+
+  @override
+  List<Object?> get props => [productId];
+}
+
+// Extension to provide helper methods similar to the original Freezed version
+extension AdminProductStateX on AdminProductState {
   bool get isInitial => this is AdminProductInitial;
-
-  /// Helper: Check if state is loading (initial load)
   bool get isLoading => this is AdminProductLoading;
-
-  /// Helper: Check if state is loaded
   bool get isLoaded => this is AdminProductLoaded;
-
-  /// Helper: Check if state is error
   bool get isError => this is AdminProductError;
-
-  /// Helper: Check if currently deleting
   bool get isDeleting => this is AdminProductDeleting;
 
-  /// Helper: Get products list (returns empty list if not loaded)
   List<Product> get products {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          products,
-    ) ?? [];
+    if (this is AdminProductLoaded) {
+      return (this as AdminProductLoaded).products;
+    }
+    return [];
   }
 
-  /// Helper: Get error message (null if not error)
   String? get errorMessage {
-    return whenOrNull(error: (message) => message);
+    if (this is AdminProductError) {
+      return (this as AdminProductError).message;
+    }
+    return null;
   }
 
-  /// Helper: Get current filter (null if not loaded)
   AdminProductFilter? get filter {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          filter,
-    );
+    if (this is AdminProductLoaded) {
+      return (this as AdminProductLoaded).filter;
+    }
+    return null;
   }
 
-  /// Helper: Get current page (1 if not loaded)
   int get currentPage {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          currentPage,
-    ) ?? 1;
+    if (this is AdminProductLoaded) {
+      return (this as AdminProductLoaded).currentPage;
+    }
+    return 1;
   }
 
-  /// Helper: Get total count (0 if not loaded)
   int get totalCount {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          totalCount,
-    ) ?? 0;
+    if (this is AdminProductLoaded) {
+      return (this as AdminProductLoaded).totalCount;
+    }
+    return 0;
   }
 
-  /// Helper: Get hasMore flag (false if not loaded)
   bool get hasMore {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          hasMore,
-    ) ?? false;
+    if (this is AdminProductLoaded) {
+      return (this as AdminProductLoaded).hasMore;
+    }
+    return false;
   }
 
-  /// Helper: Get isLoadingMore flag (false if not loaded)
   bool get isLoadingMore {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          isLoadingMore,
-    ) ?? false;
+    if (this is AdminProductLoaded) {
+      return (this as AdminProductLoaded).isLoadingMore;
+    }
+    return false;
   }
 
-  /// Helper: Get isRefreshing flag (false if not loaded)
   bool get isRefreshing {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          isRefreshing,
-    ) ?? false;
+    if (this is AdminProductLoaded) {
+      return (this as AdminProductLoaded).isRefreshing;
+    }
+    return false;
   }
 
-  /// Helper: Get selected brand (null if not loaded)
   String? get selectedBrand {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          selectedBrand,
-    );
+    if (this is AdminProductLoaded) {
+      return (this as AdminProductLoaded).selectedBrand;
+    }
+    return null;
   }
 
-  /// Helper: Get stock status (all if not loaded)
   StockStatus get stockStatus {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          stockStatus,
-    ) ?? StockStatus.all;
+    if (this is AdminProductLoaded) {
+      return (this as AdminProductLoaded).stockStatus;
+    }
+    return StockStatus.all;
   }
 
-  /// Helper: Check if any filter is active
   bool get hasActiveFilters {
-    return whenOrNull(
-      loaded: (
-        products,
-        filter,
-        selectedBrand,
-        stockStatus,
-        currentPage,
-        totalPages,
-        hasMore,
-        totalCount,
-        isLoadingMore,
-        isRefreshing,
-      ) =>
-          selectedBrand != null || stockStatus != StockStatus.all,
-    ) ?? false;
+    if (this is AdminProductLoaded) {
+      final state = this as AdminProductLoaded;
+      return state.selectedBrand != null ||
+          state.stockStatus != StockStatus.all;
+    }
+    return false;
   }
 
-  /// Helper: Check if detail is loading
   bool get isDetailLoading => this is AdminProductDetailLoading;
-
-  /// Helper: Check if detail is loaded
   bool get isDetailLoaded => this is AdminProductDetailLoaded;
 
-  /// Helper: Get detail product (null if not loaded)
   Product? get detailProduct {
-    return whenOrNull(detailLoaded: (product) => product);
+    if (this is AdminProductDetailLoaded) {
+      return (this as AdminProductDetailLoaded).product;
+    }
+    return null;
   }
 
-  /// Helper: Check if creating product
   bool get isCreating => this is AdminProductCreating;
-
-  /// Helper: Check if create success
   bool get isCreateSuccess => this is AdminProductCreateSuccess;
-
-  /// Helper: Check if create error
   bool get isCreateError => this is AdminProductCreateError;
 
-  /// Helper: Get created product (null if not create success)
   Product? get createdProduct {
-    return whenOrNull(createSuccess: (product) => product);
+    if (this is AdminProductCreateSuccess) {
+      return (this as AdminProductCreateSuccess).product;
+    }
+    return null;
   }
 
-  /// Helper: Get create error message (null if not create error)
   String? get createErrorMessage {
-    return whenOrNull(createError: (message) => message);
+    if (this is AdminProductCreateError) {
+      return (this as AdminProductCreateError).message;
+    }
+    return null;
   }
 
-  /// Helper: Check if restoring
   bool get isRestoring => this is AdminProductRestoring;
-
-  /// Helper: Check if restored
   bool get isRestored => this is AdminProductRestored;
 }

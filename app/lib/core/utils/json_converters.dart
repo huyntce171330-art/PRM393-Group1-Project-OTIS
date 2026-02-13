@@ -35,37 +35,49 @@ String userStatusToJson(UserStatus object) {
 
 /// Parse OrderStatus from String (for @JsonKey annotations).
 OrderStatus orderStatusFromJson(dynamic json) {
-  if (json == null) return OrderStatus.pending;
+  if (json == null) return OrderStatus.pendingPayment;
   if (json is OrderStatus) return json;
   if (json is String) {
     final normalized = json.toLowerCase().trim();
     switch (normalized) {
       case 'pending':
-        return OrderStatus.pending;
+      case 'pending_payment':
+      case 'pendingpayment':
+        return OrderStatus.pendingPayment;
+      case 'paid':
+        return OrderStatus.paid;
+      case 'processing':
+        return OrderStatus.processing;
       case 'shipping':
         return OrderStatus.shipping;
       case 'delivered':
-        return OrderStatus.delivered;
+      case 'completed':
+        return OrderStatus.completed;
       case 'cancelled':
-        return OrderStatus.cancelled;
+      case 'canceled':
+        return OrderStatus.canceled;
       default:
-        return OrderStatus.pending;
+        return OrderStatus.pendingPayment;
     }
   }
-  return OrderStatus.pending;
+  return OrderStatus.pendingPayment;
 }
 
 /// Convert OrderStatus to String (for @JsonKey annotations).
 String orderStatusToJson(OrderStatus object) {
   switch (object) {
-    case OrderStatus.pending:
-      return 'pending';
+    case OrderStatus.pendingPayment:
+      return 'pending_payment';
+    case OrderStatus.paid:
+      return 'paid';
+    case OrderStatus.processing:
+      return 'processing';
     case OrderStatus.shipping:
       return 'shipping';
-    case OrderStatus.delivered:
-      return 'delivered';
-    case OrderStatus.cancelled:
-      return 'cancelled';
+    case OrderStatus.completed:
+      return 'completed';
+    case OrderStatus.canceled:
+      return 'canceled';
   }
 }
 
