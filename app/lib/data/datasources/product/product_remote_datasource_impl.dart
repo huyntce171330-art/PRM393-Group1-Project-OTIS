@@ -368,11 +368,7 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
     // Check if tire_spec with same specs exists
     final existingTireSpec = await database.rawQuery(
       'SELECT tire_spec_id FROM tire_specs WHERE width = ? AND aspect_ratio = ? AND rim_diameter = ?',
-      [
-        tireSpec?.width ?? 0,
-        tireSpec?.aspectRatio ?? 0,
-        tireSpec?.rimDiameter ?? 0,
-      ],
+      [tireSpec.width, tireSpec.aspectRatio, tireSpec.rimDiameter],
     );
 
     if (existingTireSpec.isNotEmpty) {
@@ -382,18 +378,14 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
       // Insert new tire_spec
       final tireSpecResult = await database.rawInsert(
         'INSERT INTO tire_specs (width, aspect_ratio, rim_diameter) VALUES (?, ?, ?)',
-        [
-          tireSpec?.width ?? 0,
-          tireSpec?.aspectRatio ?? 0,
-          tireSpec?.rimDiameter ?? 0,
-        ],
+        [tireSpec.width, tireSpec.aspectRatio, tireSpec.rimDiameter],
       );
       tireSpecId = tireSpecResult;
     }
 
     // 2. Get brand_id and make_id from the model (they should already be IDs)
-    final brandId = int.tryParse(product.brand?.id ?? '') ?? 0;
-    final makeId = int.tryParse(product.vehicleMake?.id ?? '') ?? 0;
+    final brandId = int.tryParse(product.brand.id) ?? 0;
+    final makeId = int.tryParse(product.vehicleMake.id) ?? 0;
 
     // 3. Insert the product
     int newProductId;

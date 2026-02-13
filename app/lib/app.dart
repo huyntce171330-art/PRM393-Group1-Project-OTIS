@@ -8,7 +8,6 @@ import 'package:frontend_otis/presentation/screens/admin/admin_create_product_sc
 import 'package:frontend_otis/presentation/screens/admin/admin_product_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_trash_screen.dart';
-import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';

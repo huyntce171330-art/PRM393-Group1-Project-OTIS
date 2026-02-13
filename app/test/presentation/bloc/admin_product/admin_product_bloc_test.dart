@@ -1139,24 +1139,6 @@ void main() {
     blocTest(
       'should handle product with minimal required fields',
       setUp: () {
-        final minimalProduct = ProductModel(
-          id: '',
-          sku: 'MIN-001',
-          name: 'Minimal',
-          imageUrl: '',
-          brand: BrandModel(id: '', name: '', logoUrl: ''),
-          vehicleMake: VehicleMakeModel(id: '', name: '', logoUrl: ''),
-          tireSpec: TireSpecModel(
-            id: '',
-            width: 0,
-            aspectRatio: 0,
-            rimDiameter: 0,
-          ),
-          price: 0.0,
-          stockQuantity: 0,
-          isActive: false,
-          createdAt: DateTime.now(),
-        );
         final minimalCreated = Product(
           id: '101',
           sku: 'MIN-001',
@@ -1209,24 +1191,6 @@ void main() {
     blocTest(
       'should handle product with zero price',
       setUp: () {
-        final zeroPriceProduct = ProductModel(
-          id: '',
-          sku: 'ZERO-001',
-          name: 'Free Product',
-          imageUrl: '',
-          brand: BrandModel(id: '1', name: 'Brand', logoUrl: ''),
-          vehicleMake: VehicleMakeModel(id: '1', name: 'Make', logoUrl: ''),
-          tireSpec: TireSpecModel(
-            id: '',
-            width: 205,
-            aspectRatio: 55,
-            rimDiameter: 16,
-          ),
-          price: 0.0,
-          stockQuantity: 10,
-          isActive: true,
-          createdAt: DateTime.now(),
-        );
         when(() => mockCreateProductUsecase.call(any())).thenAnswer(
           (_) async =>
               Left(ServerFailure(message: 'Price must be greater than 0')),

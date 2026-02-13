@@ -242,25 +242,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     return null;
   }
 
-  String _formatPrice(String value) {
-    // Remove existing formatting
-    final cleanValue = value.replaceAll(RegExp(r'[^0-9]'), '');
-    if (cleanValue.isEmpty) return '';
-
-    final number = int.tryParse(cleanValue) ?? 0;
-    final formatted = number
-        .toStringAsFixed(0)
-        .replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]}.',
-        );
-    return '$formatted đ';
-  }
-
   void _onPriceChanged(String value) {
-    final cursorPos = _priceController.selection.base.offset;
-    final oldLength = _priceController.text.length;
-
     // Remove all non-digit characters
     final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
     if (digits.isEmpty) {
@@ -365,16 +347,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     // This is a simple implementation - can be enhanced
   }
 
-  void _showLoadingDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      ),
-    );
-  }
-
   void _showSuccessSnackBar() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -455,7 +427,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
           // Dismiss loading
           if (_isSubmitting) {
             setState(() => _isSubmitting = false);
-            Navigator.of(context).pop(); // Dismiss loading dialog
           }
           // Show success message
           _showSuccessSnackBar();
@@ -465,7 +436,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
           // Dismiss loading
           if (_isSubmitting) {
             setState(() => _isSubmitting = false);
-            Navigator.of(context).pop(); // Dismiss loading dialog
           }
           // Show error message
           _showErrorSnackBar(state.message);
