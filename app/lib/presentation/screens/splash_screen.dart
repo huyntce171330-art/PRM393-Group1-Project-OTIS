@@ -40,14 +40,14 @@ class _SplashScreenState extends State<SplashScreen>
       curve: const Interval(0.0, 0.5),
     );
 
-    _controller.forward();
-
     // Navigate after animation completes
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _navigateToLogin();
       }
     });
+
+    _controller.forward();
   }
 
   void _navigateToLogin() {

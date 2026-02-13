@@ -297,17 +297,5 @@ Future<void> init() async {
     ),
   );
 
-  // Admin Product BLoC
-  sl.registerLazySingleton<AdminProductBloc>(
-    () => AdminProductBloc(
-      getAdminProductsUsecase: sl(),
-      getProductDetailUsecase: sl(),
-      deleteProductUsecase: sl(),
-      createProductUsecase: sl(),
-      restoreProductUsecase: sl(),
-      permanentDeleteProductUsecase: sl(),
-    ),
-  );
-
   print("All dependencies registered successfully");
 }

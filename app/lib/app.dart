@@ -47,7 +47,7 @@ import 'package:frontend_otis/presentation/screens/notification/notification_lis
 /// - Route guards
 final GoRouter router = GoRouter(
   // Thay đổi dòng dưới để test: '/' = customer, '/admin/products' = admin
-  initialLocation: '/admin/products',
+  initialLocation: '/',
   routes: [
     GoRoute(
       path: '/debug',
