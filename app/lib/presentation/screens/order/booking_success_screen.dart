@@ -1,0 +1,553 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:frontend_otis/core/constants/app_colors.dart';
+import 'package:frontend_otis/core/enums/order_enums.dart';
+import 'package:frontend_otis/core/injections/injection_container.dart';
+import 'package:frontend_otis/domain/entities/order.dart';
+import 'package:frontend_otis/domain/entities/order_item.dart';
+import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/domain/entities/user.dart';
+import 'package:frontend_otis/domain/repositories/product_repository.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
+
+class BookingSuccessScreen extends StatelessWidget {
+  final Order order;
+
+  const BookingSuccessScreen({super.key, required this.order});
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]}, ${date.year}';
+  }
+
+  String _formatTime(DateTime date) {
+    final hour = date.hour > 12
+        ? date.hour - 12
+        : (date.hour == 0 ? 12 : date.hour);
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        User? currentUser;
+        if (authState is Authenticated) {
+          currentUser = authState.user;
+        }
+
+        return Scaffold(
+          backgroundColor: Colors.grey[50],
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildBranding(),
+                    const SizedBox(height: 24),
+                    _buildTicketCard(context, currentUser),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBranding() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.tire_repair, color: AppColors.primary, size: 20),
+        const SizedBox(width: 8),
+        Text(
+          'OTIS TIRE SHOP',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTicketCard(BuildContext context, User? user) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 380),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildTopSection(),
+          _buildCutLine(),
+          _buildBottomSection(context, user),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: const Icon(Icons.check, color: AppColors.primary, size: 28),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Order Confirmed',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Order ID: ${order.code}',
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: Container(
+              width: 192,
+              height: 192,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: QrImageView(
+                data: order.code,
+                version: QrVersions.auto,
+                backgroundColor: Colors.white,
+                padding: const EdgeInsets.all(8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'SHOW THIS AT PICKUP',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCutLine() {
+    return SizedBox(
+      height: 24,
+      child: Stack(
+        children: [
+          Positioned(
+            left: -12,
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: CustomPaint(
+                size: const Size(double.infinity, 2),
+                painter: DashedLinePainter(),
+              ),
+            ),
+          ),
+          Positioned(
+            right: -12,
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomSection(BuildContext context, User? user) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      child: Column(
+        children: [
+          _buildDetailsGrid(user),
+          const SizedBox(height: 32),
+          _buildActionButtons(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailsGrid(User? user) {
+    final paymentMethod = order.status == OrderStatus.processing
+        ? "Cash on Delivery (COD)"
+        : "Bank Transfer";
+
+    final customerName = user?.fullName.isNotEmpty == true
+        ? user!.fullName
+        : "Guest";
+    final address = order.shippingAddress.isNotEmpty
+        ? order.shippingAddress
+        : (user?.address ?? "Unknown Address");
+    final phone = user?.phone.isNotEmpty == true ? user!.phone : "N/A";
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem('Date', _formatDate(order.createdAt)),
+            ),
+            Expanded(
+              child: _buildDetailItem(
+                'Time',
+                _formatTime(order.createdAt),
+                alignment: TextAlign.right,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _buildDetailItem('Payment Method', paymentMethod, icon: Icons.payment),
+        const SizedBox(height: 20),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[200]!),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'BRANCH',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: Colors.grey[500],
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'OTIS Shop - D1',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'District 1, HCMC',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        const SectionHeaderTitle(title: 'PURCHASED ITEMS'),
+        const SizedBox(height: 12),
+        ...order.items.map((item) => _BookingProductSummaryItem(item: item)),
+        const Divider(height: 32),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.person, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'CUSTOMER INFORMATION',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildDetailItem('Full Name', customerName),
+              const SizedBox(height: 12),
+              _buildDetailItem('Phone Number', phone, icon: Icons.phone),
+              const SizedBox(height: 12),
+              _buildDetailItem(
+                'Delivery Address',
+                address,
+                icon: Icons.location_on,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem('Status', order.status.displayName),
+            ),
+            Expanded(
+              child: _buildDetailItem(
+                'Total Amount',
+                order.formattedTotalAmount,
+                alignment: TextAlign.right,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailItem(
+    String label,
+    String value, {
+    IconData? icon,
+    TextAlign? alignment,
+  }) {
+    return Column(
+      crossAxisAlignment: alignment == TextAlign.right
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.2,
+            color: Colors.grey[500],
+          ),
+        ),
+        const SizedBox(height: 4),
+        if (icon != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: AppColors.primary),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          )
+        else
+          Text(
+            value,
+            textAlign: alignment,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              context.go('/orders');
+            },
+            icon: const Icon(Icons.receipt_long),
+            label: const Text('Back to My Orders'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF4F0F0),
+              foregroundColor: Colors.black87,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: () {
+            context.go('/');
+          },
+          child: const Text(
+            'Back to Home',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class SectionHeaderTitle extends StatelessWidget {
+  final String title;
+  const SectionHeaderTitle({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+          color: Colors.grey[500],
+        ),
+      ),
+    );
+  }
+}
+
+class DashedLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.grey[300]!
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    const dashWidth = 8;
+    const dashSpace = 8;
+    double startX = 0;
+
+    while (startX < size.width) {
+      canvas.drawLine(Offset(startX, 0), Offset(startX + dashWidth, 0), paint);
+      startX += dashWidth + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _BookingProductSummaryItem extends StatefulWidget {
+  final OrderItem item;
+  const _BookingProductSummaryItem({required this.item});
+
+  @override
+  State<_BookingProductSummaryItem> createState() =>
+      _BookingProductSummaryItemState();
+}
+
+class _BookingProductSummaryItemState
+    extends State<_BookingProductSummaryItem> {
+  Product? _product;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProduct();
+  }
+
+  Future<void> _loadProduct() async {
+    final result = await sl<ProductRepository>().getProductDetail(
+      productId: widget.item.productId,
+    );
+    result.fold((failure) => null, (product) {
+      if (mounted) setState(() => _product = product);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              _product?.name ?? 'Product #${widget.item.productId}',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+          ),
+          Text(
+            'x${widget.item.quantity}',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+}
