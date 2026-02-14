@@ -5,6 +5,7 @@ import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_create_product_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_edit_product_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_trash_screen.dart';
@@ -47,7 +48,7 @@ import 'package:frontend_otis/presentation/screens/notification/notification_lis
 /// - Route guards
 final GoRouter router = GoRouter(
   // Thay đổi dòng dưới để test: '/' = customer, '/admin/products' = admin
-  initialLocation: '/',
+  initialLocation: '/customer/products',
   routes: [
     GoRoute(
       path: '/debug',
@@ -122,11 +123,7 @@ final GoRouter router = GoRouter(
           name: 'admin-product-edit',
           builder: (context, state) {
             final productId = state.pathParameters['id']!;
-            return Scaffold(
-              body: Center(
-                child: Text('Edit Product: $productId - To be implemented'),
-              ),
-            );
+            return AdminEditProductScreen(productId: productId);
           },
         ),
       ],

@@ -51,9 +51,9 @@ abstract class ProductRemoteDatasource {
   /// [product] - Updated product data
   ///
   /// Returns updated [ProductModel].
-  Future<ProductListModel> updateProduct({
+  Future<ProductModel> updateProduct({
     required String productId,
-    required ProductListModel product,
+    required ProductModel product,
   });
 
   /// Deletes a product by its ID.

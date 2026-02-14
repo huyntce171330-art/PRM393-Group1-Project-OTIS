@@ -145,6 +145,28 @@ class AdminProductCreateError extends AdminProductState {
   List<Object?> get props => [message];
 }
 
+class AdminProductUpdating extends AdminProductState {
+  const AdminProductUpdating();
+}
+
+class AdminProductUpdateSuccess extends AdminProductState {
+  final Product product;
+
+  const AdminProductUpdateSuccess({required this.product});
+
+  @override
+  List<Object?> get props => [product];
+}
+
+class AdminProductUpdateError extends AdminProductState {
+  final String message;
+
+  const AdminProductUpdateError({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}
+
 class AdminProductRestoring extends AdminProductState {
   final String productId;
 
@@ -274,6 +296,24 @@ extension AdminProductStateX on AdminProductState {
   String? get createErrorMessage {
     if (this is AdminProductCreateError) {
       return (this as AdminProductCreateError).message;
+    }
+    return null;
+  }
+
+  bool get isUpdating => this is AdminProductUpdating;
+  bool get isUpdateSuccess => this is AdminProductUpdateSuccess;
+  bool get isUpdateError => this is AdminProductUpdateError;
+
+  Product? get updatedProduct {
+    if (this is AdminProductUpdateSuccess) {
+      return (this as AdminProductUpdateSuccess).product;
+    }
+    return null;
+  }
+
+  String? get updateErrorMessage {
+    if (this is AdminProductUpdateError) {
+      return (this as AdminProductUpdateError).message;
     }
     return null;
   }

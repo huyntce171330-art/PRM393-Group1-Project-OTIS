@@ -473,12 +473,122 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
   }
 
   @override
-  Future<ProductListModel> updateProduct({
+  Future<ProductModel> updateProduct({
     required String productId,
-    required ProductListModel product,
+    required ProductModel product,
   }) async {
-    // TODO: Implement update product logic if needed
-    throw UnimplementedError('updateProduct not yet implemented');
+    print('=== DEBUG DATASOURCE: updateProduct ===');
+    print('DEBUG: productId: $productId');
+    print('DEBUG: product.name: ${product.name}');
+
+    // 1. First, handle tire_spec - check if exists or insert new
+    int tireSpecId;
+    
+    // Get tire spec from the product
+    final tireSpec = product.tireSpec;
+
+    // Check if tire_spec with same specs exists
+    final existingTireSpec = await database.rawQuery(
+      'SELECT tire_spec_id FROM tire_specs WHERE width = ? AND aspect_ratio = ? AND rim_diameter = ?',
+      [tireSpec.width, tireSpec.aspectRatio, tireSpec.rimDiameter],
+    );
+
+    if (existingTireSpec.isNotEmpty) {
+      // Use existing tire_spec
+      tireSpecId = existingTireSpec.first['tire_spec_id'] as int;
+    } else {
+      // Insert new tire_spec
+      final tireSpecResult = await database.rawInsert(
+        'INSERT INTO tire_specs (width, aspect_ratio, rim_diameter) VALUES (?, ?, ?)',
+        [tireSpec.width, tireSpec.aspectRatio, tireSpec.rimDiameter],
+      );
+      tireSpecId = tireSpecResult;
+    }
+
+    // 2. Get brand_id and make_id from the model (they should already be IDs)
+    final brandId = int.tryParse(product.brand.id) ?? 0;
+    final makeId = int.tryParse(product.vehicleMake.id) ?? 0;
+
+    // 3. Update the product
+    try {
+      await database.rawUpdate(
+        '''
+        UPDATE products 
+        SET name = ?, 
+            image_url = ?, 
+            brand_id = ?, 
+            make_id = ?, 
+            tire_spec_id = ?, 
+            price = ?, 
+            stock_quantity = ?, 
+            is_active = ?
+        WHERE product_id = ?
+        ''',
+        [
+          product.name,
+          product.imageUrl,
+          brandId > 0 ? brandId : null,
+          makeId > 0 ? makeId : null,
+          tireSpecId,
+          product.price,
+          product.stockQuantity,
+          product.isActive ? 1 : 0,
+          productId,
+        ],
+      );
+    } on DatabaseException catch (e) {
+      // Handle database errors
+      throw CacheFailure(message: 'Lỗi cơ sở dữ liệu: $e');
+    }
+
+    // 4. Fetch and return the updated product
+    final result = await database.rawQuery(
+      '''
+      SELECT
+        p.product_id as id,
+        p.sku,
+        p.name,
+        p.image_url,
+        p.price,
+        p.stock_quantity,
+        p.is_active,
+        p.created_at,
+
+        -- Brand Info
+        b.brand_id as brand_id,
+        b.name as brand_name,
+        b.logo_url as brand_logo_url,
+
+        -- Vehicle Make Info
+        vm.make_id as vehicle_make_id,
+        vm.name as vehicle_make_name,
+        vm.logo_url as vehicle_make_logo_url,
+
+        -- Tire Spec Info
+        ts.tire_spec_id as tire_spec_id,
+        ts.width,
+        ts.aspect_ratio,
+        ts.rim_diameter
+
+      FROM products p
+      LEFT JOIN brands b ON p.brand_id = b.brand_id
+      LEFT JOIN vehicle_makes vm ON p.make_id = vm.make_id
+      LEFT JOIN tire_specs ts ON p.tire_spec_id = ts.tire_spec_id
+      WHERE p.product_id = ?
+      LIMIT 1
+    ''',
+      [productId],
+    );
+
+    if (result.isEmpty) {
+      throw CacheException(message: 'Failed to fetch updated product');
+    }
+
+    final updatedProduct = ProductModel.fromJson(
+      _transformRowToJson(result.first),
+    );
+
+    return updatedProduct;
   }
 
   @override

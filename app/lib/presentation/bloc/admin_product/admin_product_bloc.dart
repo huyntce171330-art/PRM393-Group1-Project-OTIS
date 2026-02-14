@@ -24,6 +24,7 @@ import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/permanent_delete_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/restore_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/update_product_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_event.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_state.dart';
 
@@ -69,6 +70,9 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
   /// Use case for permanently deleting a product
   final PermanentDeleteProductUsecase permanentDeleteProductUsecase;
 
+  /// Use case for updating a product
+  final UpdateProductUsecase updateProductUsecase;
+
   /// Current filter state for pagination and filtering
   AdminProductFilter _currentFilter = const AdminProductFilter();
 
@@ -97,6 +101,7 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
     required this.createProductUsecase,
     required this.restoreProductUsecase,
     required this.permanentDeleteProductUsecase,
+    required this.updateProductUsecase,
   }) : super(const AdminProductInitial()) {
     // Register event handlers
     _registerEventHandlers();
@@ -622,6 +627,35 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
       );
     });
 
+    // Handle UpdateProductEvent - Update an existing product
+    on<UpdateProductEvent>((event, emit) async {
+      print('=== DEBUG BLOC: UpdateProductEvent ===');
+      print('DEBUG: productId: ${event.productId}');
+      print('DEBUG: product.name: ${event.product.name}');
+
+      // Emit updating state
+      emit(const AdminProductUpdating());
+
+      // Use updateProductUsecase to update the product
+      final result = await updateProductUsecase(
+        UpdateProductParams(
+          productId: event.productId,
+          product: event.product,
+        ),
+      );
+
+      result.fold(
+        (failure) {
+          print('DEBUG: Update failed: ${failure.message}');
+          emit(AdminProductUpdateError(message: failure.message));
+        },
+        (product) {
+          print('DEBUG: Product updated successfully: ${product.id}');
+          emit(AdminProductUpdateSuccess(product: product));
+        },
+      );
+    });
+
     // Handle GetTrashProductsEvent - Get all deleted products
     on<GetTrashProductsEvent>((event, emit) async {
       print('=== DEBUG BLOC: GetTrashProductsEvent ===');
@@ -839,6 +873,11 @@ class AdminProductBloc extends Bloc<AdminProductEvent, AdminProductState> {
   /// Create a new product
   void createProduct(ProductModel product) {
     add(CreateProductEvent(product: product));
+  }
+
+  /// Update an existing product
+  void updateProduct(String productId, ProductModel product) {
+    add(UpdateProductEvent(productId: productId, product: product));
   }
 
   /// Load trash products (deleted products)

@@ -19,6 +19,7 @@ import 'package:frontend_otis/data/datasources/product/product_remote_datasource
 import 'package:frontend_otis/data/repositories/product_repository_impl.dart';
 import 'package:frontend_otis/domain/repositories/product_repository.dart';
 import 'package:frontend_otis/domain/usecases/product/create_product_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/update_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_brands_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_products_usecase.dart';
@@ -169,6 +170,11 @@ Future<void> init() async {
     () => CreateProductUsecase(productRepository: sl()),
   );
 
+  // Update Product Use Case
+  sl.registerLazySingleton<UpdateProductUsecase>(
+    () => UpdateProductUsecase(productRepository: sl()),
+  );
+
   // Get Brands Use Case
   sl.registerLazySingleton<GetBrandsUsecase>(
     () => GetBrandsUsecase(productRepository: sl()),
@@ -294,6 +300,7 @@ Future<void> init() async {
       createProductUsecase: sl(),
       restoreProductUsecase: sl(),
       permanentDeleteProductUsecase: sl(),
+      updateProductUsecase: sl(),
     ),
   );
 

@@ -115,6 +115,17 @@ abstract class ProductRepository {
     required ProductModel product,
   });
 
+  /// Updates an existing product.
+  ///
+  /// [productId] - The unique identifier of the product to update
+  /// [product] - The product data with updated values
+  ///
+  /// Returns [Either<Failure, Product>] - Updated product domain entity or failure
+  Future<Either<Failure, Product>> updateProduct({
+    required String productId,
+    required ProductModel product,
+  });
+
   /// Retrieves a list of all brands.
   ///
   /// Returns [Either<Failure, List<BrandModel>>] - List of brands or failure

@@ -95,6 +95,20 @@ class CreateProductEvent extends AdminProductEvent {
   List<Object?> get props => [product];
 }
 
+/// Event to update an existing product
+class UpdateProductEvent extends AdminProductEvent {
+  final String productId;
+  final ProductModel product;
+
+  const UpdateProductEvent({
+    required this.productId,
+    required this.product,
+  });
+
+  @override
+  List<Object?> get props => [productId, product];
+}
+
 /// Event to get trash products (deleted/inactive products)
 class GetTrashProductsEvent extends AdminProductEvent {
   const GetTrashProductsEvent();

@@ -347,6 +347,63 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<Either<Failure, Product>> updateProduct({
+    required String productId,
+    required ProductModel product,
+  }) async {
+    print('=== DEBUG REPO: updateProduct ===');
+    print('DEBUG: productId: $productId');
+    print('DEBUG: product.name: ${product.name}');
+
+    // Check network connectivity
+    if (!(await networkInfo.isConnected)) {
+      return Left(NetworkFailure());
+    }
+
+    try {
+      // Update product via data source
+      final productModel = await productRemoteDatasource.updateProduct(
+        productId: productId,
+        product: product,
+      );
+
+      final updatedProduct = Product(
+        id: productModel.id,
+        sku: productModel.sku,
+        name: productModel.name,
+        imageUrl: productModel.imageUrl,
+        price: productModel.price,
+        stockQuantity: productModel.stockQuantity,
+        brand: productModel.brand.toDomain(),
+        vehicleMake: productModel.vehicleMake.toDomain(),
+        tireSpec: productModel.tireSpec.toDomain(),
+        isActive: productModel.isActive,
+        createdAt: productModel.createdAt,
+      );
+
+      print(
+        'DEBUG: Product updated successfully with id: ${updatedProduct.id}',
+      );
+      return Right(updatedProduct);
+    } on ValidationFailure {
+      // Re-throw ValidationFailure to let the BLoC handle it specifically
+      rethrow;
+    } on ServerException {
+      return Left(ServerFailure());
+    } on CacheException {
+      return Left(CacheFailure());
+    } catch (e) {
+      // Catch any other exception or error
+      if (e is Failure) {
+        // Re-throw Failure types that should be handled by the caller
+        rethrow;
+      }
+      print('DEBUG: updateProduct exception: $e');
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<BrandModel>>> getBrands() async {
     print('=== DEBUG REPO: getBrands ===');
 

@@ -379,7 +379,8 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
               _buildSpecItem(
                 icon: Icons.verified,
                 label: 'Brand',
-                value: product.brand?.name ?? 'Unknown',
+                value: product.brand?.name ??
+                 'Unknown',
               ),
               _buildSpecItem(
                 icon: Icons.straighten,
