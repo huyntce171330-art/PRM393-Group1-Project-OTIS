@@ -24,6 +24,7 @@ import 'package:frontend_otis/domain/usecases/product/get_brands_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_products_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_vehicle_makes_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/create_vehicle_make_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/search_products_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/delete_product_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_admin_products_usecase.dart';
@@ -183,6 +184,11 @@ Future<void> init() async {
   // Get Vehicle Makes Use Case
   sl.registerLazySingleton<GetVehicleMakesUsecase>(
     () => GetVehicleMakesUsecase(productRepository: sl()),
+  );
+
+  // Create Vehicle Make Use Case
+  sl.registerLazySingleton<CreateVehicleMakeUsecase>(
+    () => CreateVehicleMakeUsecase(productRepository: sl()),
   );
 
   // Restore Product Use Case

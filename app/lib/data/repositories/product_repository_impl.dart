@@ -5,6 +5,7 @@ import 'package:frontend_otis/core/network/network_info.dart';
 import 'package:frontend_otis/data/datasources/product/product_remote_datasource.dart';
 import 'package:frontend_otis/data/models/brand_model.dart';
 import 'package:frontend_otis/data/models/product_model.dart';
+import 'package:frontend_otis/data/models/tire_spec_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
@@ -445,6 +446,58 @@ class ProductRepositoryImpl implements ProductRepository {
       return Left(CacheFailure());
     } on Exception catch (e) {
       print('DEBUG: getVehicleMakes exception: $e');
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VehicleMakeModel>> createVehicleMake({
+    required String name,
+    String? logoUrl,
+  }) async {
+    print('=== DEBUG REPO: createVehicleMake ===');
+
+    // Check network connectivity
+    if (!(await networkInfo.isConnected)) {
+      return Left(NetworkFailure());
+    }
+
+    try {
+      final vehicleMake = await productRemoteDatasource.createVehicleMake(
+        name: name,
+        logoUrl: logoUrl,
+      );
+      print('DEBUG: Created vehicle make: ${vehicleMake.name} with id: ${vehicleMake.id}');
+      return Right(vehicleMake);
+    } on ServerException {
+      return Left(ServerFailure());
+    } on CacheException {
+      return Left(CacheFailure());
+    } on Exception catch (e) {
+      print('DEBUG: createVehicleMake exception: $e');
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<TireSpecModel>>> getTireSpecs() async {
+    print('=== DEBUG REPO: getTireSpecs ===');
+
+    // Check network connectivity
+    if (!(await networkInfo.isConnected)) {
+      return Left(NetworkFailure());
+    }
+
+    try {
+      final tireSpecs = await productRemoteDatasource.getTireSpecs();
+      print('DEBUG: Found ${tireSpecs.length} tire specs');
+      return Right(tireSpecs);
+    } on ServerException {
+      return Left(ServerFailure());
+    } on CacheException {
+      return Left(CacheFailure());
+    } on Exception catch (e) {
+      print('DEBUG: getTireSpecs exception: $e');
       return Left(ServerFailure(message: e.toString()));
     }
   }

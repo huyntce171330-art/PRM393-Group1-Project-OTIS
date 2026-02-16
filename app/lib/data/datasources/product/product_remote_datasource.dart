@@ -11,6 +11,7 @@
 import 'package:frontend_otis/data/models/brand_model.dart';
 import 'package:frontend_otis/data/models/product_list_model.dart';
 import 'package:frontend_otis/data/models/product_model.dart';
+import 'package:frontend_otis/data/models/tire_spec_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
@@ -103,4 +104,21 @@ abstract class ProductRemoteDatasource {
   ///
   /// Returns list of [VehicleMakeModel].
   Future<List<VehicleMakeModel>> getVehicleMakes();
+
+  /// Creates a new vehicle make.
+  ///
+  /// [name] - The name of the vehicle make
+  /// [logoUrl] - Optional logo URL
+  ///
+  /// Returns created [VehicleMakeModel].
+  Future<VehicleMakeModel> createVehicleMake({
+    required String name,
+    String? logoUrl,
+  });
+
+  /// Retrieves a list of all distinct tire specifications for filter dropdowns.
+  /// Returns distinct width, aspect_ratio, rim_diameter combinations.
+  ///
+  /// Returns list of [TireSpecModel].
+  Future<List<TireSpecModel>> getTireSpecs();
 }

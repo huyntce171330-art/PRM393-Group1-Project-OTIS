@@ -6,6 +6,7 @@
 // - Services categories grid
 // - Featured products horizontal scroll
 // - Bottom navigation bar
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,6 +25,7 @@ import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/core/utils/ui_utils.dart';
 import 'package:frontend_otis/presentation/widgets/nav_bar.dart';
+import 'package:frontend_otis/presentation/widgets/filter/smart_filter_sheet.dart';
 
 /// Home screen - Main landing page.
 class HomeScreen extends StatefulWidget {
@@ -88,6 +90,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onSearchChanged() {
     _productBloc.add(SearchProductsEvent(query: _searchController.text));
+  }
+
+  Future<void> _openSmartFilter(BuildContext context) async {
+    final filter = await SmartFilterSheet.show(context);
+    if (filter != null && mounted) {
+      // Navigate to product list with the filter
+      context.push('/products', extra: filter).then((_) {
+        if (mounted) {
+          _productBloc.add(const RestoreProductListEvent());
+        }
+      });
+    }
   }
 
   void _navigateToProductList() {
@@ -236,10 +250,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.grey[400],
                     size: 20,
                   ),
-                  suffixIcon: Icon(
-                    Icons.tune,
-                    color: Colors.grey[400],
-                    size: 20,
+                  suffixIcon: GestureDetector(
+                    onTap: () => _openSmartFilter(context),
+                    child: Icon(Icons.tune, color: Colors.grey[400], size: 20),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(9999),

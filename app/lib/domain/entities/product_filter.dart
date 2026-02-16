@@ -42,6 +42,12 @@ class ProductFilter with EquatableMixin {
   final double? minPrice;
   final double? maxPrice;
 
+  // Tire specification filter parameters
+  final int? width;
+  final int? aspectRatio;
+  final int? rimDiameter;
+  final String? tireSpecId;
+
   // Sorting parameters
   final String? sortBy; // 'price', 'name', 'createdAt', 'stockQuantity'
   final bool sortAscending; // true = ASC, false = DESC
@@ -55,6 +61,10 @@ class ProductFilter with EquatableMixin {
     this.vehicleMakeId,
     this.minPrice,
     this.maxPrice,
+    this.width,
+    this.aspectRatio,
+    this.rimDiameter,
+    this.tireSpecId,
     this.sortBy,
     this.sortAscending = true,
   }) : assert(page >= 1, 'Page must be >= 1'),
@@ -74,6 +84,10 @@ class ProductFilter with EquatableMixin {
     vehicleMakeId,
     minPrice,
     maxPrice,
+    width,
+    aspectRatio,
+    rimDiameter,
+    tireSpecId,
     sortBy,
     sortAscending,
   ];
@@ -86,6 +100,10 @@ class ProductFilter with EquatableMixin {
         vehicleMakeId != null ||
         minPrice != null ||
         maxPrice != null ||
+        width != null ||
+        aspectRatio != null ||
+        rimDiameter != null ||
+        tireSpecId != null ||
         sortBy != null;
   }
 
@@ -116,6 +134,18 @@ class ProductFilter with EquatableMixin {
     if (maxPrice != null) {
       params['max_price'] = maxPrice;
     }
+    if (width != null) {
+      params['width'] = width;
+    }
+    if (aspectRatio != null) {
+      params['aspect_ratio'] = aspectRatio;
+    }
+    if (rimDiameter != null) {
+      params['rim_diameter'] = rimDiameter;
+    }
+    if (tireSpecId != null) {
+      params['tire_spec_id'] = tireSpecId;
+    }
     if (sortBy != null) {
       params['sort_by'] = sortBy;
       params['sort_order'] = sortAscending ? 'ASC' : 'DESC';
@@ -136,6 +166,10 @@ class ProductFilter with EquatableMixin {
     Object? vehicleMakeId = _unset,
     Object? minPrice = _unset,
     Object? maxPrice = _unset,
+    Object? width = _unset,
+    Object? aspectRatio = _unset,
+    Object? rimDiameter = _unset,
+    Object? tireSpecId = _unset,
     String? sortBy,
     bool? sortAscending,
   }) {
@@ -153,6 +187,10 @@ class ProductFilter with EquatableMixin {
           : vehicleMakeId as String?,
       minPrice: minPrice == _unset ? this.minPrice : minPrice as double?,
       maxPrice: maxPrice == _unset ? this.maxPrice : maxPrice as double?,
+      width: width == _unset ? this.width : width as int?,
+      aspectRatio: aspectRatio == _unset ? this.aspectRatio : aspectRatio as int?,
+      rimDiameter: rimDiameter == _unset ? this.rimDiameter : rimDiameter as int?,
+      tireSpecId: tireSpecId == _unset ? this.tireSpecId : tireSpecId as String?,
       sortBy: sortBy ?? this.sortBy,
       sortAscending: sortAscending ?? this.sortAscending,
     );
@@ -192,6 +230,10 @@ class ProductFilter with EquatableMixin {
         'vehicleMakeId: ${vehicleMakeId ?? 'null'}, '
         'minPrice: ${minPrice ?? 'null'}, '
         'maxPrice: ${maxPrice ?? 'null'}, '
+        'width: ${width ?? 'null'}, '
+        'aspectRatio: ${aspectRatio ?? 'null'}, '
+        'rimDiameter: ${rimDiameter ?? 'null'}, '
+        'tireSpecId: ${tireSpecId ?? 'null'}, '
         'sortBy: ${sortBy ?? 'null'}, '
         'sortAscending: $sortAscending'
         ')';

@@ -10,6 +10,8 @@
 // - Loading, empty, and error states
 //
 // Based on UI reference from admin_product_list_1/code.html
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +39,9 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+
+  // Debounce timer for search
+  Timer? _debounceTimer;
 
   // Brands loaded from database for filter chips
   List<BrandModel> _brands = [];
@@ -71,6 +76,7 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _scrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -93,7 +99,48 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
   }
 
   void _onSearchChanged() {
-    _adminProductBloc.searchProducts(_searchController.text);
+    final query = _searchController.text.trim();
+
+    // Cancel previous debounce timer
+    _debounceTimer?.cancel();
+
+    // Empty query - show all products
+    if (query.isEmpty) {
+      _adminProductBloc.searchProducts('');
+      return;
+    }
+
+    // Minimum 2 characters required for search
+    if (query.length < 2) {
+      // Don't call API, just return (hint will be shown by UI)
+      return;
+    }
+
+    // Sanitize input to prevent XSS/SQL injection
+    final sanitizedQuery = _sanitizeSearchInput(query);
+
+    // Debounce API call by 300ms
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _adminProductBloc.searchProducts(sanitizedQuery);
+    });
+  }
+
+  /// Sanitizes search input to prevent XSS and SQL injection attacks.
+  String _sanitizeSearchInput(String input) {
+    String result = input;
+
+    // Remove HTML tags
+    result = result.replaceAll(RegExp(r'<[^>]*>'), '');
+    // Remove HTML entities
+    result = result.replaceAll(RegExp(r'&[#a-zA-Z0-9]+;'), '');
+
+    // Remove special characters that could be used for injection
+    const specialChars = '<>&"\'\\;';
+    for (final char in specialChars.split('')) {
+      result = result.replaceAll(char, '');
+    }
+
+    return result.trim();
   }
 
   void _clearAndUnfocus() {

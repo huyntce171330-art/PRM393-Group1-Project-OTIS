@@ -97,7 +97,7 @@ class AdminProductFilter with EquatableMixin {
 
   /// Check if any admin-specific filter is active
   bool get hasAdminFilters {
-    return brandName != null || stockStatus != StockStatus.all;
+    return brandName != null || stockStatus != StockStatus.all || hasPriceFilter;
   }
 
   /// Check if brand filter is active
@@ -114,6 +114,15 @@ class AdminProductFilter with EquatableMixin {
 
   /// Get search query from base filter
   String? get searchQuery => baseFilter.searchQuery;
+
+  /// Get minimum price from base filter
+  double? get minPrice => baseFilter.minPrice;
+
+  /// Get maximum price from base filter
+  double? get maxPrice => baseFilter.maxPrice;
+
+  /// Check if price filter is active
+  bool get hasPriceFilter => minPrice != null || maxPrice != null;
 
   /// Create a copy with updated values.
   ///
@@ -152,7 +161,7 @@ class AdminProductFilter with EquatableMixin {
   /// Create a copy with cleared admin filters (preserve pagination/search).
   AdminProductFilter clearAdminFilters() {
     return AdminProductFilter(
-      baseFilter: baseFilter,
+      baseFilter: baseFilter.clearFilters(),
       brandName: null,
       stockStatus: StockStatus.all,
     );
@@ -166,6 +175,28 @@ class AdminProductFilter with EquatableMixin {
   /// Create a copy with cleared stock status filter.
   AdminProductFilter clearStockStatusFilter() {
     return copyWith(stockStatus: StockStatus.all);
+  }
+
+  /// Create a copy with cleared price filter.
+  AdminProductFilter clearPriceFilter() {
+    return AdminProductFilter(
+      baseFilter: ProductFilter(
+        page: baseFilter.page,
+        limit: baseFilter.limit,
+        searchQuery: baseFilter.searchQuery,
+        categoryId: baseFilter.categoryId,
+        brandId: baseFilter.brandId,
+        vehicleMakeId: baseFilter.vehicleMakeId,
+        width: baseFilter.width,
+        aspectRatio: baseFilter.aspectRatio,
+        rimDiameter: baseFilter.rimDiameter,
+        tireSpecId: baseFilter.tireSpecId,
+        sortBy: baseFilter.sortBy,
+        sortAscending: baseFilter.sortAscending,
+      ),
+      brandName: brandName,
+      stockStatus: stockStatus,
+    );
   }
 
   /// Convert to query parameters for API request.
@@ -194,4 +225,26 @@ class AdminProductFilter with EquatableMixin {
         'stockStatus: $stockStatus'
         ')';
   }
+}
+
+/// Validates price range values.
+///
+/// Returns null if valid, or an error message in Vietnamese if invalid.
+String? validatePriceRange(double? minPrice, double? maxPrice) {
+  const minLimit = 0.0;
+  const maxLimit = 10000000.0;
+
+  if (minPrice != null && minPrice < minLimit) {
+    return 'Giá tối thiểu không được âm';
+  }
+
+  if (maxPrice != null && maxPrice > maxLimit) {
+    return 'Giá tối đa không được vượt quá 10.000.000 VND';
+  }
+
+  if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
+    return 'Giá tối thiểu không được lớn hơn giá tối đa';
+  }
+
+  return null;
 }

@@ -23,7 +23,9 @@ import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 /// Product list screen.
 class ProductListScreen extends StatefulWidget {
-  const ProductListScreen({super.key});
+  final ProductFilter? initialFilter;
+
+  const ProductListScreen({super.key, this.initialFilter});
 
   @override
   State<ProductListScreen> createState() => _ProductListScreenState();
@@ -38,7 +40,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   void initState() {
     super.initState();
-    _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
+    // Use initialFilter if provided, otherwise use empty filter
+    final initialFilter = widget.initialFilter ?? const ProductFilter();
+    _productBloc.add(GetProductsEvent(filter: initialFilter));
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
   }

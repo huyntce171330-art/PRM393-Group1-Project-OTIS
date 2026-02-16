@@ -9,6 +9,7 @@ import 'package:dartz/dartz.dart';
 import 'package:frontend_otis/core/error/failures.dart';
 import 'package:frontend_otis/data/models/brand_model.dart';
 import 'package:frontend_otis/data/models/product_model.dart';
+import 'package:frontend_otis/data/models/tire_spec_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
@@ -135,4 +136,21 @@ abstract class ProductRepository {
   ///
   /// Returns [Either<Failure, List<VehicleMakeModel>>] - List of vehicle makes or failure
   Future<Either<Failure, List<VehicleMakeModel>>> getVehicleMakes();
+
+  /// Creates a new vehicle make.
+  ///
+  /// [name] - The name of the vehicle make
+  /// [logoUrl] - Optional logo URL
+  ///
+  /// Returns [Either<Failure, VehicleMakeModel>] - Created vehicle make or failure
+  Future<Either<Failure, VehicleMakeModel>> createVehicleMake({
+    required String name,
+    String? logoUrl,
+  });
+
+  /// Retrieves a list of all distinct tire specifications for filter dropdowns.
+  /// Returns distinct width, aspect_ratio, rim_diameter combinations.
+  ///
+  /// Returns [Either<Failure, List<TireSpecModel>>] - List of tire specs or failure
+  Future<Either<Failure, List<TireSpecModel>>> getTireSpecs();
 }

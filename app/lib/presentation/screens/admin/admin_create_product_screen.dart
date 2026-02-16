@@ -24,6 +24,8 @@ import 'package:frontend_otis/data/models/product_model.dart';
 import 'package:frontend_otis/data/models/tire_spec_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/domain/usecases/product/get_brands_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/get_vehicle_makes_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/create_vehicle_make_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_state.dart';
 
@@ -54,6 +56,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
 
   // Dropdown values
   BrandModel? _selectedBrand;
+  VehicleMakeModel? _selectedVehicleMake;
 
   // Toggle value
   bool _isActive = true;
@@ -69,6 +72,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
 
   // Lists for dropdowns
   List<BrandModel> _brands = [];
+  List<VehicleMakeModel> _vehicleMakes = [];
 
   @override
   void initState() {
@@ -96,6 +100,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
   Future<void> _loadDropdowns() async {
     // Get use cases from the bloc (injected via GetIt in real app)
     final getBrandsUsecase = GetBrandsUsecase(productRepository: sl());
+    final getVehicleMakesUsecase = GetVehicleMakesUsecase(productRepository: sl());
 
     // Load brands
     final brandsResult = await getBrandsUsecase();
@@ -107,6 +112,19 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
       (brands) {
         if (mounted) {
           setState(() => _brands = brands);
+        }
+      },
+    );
+
+    // Load vehicle makes
+    final vehicleMakesResult = await getVehicleMakesUsecase();
+    vehicleMakesResult.fold(
+      (failure) {
+        print('DEBUG: Failed to load vehicle makes: $failure');
+      },
+      (vehicleMakes) {
+        if (mounted) {
+          setState(() => _vehicleMakes = vehicleMakes);
         }
       },
     );
@@ -187,43 +205,67 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
   }
 
   String? _validateWidth(String? value) {
+    // If this field has a value, always validate the range
+    if (value != null && value.isNotEmpty) {
+      final width = int.tryParse(value);
+      if (width == null) {
+        return 'Chiều rộng phải là số';
+      }
+      if (width < 145 || width > 455) {
+        return 'Chiều rộng phải từ 145 đến 455 mm';
+      }
+    }
+    // If empty and other tire specs are filled, this field is required
     if (value == null || value.isEmpty) {
-      return null; // Optional field
-    }
-    final width = int.tryParse(value);
-    if (width == null) {
-      return 'Chiều rộng phải là số';
-    }
-    if (width < 145 || width > 455) {
-      return 'Chiều rộng phải từ 145 đến 455 mm';
+      final aspectFilled = _aspectRatioController.text.trim().isNotEmpty;
+      final rimFilled = _rimController.text.trim().isNotEmpty;
+      if (aspectFilled || rimFilled) {
+        return 'Chiều rộng là bắt buộc khi nhập thông số lốp';
+      }
     }
     return null;
   }
 
   String? _validateAspectRatio(String? value) {
+    // If this field has a value, always validate the range
+    if (value != null && value.isNotEmpty) {
+      final ratio = int.tryParse(value);
+      if (ratio == null) {
+        return 'Tỷ lệ aspect phải là số';
+      }
+      if (ratio < 20 || ratio > 95) {
+        return 'Tỷ lệ aspect phải từ 20% đến 95%';
+      }
+    }
+    // If empty and other tire specs are filled, this field is required
     if (value == null || value.isEmpty) {
-      return null; // Optional field
-    }
-    final ratio = int.tryParse(value);
-    if (ratio == null) {
-      return 'Tỷ lệ aspect phải là số';
-    }
-    if (ratio < 20 || ratio > 95) {
-      return 'Tỷ lệ aspect phải từ 20% đến 95%';
+      final widthFilled = _widthController.text.trim().isNotEmpty;
+      final rimFilled = _rimController.text.trim().isNotEmpty;
+      if (widthFilled || rimFilled) {
+        return 'Tỷ lệ aspect là bắt buộc khi nhập thông số lốp';
+      }
     }
     return null;
   }
 
   String? _validateRim(String? value) {
+    // If this field has a value, always validate the range
+    if (value != null && value.isNotEmpty) {
+      final rim = int.tryParse(value);
+      if (rim == null) {
+        return 'Đường kính mâm phải là số';
+      }
+      if (rim < 10 || rim > 30) {
+        return 'Đường kính mâm phải từ 10 đến 30 inch';
+      }
+    }
+    // If empty and other tire specs are filled, this field is required
     if (value == null || value.isEmpty) {
-      return null; // Optional field
-    }
-    final rim = int.tryParse(value);
-    if (rim == null) {
-      return 'Đường kính mâm phải là số';
-    }
-    if (rim < 10 || rim > 30) {
-      return 'Đường kính mâm phải từ 10 đến 30 inch';
+      final widthFilled = _widthController.text.trim().isNotEmpty;
+      final aspectFilled = _aspectRatioController.text.trim().isNotEmpty;
+      if (widthFilled || aspectFilled) {
+        return 'Đường kính mâm là bắt buộc khi nhập thông số lốp';
+      }
     }
     return null;
   }
@@ -232,6 +274,12 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     if (value == null || value.isEmpty) {
       return null; // Optional field
     }
+
+    // Check for missing protocol first
+    if (!value.startsWith('http://') && !value.startsWith('https://')) {
+      return 'URL phải bắt đầu bằng http:// hoặc https://';
+    }
+
     final uri = Uri.tryParse(value);
     if (uri == null || !uri.isAbsolute) {
       return 'URL hình ảnh không hợp lệ';
@@ -319,7 +367,7 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
         name: _nameController.text.trim(),
         imageUrl: _imageUrlController.text.trim(),
         brand: _selectedBrand!,
-        vehicleMake: VehicleMakeModel(id: '', name: '', logoUrl: ''),
+        vehicleMake: _selectedVehicleMake ?? VehicleMakeModel(id: '', name: '', logoUrl: ''),
         tireSpec: TireSpecModel(
           id: '',
           width: int.tryParse(_widthController.text.trim()) ?? 0,
@@ -365,6 +413,60 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  Future<void> _showAddVehicleMakeDialog() async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Thêm hãng xe mới'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Tên hãng xe',
+            hintText: 'Nhập tên hãng xe',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.pop(context, controller.text.trim());
+              }
+            },
+            child: const Text('Thêm'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      // Create new VehicleMakeModel in database
+      final createVehicleMakeUsecase = CreateVehicleMakeUsecase(productRepository: sl());
+      final createResult = await createVehicleMakeUsecase(name: result);
+
+      createResult.fold(
+        (failure) {
+          // Show error if creation failed
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Lỗi khi tạo hãng xe: ${failure.message}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        },
+        (newMake) {
+          // Success - add to list and select
+          setState(() {
+            _vehicleMakes.add(newMake);
+            _selectedVehicleMake = newMake;
+          });
+        },
+      );
+    }
   }
 
   @override
@@ -601,6 +703,42 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
             }).toList(),
             onChanged: (value) {
               setState(() => _selectedBrand = value);
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Vehicle Make Dropdown
+          DropdownButtonFormField<VehicleMakeModel>(
+            value: _selectedVehicleMake,
+            decoration: _buildInputDecoration(
+              'Hãng xe tương thích',
+              'Chọn hãng xe',
+              Icons.directions_car,
+            ),
+            items: [
+              ..._vehicleMakes.map((make) {
+                return DropdownMenuItem<VehicleMakeModel>(
+                  value: make,
+                  child: Text(make.name),
+                );
+              }),
+              const DropdownMenuItem<VehicleMakeModel>(
+                value: null,
+                child: Text(
+                  'Thêm hãng xe mới',
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+            onChanged: (value) {
+              if (value == null) {
+                // User selected "Thêm hãng xe mới"
+                _showAddVehicleMakeDialog();
+              } else {
+                setState(() => _selectedVehicleMake = value);
+              }
             },
           ),
         ],

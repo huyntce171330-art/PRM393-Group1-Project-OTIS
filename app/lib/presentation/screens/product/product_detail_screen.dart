@@ -21,7 +21,6 @@ import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_action_bar.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_image_carousel.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_specs_grid.dart';
-import 'package:frontend_otis/presentation/widgets/product/product_services_section.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
@@ -263,16 +262,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                     // Prices
                     _buildPriceSection(product, isDarkMode),
-                    const SizedBox(height: 8),
-
-                    // VAT note
-                    Text(
-                      AppStrings.priceIncludesVat,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -351,19 +340,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
 
               // Specifications grid
-              ProductSpecsGrid(tireSpec: product.tireSpec),
-
-              // Services section
-              const ProductServicesSection(),
-
-              // Divider
-              Divider(
-                color: isDarkMode
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.grey[200],
-                thickness: 1,
-                indent: 16,
-                endIndent: 16,
+              ProductSpecsGrid(
+                tireSpec: product.tireSpec,
+                vehicleMake: product.vehicleMake,
+                brand: product.brand,
               ),
 
               // Bottom spacing for action bar
@@ -425,7 +405,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        isInStock ? AppStrings.inStock : AppStrings.outOfStock,
+        product.stockStatus,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,

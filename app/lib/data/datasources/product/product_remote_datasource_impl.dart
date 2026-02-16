@@ -4,6 +4,7 @@ import 'package:frontend_otis/data/datasources/product/product_remote_datasource
 import 'package:frontend_otis/data/models/brand_model.dart';
 import 'package:frontend_otis/data/models/product_list_model.dart';
 import 'package:frontend_otis/data/models/product_model.dart';
+import 'package:frontend_otis/data/models/tire_spec_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/domain/entities/admin_product_filter.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
@@ -67,6 +68,24 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
     if (filter?.maxPrice != null) {
       whereClauses.add('p.price <= ?');
       whereArgs.add(filter!.maxPrice);
+    }
+
+    // Add tire spec filters if provided
+    if (filter?.width != null) {
+      whereClauses.add('ts.width = ?');
+      whereArgs.add(filter!.width);
+    }
+    if (filter?.aspectRatio != null) {
+      whereClauses.add('ts.aspect_ratio = ?');
+      whereArgs.add(filter!.aspectRatio);
+    }
+    if (filter?.rimDiameter != null) {
+      whereClauses.add('ts.rim_diameter = ?');
+      whereArgs.add(filter!.rimDiameter);
+    }
+    if (filter?.tireSpecId != null) {
+      whereClauses.add('p.tire_spec_id = ?');
+      whereArgs.add(filter!.tireSpecId);
     }
 
     // Join all WHERE clauses
@@ -383,9 +402,27 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
       tireSpecId = tireSpecResult;
     }
 
-    // 2. Get brand_id and make_id from the model (they should already be IDs)
-    final brandId = int.tryParse(product.brand.id) ?? 0;
-    final makeId = int.tryParse(product.vehicleMake.id) ?? 0;
+    // 2. Get brand_id and make_id from the model
+    // Handle empty string or invalid ID properly
+    final brandIdStr = product.brand.id;
+    final makeIdStr = product.vehicleMake.id;
+
+    int? brandId;
+    int? makeId;
+
+    if (brandIdStr.isNotEmpty) {
+      final parsedBrandId = int.tryParse(brandIdStr);
+      if (parsedBrandId != null && parsedBrandId > 0) {
+        brandId = parsedBrandId;
+      }
+    }
+
+    if (makeIdStr.isNotEmpty) {
+      final parsedMakeId = int.tryParse(makeIdStr);
+      if (parsedMakeId != null && parsedMakeId > 0) {
+        makeId = parsedMakeId;
+      }
+    }
 
     // 3. Insert the product
     int newProductId;
@@ -399,8 +436,8 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
           product.sku,
           product.name,
           product.imageUrl,
-          brandId > 0 ? brandId : null,
-          makeId > 0 ? makeId : null,
+          brandId,
+          makeId,
           tireSpecId,
           product.price,
           product.stockQuantity,
@@ -483,7 +520,7 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
 
     // 1. First, handle tire_spec - check if exists or insert new
     int tireSpecId;
-    
+
     // Get tire spec from the product
     final tireSpec = product.tireSpec;
 
@@ -505,9 +542,27 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
       tireSpecId = tireSpecResult;
     }
 
-    // 2. Get brand_id and make_id from the model (they should already be IDs)
-    final brandId = int.tryParse(product.brand.id) ?? 0;
-    final makeId = int.tryParse(product.vehicleMake.id) ?? 0;
+    // 2. Get brand_id and make_id from the model
+    // Handle empty string or invalid ID properly
+    final brandIdStr = product.brand.id;
+    final makeIdStr = product.vehicleMake.id;
+
+    int? brandId;
+    int? makeId;
+
+    if (brandIdStr.isNotEmpty) {
+      final parsedBrandId = int.tryParse(brandIdStr);
+      if (parsedBrandId != null && parsedBrandId > 0) {
+        brandId = parsedBrandId;
+      }
+    }
+
+    if (makeIdStr.isNotEmpty) {
+      final parsedMakeId = int.tryParse(makeIdStr);
+      if (parsedMakeId != null && parsedMakeId > 0) {
+        makeId = parsedMakeId;
+      }
+    }
 
     // 3. Update the product
     try {
@@ -527,8 +582,8 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
         [
           product.name,
           product.imageUrl,
-          brandId > 0 ? brandId : null,
-          makeId > 0 ? makeId : null,
+          brandId,
+          makeId,
           tireSpecId,
           product.price,
           product.stockQuantity,
@@ -669,11 +724,52 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
   @override
   Future<List<VehicleMakeModel>> getVehicleMakes() async {
     final result = await database.rawQuery(
-      'SELECT make_id as id, name, logo_url FROM vehicle_makes ORDER BY name ASC',
+      'SELECT make_id, name, logo_url FROM vehicle_makes ORDER BY name ASC',
     );
 
     return result.map((row) {
       return VehicleMakeModel.fromJson(row);
+    }).toList();
+  }
+
+  @override
+  Future<VehicleMakeModel> createVehicleMake({
+    required String name,
+    String? logoUrl,
+  }) async {
+    final result = await database.rawInsert(
+      'INSERT INTO vehicle_makes (name, logo_url) VALUES (?, ?)',
+      [name, logoUrl ?? ''],
+    );
+
+    // Return the created vehicle make
+    final created = await database.rawQuery(
+      'SELECT make_id, name, logo_url FROM vehicle_makes WHERE make_id = ?',
+      [result],
+    );
+
+    return VehicleMakeModel.fromJson(created.first);
+  }
+
+  @override
+  Future<List<TireSpecModel>> getTireSpecs() async {
+    final result = await database.rawQuery('''
+      SELECT DISTINCT 
+        tire_spec_id,
+        width, 
+        aspect_ratio, 
+        rim_diameter 
+      FROM tire_specs 
+      ORDER BY width ASC, aspect_ratio ASC, rim_diameter ASC
+      ''');
+
+    return result.map((row) {
+      return TireSpecModel.fromJson({
+        'tire_spec_id': row['tire_spec_id'],
+        'width': row['width'],
+        'aspect_ratio': row['aspect_ratio'],
+        'rim_diameter': row['rim_diameter'],
+      });
     }).toList();
   }
 }

@@ -202,10 +202,8 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
     );
   }
 
-  /// Builds the product image with Hero animation and stock badge.
+  /// Builds the product image with Hero animation and badges.
   Widget _buildProductImage(Product product) {
-    final stockStatus = _getStockStatus(product);
-
     return Stack(
       children: [
         AspectRatio(
@@ -234,38 +232,18 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
             ),
           ),
         ),
-        // Stock badge
+        // Status and Stock badges
         Positioned(
           top: 12,
           right: 12,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: stockStatus.color,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  stockStatus.label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
+          child: Row(
+            children: [
+              // Status badge (Active/Inactive)
+              _buildStatusBadge(product),
+              const SizedBox(width: 8),
+              // Stock badge
+              _buildStockBadge(product),
+            ],
           ),
         ),
       ],
@@ -294,6 +272,35 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
           Text(
             'SKU: ${product.sku}',
             style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+
+          // Brand Logo and Created Date row
+          Row(
+            children: [
+              // Brand Logo
+              if (product.brand != null && product.brand!.hasLogo) ...[
+                Image.network(
+                  product.brand!.logoUrl,
+                  width: 32,
+                  height: 32,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.factory, size: 32),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  product.brand!.name,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ],
+              const Spacer(),
+              // Created Date
+              Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                'Created: ${product.formattedCreatedAt}',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
 
@@ -402,6 +409,11 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
                 value: product.tireSpec != null
                     ? 'R${product.tireSpec!.rimDiameter}'
                     : 'N/A',
+              ),
+              _buildSpecItem(
+                icon: Icons.directions_car,
+                label: 'Vehicle',
+                value: product.vehicleMake?.name ?? 'N/A',
               ),
             ],
           ),
@@ -569,5 +581,72 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
     } else {
       return (color: AppColors.success, label: 'In Stock');
     }
+  }
+
+  /// Builds the status badge (Active/Inactive).
+  Widget _buildStatusBadge(Product product) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: product.isActive ? AppColors.success : AppColors.error,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            product.isActive ? 'Active' : 'Inactive',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds the stock badge.
+  Widget _buildStockBadge(Product product) {
+    final stockStatus = _getStockStatus(product);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: stockStatus.color,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            stockStatus.label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

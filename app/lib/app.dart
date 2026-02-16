@@ -18,6 +18,7 @@ import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/cart_item.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/domain/entities/product_filter.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_orders_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_home_screen.dart';
@@ -48,7 +49,7 @@ import 'package:frontend_otis/presentation/screens/notification/notification_lis
 /// - Route guards
 final GoRouter router = GoRouter(
   // Thay đổi dòng dưới để test: '/' = customer, '/admin/products' = admin
-  initialLocation: '/customer/products',
+  initialLocation: '/admin/products',
   routes: [
     GoRoute(
       path: '/debug',
@@ -141,7 +142,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/products',
       name: 'product-list',
-      builder: (context, state) => const ProductListScreen(),
+      builder: (context, state) {
+        final ProductFilter? filter = state.extra as ProductFilter?;
+        return ProductListScreen(initialFilter: filter);
+      },
     ),
     GoRoute(
       path: '/product/:id',
