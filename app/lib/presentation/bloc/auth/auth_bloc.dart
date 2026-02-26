@@ -133,5 +133,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<CheckAuthStatusEvent>((event, emit) async {
       emit(Unauthenticated());
     });
+
+    on<AuthUserUpdated>((event, emit) {
+      final current = state;
+      if (current is Authenticated) {
+        emit(Authenticated(event.updatedUser));
+      }
+    });
   }
 }

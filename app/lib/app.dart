@@ -37,7 +37,8 @@ import 'package:frontend_otis/presentation/screens/auth/register_screen.dart';
 import 'package:frontend_otis/presentation/screens/profile/profile_screen.dart';
 import 'package:frontend_otis/presentation/screens/profile/profile_update_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/notification_list_screen.dart';
-
+import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
 /// GoRouter configuration for the OTIS app.
 ///
 /// Provides type-safe navigation with support for:
@@ -115,6 +116,17 @@ final GoRouter router = GoRouter(
           builder: (context, state) {
             final productId = state.pathParameters['id']!;
             return AdminProductDetailScreen(productId: productId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/users',
+          builder: (context, state) => const AdminViewListUserScreen(),
+        ),
+        GoRoute(
+          path: '/admin/users/:id',
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            return AdminViewUserDetailScreen(userId: id);
           },
         ),
         GoRoute(

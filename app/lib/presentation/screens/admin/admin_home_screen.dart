@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_header.dart';
+import 'package:go_router/go_router.dart';
+import 'package:frontend_otis/core/injections/database_helper.dart';
 
 class AdminHomeScreen extends StatelessWidget {
   const AdminHomeScreen({super.key});
@@ -222,17 +224,29 @@ class AdminHomeScreen extends StatelessWidget {
           value: '340',
           subtext: 'Tires in stock',
         ),
-        _buildStatCard(
-          surfaceColor,
-          textColor,
-          textSecondaryColor,
-          icon: Icons.group,
-          iconColor: Colors.purple,
-          iconBg: Colors.purple.withValues(alpha: 0.1),
-          title: 'Customers',
-          value: '1,205',
-          trend: '+4',
-          trendUp: true,
+        FutureBuilder<int>(
+          future: DatabaseHelper.countCustomers(),
+          builder: (context, snap) {
+            final count = snap.data ?? 0;
+
+            return InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => context.push('/admin/users'),
+              child: _buildStatCard(
+                surfaceColor,
+                textColor,
+                textSecondaryColor,
+                icon: Icons.group,
+                iconColor: Colors.purple,
+                iconBg: Colors.purple.withValues(alpha: 0.1),
+                title: 'Customers',
+                value: snap.connectionState == ConnectionState.waiting
+                    ? '...'
+                    : count.toString(),
+                subtext: 'Tap to view list',
+              ),
+            );
+          },
         ),
       ],
     );
