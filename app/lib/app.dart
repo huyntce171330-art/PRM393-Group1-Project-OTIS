@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/category/category_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/category/category_event.dart';
+import 'package:frontend_otis/presentation/screens/category/category_list_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart' as di;
@@ -37,6 +40,8 @@ import 'package:frontend_otis/presentation/screens/auth/register_screen.dart';
 import 'package:frontend_otis/presentation/screens/profile/profile_screen.dart';
 import 'package:frontend_otis/presentation/screens/profile/profile_update_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/notification_list_screen.dart';
+
+import 'core/enums/category_type.dart';
 
 /// GoRouter configuration for the OTIS app.
 ///
@@ -248,6 +253,21 @@ final GoRouter router = GoRouter(
       path: '/notifications',
       name: 'notifications',
       builder: (context, state) => const NotificationListScreen(),
+    ),
+    GoRoute(
+      path: '/admin/categories',
+      builder: (context, state) {
+        final bloc = di.sl<CategoryBloc>();
+
+        bloc.add(LoadCategories(CategoryType.tireBrand));
+        bloc.add(LoadCategories(CategoryType.vehicleMake));
+        bloc.add(LoadCategories(CategoryType.tireSpec));
+
+        return BlocProvider(
+          create: (_) => bloc,
+          child: const CategoryScreen(),
+        );
+      },
     ),
   ],
   errorPageBuilder: (context, state) => MaterialPage(

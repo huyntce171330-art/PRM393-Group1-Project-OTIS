@@ -33,18 +33,19 @@ class AdminNavBar extends StatelessWidget {
           _buildNavItem(context, Icons.dashboard, 'Home', 0),
           _buildNavItem(context, Icons.receipt_long, 'Orders', 1),
           _buildNavItem(context, Icons.tire_repair, 'Products', 2),
-          _buildNavItem(context, Icons.settings, 'Settings', 3),
+          _buildNavItem(context, Icons.category, 'Categories', 3),
+          _buildNavItem(context, Icons.settings, 'Settings', 4),
         ],
       ),
     );
   }
 
   Widget _buildNavItem(
-    BuildContext context,
-    IconData icon,
-    String label,
-    int index,
-  ) {
+      BuildContext context,
+      IconData icon,
+      String label,
+      int index,
+      ) {
     final isActive = currentIndex == index;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primary;
@@ -54,7 +55,6 @@ class AdminNavBar extends StatelessWidget {
       onTap: () {
         if (index == currentIndex) return;
 
-        // Navigation logic
         switch (index) {
           case 0:
             context.go('/admin/home');
@@ -63,10 +63,13 @@ class AdminNavBar extends StatelessWidget {
             context.go('/admin/orders');
             break;
           case 2:
-            // context.go('/admin/products');
+            context.go('/admin/products');
             break;
           case 3:
-            // context.go('/admin/settings');
+            context.go('/admin/categories');
+            break;
+          case 4:
+            context.go('/admin/settings');
             break;
         }
       },

@@ -70,6 +70,24 @@ import 'package:frontend_otis/domain/usecases/auth/otp_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/forgot_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/change_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/data/datasources/category/brand_datasource.dart';
+import 'package:frontend_otis/data/datasources/category/brand_datasource_impl.dart';
+import '../../data/datasources/category/tire_spec_datasource.dart';
+import '../../data/datasources/category/tire_spec_datasource_impl.dart';
+import '../../data/datasources/category/vehicle_make_datasource.dart';
+import '../../data/datasources/category/vehicle_make_datasource_impl.dart';
+import '../../data/repositories/brand_repository_impl.dart';
+import '../../data/repositories/tire_spec_repository_impl.dart';
+import '../../data/repositories/vehicle_make_repository_impl.dart';
+import '../../domain/repositories/brand_repository.dart';
+import '../../domain/repositories/tire_spec_repository.dart';
+import '../../domain/repositories/vehicle_make_repository.dart';
+import '../../domain/usecases/category/create_category_usecase.dart';
+import '../../domain/usecases/category/delete_category_usecase.dart';
+import '../../domain/usecases/category/get_categories_usecase.dart';
+import '../../domain/usecases/category/get_category_detail_usecase.dart';
+import '../../domain/usecases/category/update_category_usecase.dart';
+import '../../presentation/bloc/category/category_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -296,6 +314,87 @@ Future<void> init() async {
       permanentDeleteProductUsecase: sl(),
     ),
   );
+
+
+
+  // ========== BRAND DATASOURCE ==========
+  sl.registerLazySingleton<TireBrandDataSource>(
+        () => TireBrandDataSourceImpl(sl()),
+  );
+
+// ========== BRAND REPOSITORY ==========
+  sl.registerLazySingleton<TireBrandRepository>(
+        () => TireBrandRepositoryImpl(sl()),
+  );
+  // ========== TIRE SPEC DATASOURCE ==========
+  sl.registerLazySingleton<TireSpecDataSource>(
+        () => TireSpecDataSourceImpl(sl()),
+  );
+
+// ========== TIRE SPEC REPOSITORY ==========
+  sl.registerLazySingleton<TireSpecRepository>(
+        () => TireSpecRepositoryImpl(sl()),
+  );
+  // ========== VEHICLE MAKE DATASOURCE ==========
+  sl.registerLazySingleton<VehicleMakeDataSource>(
+        () => VehicleMakeDataSourceImpl(sl()),
+  );
+
+// ========== VEHICLE MAKE REPOSITORY ==========
+  sl.registerLazySingleton<VehicleMakeRepository>(
+        () => VehicleMakeRepositoryImpl(sl()),
+  );
+
+  sl.registerFactory<CategoryBloc>(
+        () => CategoryBloc(
+      getCategoriesUseCase: sl(),
+      getCategoryDetailUseCase: sl(),
+      createCategoryUseCase: sl(),
+      updateCategoryUseCase: sl(),
+      deleteCategoryUseCase: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<CreateCategoryUseCase>(
+        () => CreateCategoryUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
+  sl.registerLazySingleton<GetCategoriesUseCase>(
+        () => GetCategoriesUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
+  sl.registerLazySingleton<UpdateCategoryUseCase>(
+        () => UpdateCategoryUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
+  sl.registerLazySingleton<DeleteCategoryUseCase>(
+        () => DeleteCategoryUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
+  sl.registerLazySingleton<GetCategoryDetailUseCase>(
+        () => GetCategoryDetailUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
 
   print("All dependencies registered successfully");
 }
