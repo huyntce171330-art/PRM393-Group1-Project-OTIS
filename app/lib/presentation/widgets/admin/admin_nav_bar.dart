@@ -63,7 +63,7 @@ class AdminNavBar extends StatelessWidget {
             context.go('/admin/orders');
             break;
           case 2:
-            // context.go('/admin/products');
+            context.go('/admin/products');
             break;
           case 3:
             // context.go('/admin/settings');

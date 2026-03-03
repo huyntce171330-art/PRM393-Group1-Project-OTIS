@@ -49,7 +49,7 @@ import 'package:frontend_otis/presentation/screens/notification/notification_lis
 /// - Route guards
 final GoRouter router = GoRouter(
   // Thay đổi dòng dưới để test: '/' = customer, '/admin/products' = admin
-  initialLocation: '/admin/products',
+  initialLocation: '/admin/home',
   routes: [
     GoRoute(
       path: '/debug',
@@ -86,49 +86,7 @@ final GoRouter router = GoRouter(
       name: 'home',
       builder: (context, state) => const HomeScreen(),
     ),
-    // Admin Routes - Wrap with BlocProvider to share state between List and Detail
-    // Use BlocProvider.value with singleton from GetIt to preserve state across navigation
-    ShellRoute(
-      builder: (context, state, child) {
-        return BlocProvider<AdminProductBloc>.value(
-          value: di.sl<AdminProductBloc>(),
-          child: child,
-        );
-      },
-      routes: [
-        GoRoute(
-          path: '/admin/products',
-          name: 'admin-product-list',
-          builder: (context, state) => const AdminProductListScreen(),
-        ),
-        GoRoute(
-          path: '/admin/products/create',
-          name: 'admin-product-create',
-          builder: (context, state) => const AdminCreateProductScreen(),
-        ),
-        GoRoute(
-          path: '/admin/products/trash',
-          name: 'admin-trash',
-          builder: (context, state) => const AdminTrashScreen(),
-        ),
-        GoRoute(
-          path: '/admin/products/:id',
-          name: 'admin-product-detail',
-          builder: (context, state) {
-            final productId = state.pathParameters['id']!;
-            return AdminProductDetailScreen(productId: productId);
-          },
-        ),
-        GoRoute(
-          path: '/admin/products/:id/edit',
-          name: 'admin-product-edit',
-          builder: (context, state) {
-            final productId = state.pathParameters['id']!;
-            return AdminEditProductScreen(productId: productId);
-          },
-        ),
-      ],
-    ), // Customer Routes
+    // Customer Routes
     GoRoute(
       path: '/login',
       name: 'login',
@@ -202,9 +160,13 @@ final GoRouter router = GoRouter(
         return BookingSuccessScreen(order: order);
       },
     ),
+    // Admin Routes - ShellRoute with both AdminLayout (bottom nav) and BlocProvider
     ShellRoute(
       builder: (context, state, child) {
-        return AdminLayout(child: child);
+        return BlocProvider<AdminProductBloc>.value(
+          value: di.sl<AdminProductBloc>(),
+          child: AdminLayout(child: child),
+        );
       },
       routes: [
         GoRoute(
@@ -223,6 +185,37 @@ final GoRouter router = GoRouter(
           builder: (context, state) {
             final orderId = state.pathParameters['orderId']!;
             return AdminOrderDetailsScreen(orderId: orderId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/products',
+          name: 'admin-product-list',
+          builder: (context, state) => const AdminProductListScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/create',
+          name: 'admin-product-create',
+          builder: (context, state) => const AdminCreateProductScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/trash',
+          name: 'admin-trash',
+          builder: (context, state) => const AdminTrashScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/:id',
+          name: 'admin-product-detail',
+          builder: (context, state) {
+            final productId = state.pathParameters['id']!;
+            return AdminProductDetailScreen(productId: productId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/products/:id/edit',
+          name: 'admin-product-edit',
+          builder: (context, state) {
+            final productId = state.pathParameters['id']!;
+            return AdminEditProductScreen(productId: productId);
           },
         ),
       ],

@@ -25,6 +25,8 @@ import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_even
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_state.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_filter_chip.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_product_card.dart';
+import 'package:frontend_otis/presentation/widgets/admin/admin_header.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_profile_screen.dart';
 
 /// Admin Product List Screen for inventory management.
 class AdminProductListScreen extends StatefulWidget {
@@ -141,12 +143,6 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
     }
 
     return result.trim();
-  }
-
-  void _clearAndUnfocus() {
-    _searchController.clear();
-    _onSearchChanged();
-    FocusScope.of(context).unfocus();
   }
 
   Future<void> _onRefresh() async {
@@ -273,7 +269,10 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
     // The BLoC is still in "trash" state (showing deleted products) after returning
     // We must restore it to normal "active products" state
     _adminProductBloc.add(
-      GetAdminProductsEvent(filter: _adminProductBloc.currentFilter, showInactive: false),
+      GetAdminProductsEvent(
+        filter: _adminProductBloc.currentFilter,
+        showInactive: false,
+      ),
     );
   }
 
@@ -284,6 +283,34 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        appBar: AdminHeader(
+          showBack: false,
+          actions: [
+            InkWell(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AdminProfileScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image: const NetworkImage(
+                      'https://lh3.googleusercontent.com/aida-public/AB6AXuD8YWidUUkqIitQsKH0Xj1BREkpvbhijdepzuqA_Da7KY6sVqLLfwQgwKUF9ajSgmIMnTK0j4b0lW5CkUPGvtwFsjNt2kHd8yr7_dEwL5bx51eY3jU3_u31A2YSvWEFA00LNez6c73az5gA1bCFT0EEn4VjFiJVlHZn88Ebl-X_XiKkoFtdil-UCs5KFqAl7wEnKq8OLGx60Cizj1NUiG97bPDbHHbp5LaKFDQzgFSHOcwQW9yHMP5fpRLrvtR7YpdR7Wd2dLwd7G4',
+                    ),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+        ),
         body: BlocProvider<AdminProductBloc>.value(
           value: _adminProductBloc,
           child: BlocListener<AdminProductBloc, AdminProductState>(
@@ -307,9 +334,42 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
                       : AppColors.backgroundLight,
                   child: SafeArea(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header Section
-                        _buildHeader(context, state),
+                        // Inventory Title Section with Trash
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Inventory',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: _onNavigateToTrash,
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Search Bar
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          child: _buildSearchBar(),
+                        ),
+                        const SizedBox(height: 8),
                         // Filter Chips Section
                         _buildFilterChips(state),
                         // Main Content - Product List
@@ -338,68 +398,21 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, AdminProductState state) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      color: isDarkMode
-          ? AppColors.backgroundDark.withValues(alpha: 0.95)
-          : AppColors.backgroundLight.withValues(alpha: 0.95),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Row: Menu, Title, Trash Icon
-          Row(
-            children: [
-              // Menu Button
-              IconButton(
-                onPressed: () {
-                  // Open drawer or menu
-                },
-                icon: Icon(
-                  Icons.menu,
-                  color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Title
-              Text(
-                'Inventory',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                ),
-              ),
-              const Spacer(),
-              // Trash Icon Button
-              IconButton(
-                onPressed: _onNavigateToTrash,
-                icon: Icon(
-                  Icons.delete_outline,
-                  color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Search Bar
-          _buildSearchBar(),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSearchBar() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDarkMode ? const Color(0xFF1A2230) : Colors.white;
+    final textSub = isDarkMode ? Colors.grey[400]! : const Color(0xFF896161);
+    const primaryColor = Color(0xFFEC1313);
+
     return Container(
+      height: 44,
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(9999),
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
@@ -407,27 +420,33 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
-        textInputAction: TextInputAction.done,
-        onEditingComplete: _clearAndUnfocus,
         onChanged: (_) => _onSearchChanged(),
         style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(
+          prefixIcon: Icon(Icons.search, color: textSub, size: 20),
           hintText: 'Search tire size, brand...',
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-          prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 20),
-          suffixIcon: IconButton(
-            icon: Icon(Icons.tune, color: Colors.grey[400], size: 20),
-            onPressed: () {
-              // Open advanced filters
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _searchController,
+            builder: (context, value, child) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (value.text.isNotEmpty)
+                    IconButton(
+                      icon: Icon(Icons.close, color: textSub, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChanged();
+                      },
+                    ),
+                  Icon(Icons.tune, color: primaryColor, size: 20),
+                  const SizedBox(width: 4),
+                ],
+              );
             },
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(9999),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
           ),
         ),
       ),
@@ -594,46 +613,51 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
   Widget _buildErrorState(BuildContext context, String message) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading products',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isDarkMode ? Colors.white : AppColors.textPrimary,
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[400],
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDarkMode ? Colors.grey[400] : AppColors.textSecondary,
+              const SizedBox(height: 16),
+              Text(
+                'Error loading products',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _onRefresh,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDarkMode
+                      ? Colors.grey[400]
+                      : AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _onRefresh,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -642,46 +666,41 @@ class _AdminProductListScreenState extends State<AdminProductListScreen> {
   Widget _buildEmptyState(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.inventory_2_outlined,
-              size: 80,
-              color: isDarkMode ? Colors.grey[600] : Colors.grey[300],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No products found',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: isDarkMode ? Colors.white : AppColors.textPrimary,
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.inventory_2_outlined,
+                size: 80,
+                color: isDarkMode ? Colors.grey[600] : Colors.grey[300],
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Add products to start managing your inventory',
-              style: TextStyle(
-                fontSize: 14,
-                color: isDarkMode ? Colors.grey[400] : AppColors.textSecondary,
+              const SizedBox(height: 16),
+              Text(
+                'No products found',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _onAddProduct,
-              icon: const Icon(Icons.add),
-              label: const Text('Add Product'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+              const SizedBox(height: 8),
+              Text(
+                'Try adjusting your search or filters',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDarkMode
+                      ? Colors.grey[400]
+                      : AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
