@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/category/category_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/category/category_event.dart';
+import 'package:frontend_otis/presentation/screens/auth/change_screen.dart';
 import 'package:frontend_otis/presentation/screens/category/category_list_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
@@ -266,6 +267,17 @@ final GoRouter router = GoRouter(
         return BlocProvider(
           create: (_) => bloc,
           child: const CategoryScreen(),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/otp',
+      name: 'otp',
+      builder: (context, state) {
+        final phone = state.extra as String;
+
+        return ChangePasswordOtpScreen(
+          phone: phone,
         );
       },
     ),

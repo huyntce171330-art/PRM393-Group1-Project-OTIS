@@ -72,7 +72,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     /// ───────────── REQUEST OTP ─────────────
     on<RequestOtpEvent>((event, emit) async {
-      emit(AuthLoading());
+      final previousState = state;
+
+      if (state is! Authenticated) {
+        emit(AuthLoading());
+      }
 
       final result = await otpUseCase.requestOtp(
         phone: event.phone,
@@ -80,13 +84,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       result.fold(
             (failure) => emit(AuthError(failure.message)),
-            (_) => emit(OtpSent()),
+            (_) {
+          emit(OtpSent());
+
+          if (previousState is Authenticated) {
+            emit(previousState);
+          }
+        },
       );
     });
 
     /// ───────────── VERIFY OTP ─────────────
     on<VerifyOtpEvent>((event, emit) async {
-      emit(AuthLoading());
+      final previousState = state;
+
+      if (state is! Authenticated) {
+        emit(AuthLoading());
+      }
 
       final result = await otpUseCase.verifyOtp(
         phone: event.phone,
@@ -95,13 +109,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       result.fold(
             (failure) => emit(AuthError(failure.message)),
-            (_) => emit(OtpVerified()),
+            (_) {
+          emit(OtpVerified());
+
+          if (previousState is Authenticated) {
+            emit(previousState);
+          }
+        },
       );
     });
 
     /// ───────────── FORGOT PASSWORD ─────────────
     on<ResetPasswordEvent>((event, emit) async {
-      emit(AuthLoading());
+      final previousState = state;
+
+      if (state is! Authenticated) {
+        emit(AuthLoading());
+      }
 
       final result = await forgotPasswordUseCase.resetPassword(
         phone: event.phone,
@@ -110,13 +134,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       result.fold(
             (failure) => emit(AuthError(failure.message)),
-            (_) => emit(PasswordChanged()),
+            (_) {
+          emit(PasswordChanged());
+
+          if (previousState is Authenticated) {
+            emit(previousState);
+          }
+        },
       );
     });
 
     /// ───────────── CHANGE PASSWORD ─────────────
     on<ChangePasswordEvent>((event, emit) async {
-      emit(AuthLoading());
+      final previousState = state;
+
+      if (state is! Authenticated) {
+        emit(AuthLoading());
+      }
 
       final result = await changePasswordUseCase.changePassword(
         phone: event.phone,
@@ -125,7 +159,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       result.fold(
             (failure) => emit(AuthError(failure.message)),
-            (_) => emit(PasswordChanged()),
+            (_) {
+          emit(PasswordChanged());
+
+          if (previousState is Authenticated) {
+            emit(previousState);
+          }
+        },
       );
     });
 
