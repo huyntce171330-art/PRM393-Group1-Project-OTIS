@@ -32,7 +32,13 @@ class VehicleMakeDataSourceImpl implements VehicleMakeDataSource {
 
   @override
   Future<void> create(VehicleMakeModel make) async {
-    await database.insert('vehicle_makes', make.toJson());
+    await database.insert(
+      'vehicle_makes',
+      {
+        'name': make.name,
+        'logo_url': make.logoUrl,
+      },
+    );
   }
 
   @override

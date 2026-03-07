@@ -32,7 +32,14 @@ class TireSpecDataSourceImpl implements TireSpecDataSource {
 
   @override
   Future<void> create(TireSpecModel spec) async {
-    await database.insert('tire_specs', spec.toJson());
+    await database.insert(
+      'tire_specs',
+      {
+        'width': spec.width,
+        'aspect_ratio': spec.aspectRatio,
+        'rim_diameter': spec.rimDiameter,
+      },
+    );
   }
 
   @override

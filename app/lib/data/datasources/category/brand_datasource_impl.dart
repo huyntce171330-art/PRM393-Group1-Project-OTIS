@@ -32,7 +32,13 @@ class TireBrandDataSourceImpl implements TireBrandDataSource {
 
   @override
   Future<void> create(BrandModel brand) async {
-    await database.insert('brands', brand.toJson());
+    await database.insert(
+      'brands',
+      {
+        'name': brand.name,
+        'logo_url': brand.logoUrl,
+      },
+    );
   }
 
   @override
