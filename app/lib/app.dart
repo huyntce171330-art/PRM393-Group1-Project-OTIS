@@ -39,6 +39,14 @@ import 'package:frontend_otis/presentation/screens/profile/profile_update_screen
 import 'package:frontend_otis/presentation/screens/notification/notification_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend_otis/core/network/socket_service.dart';
+import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
+import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
+import 'package:frontend_otis/presentation/screens/chat/chat_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_chat_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_chat_detail_screen.dart';
+
 /// GoRouter configuration for the OTIS app.
 ///
 /// Provides type-safe navigation with support for:
@@ -74,6 +82,24 @@ final GoRouter router = GoRouter(
           ),
         ),
       ),
+    ),
+    GoRoute(
+      path: '/admin/chats',
+      builder: (context, state) => const AdminChatListScreen(),
+    ),
+
+    GoRoute(
+      path: '/admin/chats/:roomId',
+      builder: (context, state) {
+        final roomId = int.parse(state.pathParameters['roomId']!);
+        final extra = state.extra as Map<String, dynamic>?;
+
+        return AdminChatDetailScreen(
+          roomId: roomId,
+          peerTitle: extra?['peerTitle']?.toString() ?? 'Customer',
+          socketUrl: extra?['socketUrl']?.toString() ?? 'http://10.0.2.2:3000',
+        );
+      },
     ),
     GoRoute(
       path: '/',
@@ -128,6 +154,33 @@ final GoRouter router = GoRouter(
             final id = int.parse(state.pathParameters['id']!);
             return AdminViewUserDetailScreen(userId: id);
           },
+        ),
+        GoRoute(
+          path: '/chat',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>;
+            final roomId = extra['roomId'] as int;
+            final userId = extra['userId'] as int;
+            final peerTitle = extra['peerTitle'] as String;
+            final socketUrl = extra['socketUrl'] as String;
+
+            return BlocProvider(
+              create: (_) => ChatBloc(
+                datasource: ChatSocketDatasource(SocketService.instance),
+              ),
+              child: ChatScreen(
+                roomId: roomId,
+                userId: userId,
+                peerTitle: peerTitle,
+                socketUrl: socketUrl,
+              ),
+            );
+          },
+        ),
+
+        GoRoute(
+          path: '/admin/inbox',
+          builder: (context, state) => const AdminChatListScreen(),
         ),
         GoRoute(
           path: '/admin/products/:id/edit',
