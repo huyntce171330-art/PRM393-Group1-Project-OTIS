@@ -25,7 +25,6 @@ import 'package:frontend_otis/data/models/tire_spec_model.dart';
 import 'package:frontend_otis/data/models/vehicle_make_model.dart';
 import 'package:frontend_otis/domain/usecases/product/get_brands_usecase.dart';
 import 'package:frontend_otis/domain/usecases/product/get_vehicle_makes_usecase.dart';
-import 'package:frontend_otis/domain/usecases/product/create_vehicle_make_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_state.dart';
 
@@ -415,60 +414,6 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
     );
   }
 
-  Future<void> _showAddVehicleMakeDialog() async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Thêm hãng xe mới'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Tên hãng xe',
-            hintText: 'Nhập tên hãng xe',
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                Navigator.pop(context, controller.text.trim());
-              }
-            },
-            child: const Text('Thêm'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null) {
-      // Create new VehicleMakeModel in database
-      final createVehicleMakeUsecase = CreateVehicleMakeUsecase(productRepository: sl());
-      final createResult = await createVehicleMakeUsecase(name: result);
-
-      createResult.fold(
-        (failure) {
-          // Show error if creation failed
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Lỗi khi tạo hãng xe: ${failure.message}'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        },
-        (newMake) {
-          // Success - add to list and select
-          setState(() {
-            _vehicleMakes.add(newMake);
-            _selectedVehicleMake = newMake;
-          });
-        },
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -715,30 +660,14 @@ class _AdminCreateProductScreenState extends State<AdminCreateProductScreen> {
               'Chọn hãng xe',
               Icons.directions_car,
             ),
-            items: [
-              ..._vehicleMakes.map((make) {
-                return DropdownMenuItem<VehicleMakeModel>(
-                  value: make,
-                  child: Text(make.name),
-                );
-              }),
-              const DropdownMenuItem<VehicleMakeModel>(
-                value: null,
-                child: Text(
-                  'Thêm hãng xe mới',
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
+            items: _vehicleMakes.map((make) {
+              return DropdownMenuItem<VehicleMakeModel>(
+                value: make,
+                child: Text(make.name),
+              );
+            }).toList(),
             onChanged: (value) {
-              if (value == null) {
-                // User selected "Thêm hãng xe mới"
-                _showAddVehicleMakeDialog();
-              } else {
-                setState(() => _selectedVehicleMake = value);
-              }
+              setState(() => _selectedVehicleMake = value);
             },
           ),
         ],
