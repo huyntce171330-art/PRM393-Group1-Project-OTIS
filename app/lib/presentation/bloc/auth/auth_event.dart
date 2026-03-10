@@ -14,6 +14,7 @@
 // 5. Create `CheckAuthStatusEvent` (optional, to check if already logged in on app start).
 
 import 'package:equatable/equatable.dart';
+import 'package:frontend_otis/domain/entities/user.dart';
 
 /// Base class for authentication events
 abstract class AuthEvent extends Equatable {
@@ -110,5 +111,11 @@ class ChangePasswordEvent extends AuthEvent {
   @override
   List<Object?> get props => [phone, newPassword];
 }
+class AuthUserUpdated extends AuthEvent {
+  final User updatedUser;
+  const AuthUserUpdated(this.updatedUser);
 
+  @override
+  List<Object?> get props => [updatedUser];
+}
 

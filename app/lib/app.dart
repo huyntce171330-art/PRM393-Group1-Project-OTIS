@@ -43,6 +43,15 @@ import 'package:frontend_otis/presentation/screens/auth/register_screen.dart';
 import 'package:frontend_otis/presentation/screens/profile/profile_screen.dart';
 import 'package:frontend_otis/presentation/screens/profile/profile_update_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/notification_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend_otis/core/network/socket_service.dart';
+import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
+import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
+import 'package:frontend_otis/presentation/screens/chat/chat_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_chat_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_chat_detail_screen.dart';
 
 import 'core/enums/category_type.dart';
 
@@ -83,6 +92,24 @@ final GoRouter router = GoRouter(
       ),
     ),
     GoRoute(
+      path: '/admin/chats',
+      builder: (context, state) => const AdminChatListScreen(),
+    ),
+
+    GoRoute(
+      path: '/admin/chats/:roomId',
+      builder: (context, state) {
+        final roomId = int.parse(state.pathParameters['roomId']!);
+        final extra = state.extra as Map<String, dynamic>?;
+
+        return AdminChatDetailScreen(
+          roomId: roomId,
+          peerTitle: extra?['peerTitle']?.toString() ?? 'Customer',
+          socketUrl: extra?['socketUrl']?.toString() ?? 'http://10.0.2.2:3000',
+        );
+      },
+    ),
+    GoRoute(
       path: '/',
       name: 'splash',
       builder: (context, state) => const SplashScreen(),
@@ -93,6 +120,91 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const HomeScreen(),
     ),
     // Customer Routes
+    // Admin Routes - Wrap with BlocProvider to share state between List and Detail
+    // Use BlocProvider.value with singleton from GetIt to preserve state across navigation
+    ShellRoute(
+      builder: (context, state, child) {
+        return BlocProvider<AdminProductBloc>.value(
+          value: di.sl<AdminProductBloc>(),
+          child: child,
+        );
+      },
+      routes: [
+        GoRoute(
+          path: '/admin/products',
+          name: 'admin-product-list',
+          builder: (context, state) => const AdminProductListScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/create',
+          name: 'admin-product-create',
+          builder: (context, state) => const AdminCreateProductScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/trash',
+          name: 'admin-trash',
+          builder: (context, state) => const AdminTrashScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/:id',
+          name: 'admin-product-detail',
+          builder: (context, state) {
+            final productId = state.pathParameters['id']!;
+            return AdminProductDetailScreen(productId: productId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/users',
+          builder: (context, state) => const AdminViewListUserScreen(),
+        ),
+        GoRoute(
+          path: '/admin/users/:id',
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            return AdminViewUserDetailScreen(userId: id);
+          },
+        ),
+        GoRoute(
+          path: '/chat',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>;
+            final roomId = extra['roomId'] as int;
+            final userId = extra['userId'] as int;
+            final peerTitle = extra['peerTitle'] as String;
+            final socketUrl = extra['socketUrl'] as String;
+
+            return BlocProvider(
+              create: (_) => ChatBloc(
+                datasource: ChatSocketDatasource(SocketService.instance),
+              ),
+              child: ChatScreen(
+                roomId: roomId,
+                userId: userId,
+                peerTitle: peerTitle,
+                socketUrl: socketUrl,
+              ),
+            );
+          },
+        ),
+
+        GoRoute(
+          path: '/admin/inbox',
+          builder: (context, state) => const AdminChatListScreen(),
+        ),
+        GoRoute(
+          path: '/admin/products/:id/edit',
+          name: 'admin-product-edit',
+          builder: (context, state) {
+            final productId = state.pathParameters['id']!;
+            return Scaffold(
+              body: Center(
+                child: Text('Edit Product: $productId - To be implemented'),
+              ),
+            );
+          },
+        ),
+      ],
+    ),
     GoRoute(
       path: '/login',
       name: 'login',

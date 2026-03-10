@@ -5,6 +5,8 @@ import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/core/injections/database_helper.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_event.dart';
 
 class ProfileUpdateScreen extends StatefulWidget {
   const ProfileUpdateScreen({super.key});
@@ -275,12 +277,88 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
           width: double.infinity,
           height: 48,
           child: ElevatedButton(
-            onPressed: () {
-              // TODO: Implement save functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile updated successfully!')),
-              );
-              context.pop();
+            onPressed: () async {
+              final fullName = _nameController.text.trim();
+              final address = _addressController.text.trim();
+              final phone = _phoneController.text.trim();
+
+              if (fullName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Full Name is required')),
+                );
+                return;
+              }
+
+              if (phone.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Phone Number is required')),
+                );
+                return;
+              }
+
+              // 1) xác định userId
+              int userId = 2; // demo default
+              final state = context.read<AuthBloc>().state;
+              if (state is Authenticated) {
+                final parsed = int.tryParse(state.user.id.toString());
+                if (parsed != null) userId = parsed;
+              }
+
+              try {
+                // 2) Update DB
+                final affected = await DatabaseHelper.updateUserProfile(
+                  userId: userId,
+                  fullName: fullName,
+                  address: address,
+                  phone: phone,
+                );
+
+                // 3) Query lại DB để kiểm tra
+                final row = await DatabaseHelper.getUserById(userId);
+
+                // 4) LOG ra console cho chắc
+                // ignore: avoid_print
+                print('UPDATE_PROFILE userId=$userId affected=$affected row=$row');
+
+                if (!mounted) return;
+
+                if (affected == 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Update FAILED (affected=0). userId=$userId')),
+                  );
+                  return;
+                }
+
+                // 5) Set lại controller từ DB để "nhận thông tin update"
+                if (row != null) {
+                  _nameController.text = (row['full_name'] ?? '').toString();
+                  _addressController.text = (row['address'] ?? '').toString();
+                  _phoneController.text = (row['phone'] ?? '').toString();
+                }
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Updated OK! affected=$affected userId=$userId')),
+                );
+                final authState = context.read<AuthBloc>().state;
+                if (authState is Authenticated) {
+                  final updatedUser = authState.user.copyWith(
+                    fullName: fullName,
+                    address: address,
+                    phone: phone,
+                  );
+                  context.read<AuthBloc>().add(AuthUserUpdated(updatedUser));
+                }
+
+                context.pop();
+              } catch (e) {
+                // ignore: avoid_print
+                print('UPDATE_PROFILE ERROR: $e');
+
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Update failed: $e')),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
