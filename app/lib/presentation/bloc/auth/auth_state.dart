@@ -59,3 +59,7 @@ class OtpVerified extends AuthState {}
 /// Password was changed or reset successfully
 class PasswordChanged extends AuthState {}
 
+class OtpLoading extends AuthState {}
+
+class PasswordLoading extends AuthState {}
+

@@ -23,3 +23,7 @@ class NetworkFailure extends Failure {
 class ValidationFailure extends Failure {
   const ValidationFailure({required String message}) : super(message);
 }
+
+class DatabaseFailure extends Failure {
+  const DatabaseFailure({required String message}) : super(message);
+}
