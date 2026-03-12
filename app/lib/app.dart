@@ -9,7 +9,6 @@ import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_create_product_screen.dart';
-import 'package:frontend_otis/presentation/screens/admin/admin_edit_product_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_trash_screen.dart';
@@ -45,7 +44,7 @@ import 'package:frontend_otis/presentation/screens/profile/profile_update_screen
 import 'package:frontend_otis/presentation/screens/notification/notification_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:frontend_otis/core/network/socket_service.dart';
 import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
 import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
@@ -130,11 +129,6 @@ final GoRouter router = GoRouter(
         );
       },
       routes: [
-        GoRoute(
-          path: '/admin/products',
-          name: 'admin-product-list',
-          builder: (context, state) => const AdminProductListScreen(),
-        ),
         GoRoute(
           path: '/admin/products/create',
           name: 'admin-product-create',
@@ -310,32 +304,6 @@ final GoRouter router = GoRouter(
           name: 'admin-product-list',
           builder: (context, state) => const AdminProductListScreen(),
         ),
-        GoRoute(
-          path: '/admin/products/create',
-          name: 'admin-product-create',
-          builder: (context, state) => const AdminCreateProductScreen(),
-        ),
-        GoRoute(
-          path: '/admin/products/trash',
-          name: 'admin-trash',
-          builder: (context, state) => const AdminTrashScreen(),
-        ),
-        GoRoute(
-          path: '/admin/products/:id',
-          name: 'admin-product-detail',
-          builder: (context, state) {
-            final productId = state.pathParameters['id']!;
-            return AdminProductDetailScreen(productId: productId);
-          },
-        ),
-        GoRoute(
-          path: '/admin/products/:id/edit',
-          name: 'admin-product-edit',
-          builder: (context, state) {
-            final productId = state.pathParameters['id']!;
-            return AdminEditProductScreen(productId: productId);
-          },
-        ),
       ],
     ),
     GoRoute(
@@ -370,10 +338,7 @@ final GoRouter router = GoRouter(
         bloc.add(LoadCategories(CategoryType.vehicleMake));
         bloc.add(LoadCategories(CategoryType.tireSpec));
 
-        return BlocProvider(
-          create: (_) => bloc,
-          child: const CategoryScreen(),
-        );
+        return BlocProvider(create: (_) => bloc, child: const CategoryScreen());
       },
     ),
     GoRoute(
@@ -382,9 +347,7 @@ final GoRouter router = GoRouter(
       builder: (context, state) {
         final phone = state.extra as String;
 
-        return ChangePasswordOtpScreen(
-          phone: phone,
-        );
+        return ChangePasswordOtpScreen(phone: phone);
       },
     ),
   ],
