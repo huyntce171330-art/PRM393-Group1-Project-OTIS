@@ -341,6 +341,21 @@ final GoRouter router = GoRouter(
         return BlocProvider(create: (_) => bloc, child: const CategoryScreen());
       },
     ),
+    // Admin Notifications: inbox (icon on home) = view only
+    GoRoute(
+      path: '/admin/notifications-inbox',
+      name: 'admin-notifications-inbox',
+      builder: (context, state) => const NotificationListScreen(
+        isAdminMode: true,
+        isInboxView: true,
+      ),
+    ),
+    // Admin Notifications CRUD (from Settings > Quản lý thông báo)
+    GoRoute(
+      path: '/admin/notifications',
+      name: 'admin-notifications',
+      builder: (context, state) => const NotificationListScreen(isAdminMode: true),
+    ),
     GoRoute(
       path: '/otp',
       name: 'otp',

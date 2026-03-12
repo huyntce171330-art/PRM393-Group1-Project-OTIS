@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/presentation/widgets/header_bar.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_profile_screen.dart';
 
@@ -25,8 +26,9 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
       actions: actions ??
           [
             IconButton(
-              onPressed: () {},
+              onPressed: () => context.push('/admin/notifications-inbox'),
               icon: const Icon(Icons.notifications_outlined),
+              tooltip: 'Thông báo',
             ),
             const SizedBox(width: 8),
             InkWell(

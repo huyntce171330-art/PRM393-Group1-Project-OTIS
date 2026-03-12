@@ -3,7 +3,16 @@ import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/header_bar.dart';
 
 class NotificationListScreen extends StatefulWidget {
-  const NotificationListScreen({super.key});
+  final bool isAdminMode;
+  final bool isInboxView;
+  final String? userId;
+
+  const NotificationListScreen({
+    super.key,
+    this.isAdminMode = false,
+    this.isInboxView = false,
+    this.userId,
+  });
 
   @override
   State<NotificationListScreen> createState() => _NotificationListScreenState();
@@ -22,27 +31,42 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: HeaderBar(
-        title: 'Notifications',
+        title: widget.isInboxView
+            ? 'Thông báo'
+            : (widget.isAdminMode ? 'Quản lý thông báo' : 'Notifications'),
         showBack: true,
-        actions: [
-          TextButton(
-            onPressed: () {
-              // Mark all read logic
-            },
-            child: const Text(
-              'Mark all as read',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
+        actions: (widget.isAdminMode && !widget.isInboxView)
+            ? null
+            : [
+                TextButton(
+                  onPressed: () {
+                    // Mark all read logic
+                  },
+                  child: const Text(
+                    'Mark all as read',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
         backgroundColor: isDarkMode
             ? const Color(0xFF1a0c0c).withOpacity(0.95)
             : Colors.white.withOpacity(0.95),
       ),
+      floatingActionButton: (widget.isAdminMode && !widget.isInboxView)
+          ? FloatingActionButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Chức năng tạo thông báo sẽ sớm có!')),
+                );
+              },
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
       body: Column(
         children: [
           _buildFilterTabs(context),
@@ -192,7 +216,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
     return InkWell(
       onTap: () {
-        // Handle tap
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chi tiết thông báo!')),
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
