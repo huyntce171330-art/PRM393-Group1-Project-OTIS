@@ -25,9 +25,5 @@ class ValidationFailure extends Failure {
 }
 
 class DatabaseFailure extends Failure {
-  const DatabaseFailure({String message = 'Database Failure'}) : super(message);
-}
-
-class LocationFailure extends Failure {
-  const LocationFailure({String message = 'Location Failure'}) : super(message);
+  const DatabaseFailure({required String message}) : super(message);
 }

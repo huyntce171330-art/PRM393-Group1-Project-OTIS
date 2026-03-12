@@ -33,11 +33,6 @@ import 'package:frontend_otis/domain/usecases/product/restore_product_usecase.da
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
-import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
-import 'package:frontend_otis/data/datasources/map/map_remote_datasource.dart';
-import 'package:frontend_otis/data/datasources/map/map_remote_datasource_impl.dart';
-import 'package:frontend_otis/data/repositories/map_repository_impl.dart';
-import 'package:frontend_otis/domain/repositories/map_repository.dart';
 import 'package:frontend_otis/core/network/api_client.dart';
 import 'package:frontend_otis/data/datasources/cart/cart_remote_datasource.dart';
 import 'package:frontend_otis/data/datasources/cart/cart_remote_datasource_impl.dart';
@@ -70,8 +65,6 @@ import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart'
 import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource_impl.dart';
 import 'package:frontend_otis/data/repositories/auth_repository_impl.dart';
 import 'package:frontend_otis/domain/repositories/auth_repository.dart';
-import 'package:frontend_otis/data/repositories/map_repository_impl.dart';
-import 'package:frontend_otis/domain/repositories/map_repository.dart';
 import 'package:frontend_otis/domain/usecases/auth/login_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/register_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/logout_usecase.dart';
@@ -79,6 +72,24 @@ import 'package:frontend_otis/domain/usecases/auth/otp_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/forgot_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/change_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/data/datasources/category/brand_datasource.dart';
+import 'package:frontend_otis/data/datasources/category/brand_datasource_impl.dart';
+import '../../data/datasources/category/tire_spec_datasource.dart';
+import '../../data/datasources/category/tire_spec_datasource_impl.dart';
+import '../../data/datasources/category/vehicle_make_datasource.dart';
+import '../../data/datasources/category/vehicle_make_datasource_impl.dart';
+import '../../data/repositories/brand_repository_impl.dart';
+import '../../data/repositories/tire_spec_repository_impl.dart';
+import '../../data/repositories/vehicle_make_repository_impl.dart';
+import '../../domain/repositories/brand_repository.dart';
+import '../../domain/repositories/tire_spec_repository.dart';
+import '../../domain/repositories/vehicle_make_repository.dart';
+import '../../domain/usecases/category/create_category_usecase.dart';
+import '../../domain/usecases/category/delete_category_usecase.dart';
+import '../../domain/usecases/category/get_categories_usecase.dart';
+import '../../domain/usecases/category/get_category_detail_usecase.dart';
+import '../../domain/usecases/category/update_category_usecase.dart';
+import '../../presentation/bloc/category/category_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -126,11 +137,6 @@ Future<void> init() async {
     () => AuthRemoteDatasourceImpl(sl()),
   );
 
-  // Map Data Source
-  sl.registerLazySingleton<MapRemoteDatasource>(
-    () => MapRemoteDatasourceImpl(database: sl()),
-  );
-
   // ========== 4. REPOSITORIES ==========
   // Product Repository
   sl.registerLazySingleton<ProductRepository>(
@@ -155,11 +161,6 @@ Future<void> init() async {
 
   // Auth Repository
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
-
-  // Map Repository
-  sl.registerLazySingleton<MapRepository>(
-    () => MapRepositoryImpl(remoteDatasource: sl()),
-  );
 
   // ========== 5. USE CASES ==========
   // Product Use Cases
@@ -327,12 +328,86 @@ Future<void> init() async {
     ),
   );
 
-  // Map BLoC
-  sl.registerLazySingleton<MapBloc>(
-    () => MapBloc(
-      repository: sl(),
+
+
+  // ========== BRAND DATASOURCE ==========
+  sl.registerLazySingleton<TireBrandDataSource>(
+        () => TireBrandDataSourceImpl(sl()),
+  );
+
+// ========== BRAND REPOSITORY ==========
+  sl.registerLazySingleton<TireBrandRepository>(
+        () => TireBrandRepositoryImpl(sl()),
+  );
+  // ========== TIRE SPEC DATASOURCE ==========
+  sl.registerLazySingleton<TireSpecDataSource>(
+        () => TireSpecDataSourceImpl(sl()),
+  );
+
+// ========== TIRE SPEC REPOSITORY ==========
+  sl.registerLazySingleton<TireSpecRepository>(
+        () => TireSpecRepositoryImpl(sl()),
+  );
+  // ========== VEHICLE MAKE DATASOURCE ==========
+  sl.registerLazySingleton<VehicleMakeDataSource>(
+        () => VehicleMakeDataSourceImpl(sl()),
+  );
+
+// ========== VEHICLE MAKE REPOSITORY ==========
+  sl.registerLazySingleton<VehicleMakeRepository>(
+        () => VehicleMakeRepositoryImpl(sl()),
+  );
+
+  sl.registerFactory<CategoryBloc>(
+        () => CategoryBloc(
+      getCategoriesUseCase: sl(),
+      getCategoryDetailUseCase: sl(),
+      createCategoryUseCase: sl(),
+      updateCategoryUseCase: sl(),
+      deleteCategoryUseCase: sl(),
     ),
   );
+
+  sl.registerLazySingleton<CreateCategoryUseCase>(
+        () => CreateCategoryUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
+  sl.registerLazySingleton<GetCategoriesUseCase>(
+        () => GetCategoriesUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
+  sl.registerLazySingleton<UpdateCategoryUseCase>(
+        () => UpdateCategoryUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
+  sl.registerLazySingleton<DeleteCategoryUseCase>(
+        () => DeleteCategoryUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
+  sl.registerLazySingleton<GetCategoryDetailUseCase>(
+        () => GetCategoryDetailUseCase(
+      tireBrandRepository: sl<TireBrandRepository>(),
+      vehicleMakeRepository: sl<VehicleMakeRepository>(),
+      tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
 
   print("All dependencies registered successfully");
 }

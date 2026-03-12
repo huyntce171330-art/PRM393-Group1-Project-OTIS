@@ -7,22 +7,18 @@
 // - Featured products horizontal scroll
 // - Bottom navigation bar
 
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:go_router/go_router.dart';
-
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
-
+import 'dart:async';
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
-import 'package:frontend_otis/domain/entities/shop_location.dart';
-import 'package:frontend_otis/domain/repositories/map_repository.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_event.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
@@ -33,6 +29,10 @@ import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/core/utils/ui_utils.dart';
 import 'package:frontend_otis/presentation/widgets/nav_bar.dart';
 import 'package:frontend_otis/presentation/widgets/filter/smart_filter_sheet.dart';
+import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
+import 'package:frontend_otis/presentation/widgets/chat/chat_bottom_sheet.dart';
+import 'package:frontend_otis/core/network/socket_service.dart';
+import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
 
 /// Home screen - Main landing page.
 class HomeScreen extends StatefulWidget {
@@ -48,23 +48,83 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   int _currentBannerPage = 0;
-  final MapRepository _mapRepository = sl<MapRepository>();
-  ShopLocation? _featuredShop;
-  bool _isShopLoading = false;
-  String? _shopLoadError;
+  bool _chatInitialized = false;
+  static const String _socketUrl = 'http://10.0.2.2:3000';
+
+  StreamSubscription? _chatBadgeSub;
+  bool _isChatSheetOpen = false;
+
+  int? get _currentUserId {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is Authenticated) {
+      return int.tryParse(authState.user.id);
+    }
+    return null;
+  }
+
+
+  Future<int?> _getCurrentRoomId() async {
+    final userId = _currentUserId;
+    if (userId == null) return null;
+    return DatabaseHelper.getRoomIdByUserId(userId);
+  }
+
+  Future<void> _initUserChatBadge() async {
+    final userId = _currentUserId;
+    if (userId == null) return;
+
+    final roomId = await _getCurrentRoomId();
+    if (roomId == null) return;
+
+    SocketService.instance.reset();
+    SocketService.instance.connect(
+      url: _socketUrl,
+      userId: userId,
+    );
+
+    SocketService.instance.joinRoom(
+      roomId,
+      userId: userId,
+    );
+
+    await _chatBadgeSub?.cancel();
+    _chatBadgeSub = SocketService.instance.messageStream.listen((msg) async {
+      final msgRoomId = msg['roomId'] ?? msg['room_id'];
+      final senderId = msg['senderId'] ?? msg['sender_id'];
+      final content = (msg['content'] ?? '').toString();
+      final createdAt = (msg['createdAt'] ?? msg['created_at'])?.toString();
+
+      if (_isChatSheetOpen) return;
+
+      if (msgRoomId == roomId &&
+          senderId != null &&
+          senderId != userId &&
+          content.isNotEmpty) {
+        await DatabaseHelper.insertMessage(
+          roomId: roomId,
+          senderId: senderId as int,
+          content: content,
+          createdAt: createdAt,
+          isRead: 0,
+        );
+
+        if (mounted) setState(() {});
+      }
+    });
+  }
 
   // Banner data
   final List<Map<String, String>> _banners = [
     {
       'imageUrl':
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCyc2sGVAca2Hw2aS4Y_yRr3Gs5HWz9pU4Vo4gA3DyIiH6CxKUQZM9KBnWsDrm6vUHjvalu5KFk2bqELSmtQTX6FHAyC8ugZyVJSkIwB4gJacnqvzewp6a068ElACuqoFBJ1D8ewrQfZIo4gaAOh7CQnbFK5XUQ3V0BOoerbd-gpOnMXrouIAk-CfEQDty2j_IyRoVWxLGxgTpoZPkOiBdsrKMr11t_toXU241N8Ja6dUF9OLHqJr0gtsGJGDLSAPPRVeX6Ish-URE',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCyc2sGVAca2Hw2aS4Y_yRr3Gs5HWz9pU4Vo4gA3DyIiH6CxKUQZM9KBnWsDrm6vUHjvalu5KFk2bqELSmtQTX6FHAyC8ugZyVJSkIwB4gJacnqvzewp6a068UQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW-gpOnMXrouIAk-CfEQDty2j_IyRoVWxLGxgTpoZPkOiBdsrKMr11t_toXU241N8Ja6dUF9OLHqJr0gtsGJGDLSAPPRVeX6Ish-URE',
       'title': 'Summer Sale',
       'subtitle': '15% off all Michelin Tires',
       'badge': 'PROMO',
     },
     {
       'imageUrl':
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCsAl8SBoQTX23DBYA0h8vlyPvXJeoaQNmGIcyjbZnAVEpHii-NZpA7Fw6yOFQhV_9aQCt7RKwkI2pSgT3gcuPzLI7T5U8rP0cjFht7N8ceWpi9U5VFMEndSir53sVq4OkSO2ejeziuYiY6HE67Ar5gVTRAlSa2cRYDZ_WzqGzGdLBjQlCOpvNJi9zrdgkVMHNA3OMRHfV3r2DYQceWoAbrG8Y8Sd0FSWye0kd1CYzyVZzqZjuOrlX_tMB7075TbByjMzwik2bskLA',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCsAl8SBoQTX23DBYA0h8vlyPvXJeoaQNmGIcyjbZnAVEpHii-NZpA7Fw6yOFQhV_9aQCt7RKwkI2pSgT3gcuPzLI7T5U8rP0cjFht7N8ceWpi9U5VFMUQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW_WzqGzGdLBjQlCOpvNJi9zrdgkVMHNA3OMRHfV3r2DYQceWoAbrG8Y8Sd0FSWye0kd1CYzyVZzqZjuOrlX_tMB7075TbByjMzwik2bskLA',
       'title': 'Bridgestone Deals',
       'subtitle': 'Buy 3 Get 1 Free on select models',
       'badge': 'NEW',
@@ -83,11 +143,20 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
-    _loadFeaturedShop();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_chatInitialized) {
+      _chatInitialized = true;
+      _initUserChatBadge();
+    }
   }
 
   @override
   void dispose() {
+    _chatBadgeSub?.cancel();
     _bannerController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -139,7 +208,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _onRefresh() async {
     _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
-    await _loadFeaturedShop();
+  }
+  Future<void> _openChatBottomSheet() async {
+    final userId = _currentUserId;
+    if (userId == null) return;
+
+    final roomId = await _getCurrentRoomId();
+    if (roomId == null) return;
+
+    _isChatSheetOpen = true;
+
+    await DatabaseHelper.markRoomMessagesAsRead(
+      roomId: roomId,
+      viewerId: userId,
+    );
+
+    if (mounted) setState(() {});
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return BlocProvider(
+          create: (_) => ChatBloc(
+            datasource: ChatSocketDatasource(SocketService.instance),
+          ),
+          child: ChatBottomSheet(
+            roomId: roomId,
+            userId: userId,
+            peerTitle: 'Admin',
+            socketUrl: _socketUrl,
+          ),
+        );
+      },
+    );
+
+    _isChatSheetOpen = false;
+    if (mounted) setState(() {});
   }
 
   @override
@@ -193,11 +299,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 productCardWidth,
                                 isSmallScreen,
                               ),
-                              const SizedBox(height: 16),
-                              _buildShopLocationSection(isSmallScreen),
                               SizedBox(
                                 height:
-                                    kBottomNavigationBarHeight +
+                                kBottomNavigationBarHeight +
                                     (isSmallScreen ? 8 : 16),
                               ),
                             ],
@@ -210,6 +314,79 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+        ),
+        floatingActionButton: FutureBuilder<int?>(
+          future: _getCurrentRoomId(),
+          builder: (context, roomSnap) {
+            final roomId = roomSnap.data;
+            final userId = _currentUserId;
+
+            if (roomId == null || userId == null) {
+              return FloatingActionButton(
+                onPressed: _openChatBottomSheet,
+                backgroundColor: AppColors.primary,
+                child: const Icon(
+                  Icons.chat_bubble,
+                  color: Colors.white,
+                ),
+              );
+            }
+
+            return FutureBuilder<int>(
+              future: DatabaseHelper.getUnreadCountForRoom(
+                roomId: roomId,
+                viewerId: userId,
+              ),
+              builder: (context, snap) {
+                final unread = snap.data ?? 0;
+                final badgeText = unread > 9 ? '9+' : unread.toString();
+
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    FloatingActionButton(
+                      onPressed: _openChatBottomSheet,
+                      backgroundColor: AppColors.primary,
+                      child: const Icon(
+                        Icons.chat_bubble,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (unread > 0)
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minWidth: 22,
+                            minHeight: 22,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: Center(
+                            child: Text(
+                              badgeText,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            );
+          },
         ),
         // Bottom Navigation
         bottomNavigationBar: NavBar(
@@ -471,7 +648,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             _banners.length,
-            (index) => Container(
+                (index) => Container(
               width: 6,
               height: 6,
               margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -489,10 +666,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildServicesSection(
-    BuildContext context,
-    double iconSize,
-    bool isSmallScreen,
-  ) {
+      BuildContext context,
+      double iconSize,
+      bool isSmallScreen,
+      ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final spacing = isSmallScreen ? 8.0 : 12.0;
     final crossAxisSpacing = isSmallScreen ? 8.0 : 12.0;
@@ -618,11 +795,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAllProductsSection(
-    BuildContext context,
-    ProductState state,
-    double cardWidth,
-    bool isSmallScreen,
-  ) {
+      BuildContext context,
+      ProductState state,
+      double cardWidth,
+      bool isSmallScreen,
+      ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     List<Product> allProducts = state.products ?? [];
 
@@ -701,7 +878,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       bool isInCart = false;
                       if (cartState is CartLoaded) {
                         isInCart = cartState.cartItems.any(
-                          (item) => item.productId == product.id,
+                              (item) => item.productId == product.id,
                         );
                       }
                       return ProductCard(
@@ -718,376 +895,47 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
         else if (state is ProductError)
-          Container(
-            constraints: const BoxConstraints(minHeight: 150),
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? AppColors.surfaceDark
-                  : AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    state.message,
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                      fontSize: 13,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _onRefresh,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                    ),
-                    child: const Text('Thử lại'),
-                  ),
-                ],
+            Container(
+              constraints: const BoxConstraints(minHeight: 150),
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDarkMode
+                    ? AppColors.surfaceDark
+                    : AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(12),
               ),
-            ),
-          )
-        else
-          const SizedBox.shrink(),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      state.message,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                        fontSize: 13,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: _onRefresh,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: const Text('Thử lại'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            const SizedBox.shrink(),
       ],
     );
-  }
-
-  Future<void> _loadFeaturedShop() async {
-    if (_isShopLoading) return;
-    setState(() {
-      _isShopLoading = true;
-      _shopLoadError = null;
-    });
-    final result = await _mapRepository.getShopLocations();
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _featuredShop = null;
-        _shopLoadError = failure.message;
-        _isShopLoading = false;
-      }),
-      (shops) => setState(() {
-        _featuredShop = shops.isNotEmpty ? shops.first : null;
-        _shopLoadError =
-            shops.isEmpty ? 'Chưa có cửa hàng nào được đăng ký.' : null;
-        _isShopLoading = false;
-      }),
-    );
-  }
-
-  Widget _buildShopLocationSection(bool isSmallScreen) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final sectionTitleStyle = TextStyle(
-      fontSize: 18,
-      fontWeight: FontWeight.w700,
-      color: isDarkMode ? Colors.white : AppColors.textPrimary,
-    );
-
-    Widget content;
-
-    if (_isShopLoading) {
-      content = ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          height: isSmallScreen ? 200 : 240,
-          color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
-          child: const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.primary,
-            ),
-          ),
-        ),
-      );
-    } else if (_shopLoadError != null) {
-      content = ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Không tải được vị trí',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                _shopLoadError!,
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white70 : Colors.grey[700],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: _loadFeaturedShop,
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                ),
-                child: const Text('Thử lại'),
-              ),
-            ],
-          ),
-        ),
-      );
-    } else if (_featuredShop == null) {
-      content = ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.location_off,
-                size: 36,
-                color: AppColors.primary,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Cửa hàng sẽ được hiển thị tại đây khi bạn tạo mục đầu tiên.',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white70 : Colors.grey[700],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
-    } else {
-      final shop = _featuredShop!;
-      final mapCenter = LatLng(shop.latitude, shop.longitude);
-      final mapHeight = isSmallScreen ? 180.0 : 210.0;
-      final imageProvider = _shopImageProvider(shop);
-
-      content = ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => context.push('/shops-map'),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDarkMode ? AppColors.surfaceDark : Colors.white,
-              border: Border.all(color: Colors.grey[200]!),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: mapHeight,
-                  child: ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(18)),
-                    child: Stack(
-                      children: [
-                        FlutterMap(
-                          options: MapOptions(
-                            initialCenter: mapCenter,
-                            initialZoom: 15,
-                            minZoom: 3,
-                            maxZoom: 18,
-                          ),
-                          children: [
-                            TileLayer(
-                              urlTemplate:
-                                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                              userAgentPackageName: 'com.example.otis_app',
-                            ),
-                            MarkerLayer(
-                              markers: [
-                                Marker(
-                                  point: mapCenter,
-                                  width: 48,
-                                  height: 80,
-                                  child: _buildLocationMarker(imageProvider),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Positioned(
-                          bottom: 16,
-                          left: 16,
-                          right: 16,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.55),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  shop.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  shop.address,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        shop.address,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Điện thoại: ${shop.phone}',
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white70 : Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Vị trí cửa hàng',
-              style: sectionTitleStyle,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: content,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLocationMarker(ImageProvider<Object>? imageProvider) {
-    const double imageSize = 32;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        
-        ClipOval(
-          child: Container(
-            width: imageSize,
-            height: imageSize,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: imageProvider != null
-                ? Image(
-                    image: imageProvider,
-                    fit: BoxFit.cover,
-                  )
-                : Center(
-                    child: Icon(
-                      Icons.storefront,
-                      size: imageSize * 0.6,
-                      color: AppColors.primary,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 1.5),
-        const Icon(
-          Icons.location_pin,
-          color: AppColors.primary,
-          size: 44,
-        ),
-
-      ],
-    );
-  }
-
-  ImageProvider<Object>? _shopImageProvider(ShopLocation shop) {
-    final rawPath = shop.imageUrl?.trim();
-    if (rawPath == null || rawPath.isEmpty) return null;
-
-    final parsed = Uri.tryParse(rawPath);
-    if (parsed != null &&
-        parsed.hasScheme &&
-        (parsed.scheme == 'http' || parsed.scheme == 'https')) {
-      return NetworkImage(rawPath);
-    }
-
-    try {
-      final file = File(parsed?.isAbsolute == true
-          ? parsed!.toFilePath()
-          : rawPath);
-      if (file.existsSync()) {
-        return FileImage(file);
-      }
-    } catch (_) {
-      // Ignore failures reading local file.
-    }
-
-    return null;
   }
 }

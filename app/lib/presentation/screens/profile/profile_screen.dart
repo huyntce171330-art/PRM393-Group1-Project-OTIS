@@ -209,7 +209,14 @@ class ProfileScreen extends StatelessWidget {
             title: 'Change Password',
             subtitle: 'Security settings',
             onTap: () {
-              // Placeholder for Change Password
+              final authState = context.read<AuthBloc>().state;
+
+              if (authState is Authenticated) {
+                context.push(
+                  '/otp',
+                  extra: authState.user.phone,
+                );
+              }
             },
           ),
         ],

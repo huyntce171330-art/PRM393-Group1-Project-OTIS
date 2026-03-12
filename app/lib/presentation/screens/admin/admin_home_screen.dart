@@ -1,10 +1,71 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-
+import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
+import 'package:frontend_otis/core/injections/database_helper.dart';
+import 'package:frontend_otis/core/network/socket_service.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_header.dart';
 
-class AdminHomeScreen extends StatelessWidget {
+class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
+
+  @override
+  State<AdminHomeScreen> createState() => _AdminHomeScreenState();
+}
+
+class _AdminHomeScreenState extends State<AdminHomeScreen> {
+  static const int _adminId = 1;
+  static const String _socketUrl = 'http://10.0.2.2:3000';
+
+  StreamSubscription? _chatBadgeSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAdminChatSocket();
+  }
+
+  Future<void> _initAdminChatSocket() async {
+    SocketService.instance.connect(
+      url: _socketUrl,
+      userId: _adminId,
+    );
+
+    _chatBadgeSub = SocketService.instance.adminInboxStream.listen((msg) async {
+      if (!mounted) return;
+      if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+
+      final roomId = msg['roomId'] ?? msg['room_id'];
+      final senderId = msg['senderId'] ?? msg['sender_id'];
+      final content = (msg['content'] ?? '').toString();
+      final createdAt = (msg['createdAt'] ?? msg['created_at'])?.toString();
+
+      if (SocketService.instance.activeAdminRoomId == roomId) {
+        return;
+      }
+
+      if (roomId != null &&
+          senderId != null &&
+          senderId != _adminId &&
+          content.isNotEmpty) {
+        await DatabaseHelper.insertMessage(
+          roomId: roomId as int,
+          senderId: senderId as int,
+          content: content,
+          createdAt: createdAt,
+          isRead: 0,
+        );
+
+        if (mounted) setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _chatBadgeSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +85,6 @@ class AdminHomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header removed from body
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -58,7 +118,7 @@ class AdminHomeScreen extends StatelessWidget {
                       textColor,
                       textSecondaryColor,
                     ),
-                    const SizedBox(height: 80), // Space for bottom nav
+                    const SizedBox(height: 80),
                   ],
                 ),
               ),
@@ -70,11 +130,11 @@ class AdminHomeScreen extends StatelessWidget {
   }
 
   Widget _buildRevenueCard(
-    BuildContext context,
-    Color surfaceColor,
-    Color textColor,
-    Color? textSecondaryColor,
-  ) {
+      BuildContext context,
+      Color surfaceColor,
+      Color textColor,
+      Color? textSecondaryColor,
+      ) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -174,18 +234,18 @@ class AdminHomeScreen extends StatelessWidget {
   }
 
   Widget _buildStatsGrid(
-    BuildContext context,
-    Color surfaceColor,
-    Color textColor,
-    Color? textSecondaryColor,
-  ) {
+      BuildContext context,
+      Color surfaceColor,
+      Color textColor,
+      Color? textSecondaryColor,
+      ) {
     return GridView.count(
       crossAxisCount: 2,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.1, // Adjust based on content
+      childAspectRatio: 1.1,
       children: [
         _buildStatCard(
           surfaceColor,
@@ -198,6 +258,35 @@ class AdminHomeScreen extends StatelessWidget {
           value: '฿45,200',
           trend: '+12.5%',
           trendUp: true,
+        ),
+        FutureBuilder<int>(
+          future: DatabaseHelper.getTotalUnreadCount(viewerId: _adminId),
+          builder: (context, snap) {
+            final unread = snap.data ?? 0;
+            final badgeText = unread > 9 ? '9+' : unread.toString();
+
+            return InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () async {
+                await context.push('/admin/chats');
+                if (mounted) setState(() {});
+              },
+              child: _buildStatCard(
+                surfaceColor,
+                textColor,
+                textSecondaryColor,
+                icon: Icons.chat_bubble_outline,
+                iconColor: Colors.teal,
+                iconBg: Colors.teal.withValues(alpha: 0.1),
+                title: 'Chats',
+                value: snap.connectionState == ConnectionState.waiting
+                    ? '...'
+                    : unread.toString(),
+                subtext: 'Tap to view inbox',
+                badge: unread > 0 ? badgeText : null,
+              ),
+            );
+          },
         ),
         _buildStatCard(
           surfaceColor,
@@ -222,36 +311,48 @@ class AdminHomeScreen extends StatelessWidget {
           value: '340',
           subtext: 'Tires in stock',
         ),
-        _buildStatCard(
-          surfaceColor,
-          textColor,
-          textSecondaryColor,
-          icon: Icons.group,
-          iconColor: Colors.purple,
-          iconBg: Colors.purple.withValues(alpha: 0.1),
-          title: 'Customers',
-          value: '1,205',
-          trend: '+4',
-          trendUp: true,
+        FutureBuilder<int>(
+          future: DatabaseHelper.countCustomers(),
+          builder: (context, snap) {
+            final count = snap.data ?? 0;
+
+            return InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => context.push('/admin/users'),
+              child: _buildStatCard(
+                surfaceColor,
+                textColor,
+                textSecondaryColor,
+                icon: Icons.group,
+                iconColor: Colors.purple,
+                iconBg: Colors.purple.withValues(alpha: 0.1),
+                title: 'Customers',
+                value: snap.connectionState == ConnectionState.waiting
+                    ? '...'
+                    : count.toString(),
+                subtext: 'Tap to view list',
+              ),
+            );
+          },
         ),
       ],
     );
   }
 
   Widget _buildStatCard(
-    Color surfaceColor,
-    Color textColor,
-    Color? textSecondaryColor, {
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required String title,
-    required String value,
-    String? trend,
-    bool trendUp = true,
-    String? subtext,
-    String? badge,
-  }) {
+      Color surfaceColor,
+      Color textColor,
+      Color? textSecondaryColor, {
+        required IconData icon,
+        required Color iconColor,
+        required Color iconBg,
+        required String title,
+        required String value,
+        String? trend,
+        bool trendUp = true,
+        String? subtext,
+        String? badge,
+      }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -359,11 +460,11 @@ class AdminHomeScreen extends StatelessWidget {
   }
 
   Widget _buildWeeklySales(
-    BuildContext context,
-    Color surfaceColor,
-    Color textColor,
-    Color? textSecondaryColor,
-  ) {
+      BuildContext context,
+      Color surfaceColor,
+      Color textColor,
+      Color? textSecondaryColor,
+      ) {
     final data = [
       {'day': 'Mon', 'val': 0.45, 'label': '22k'},
       {'day': 'Tue', 'val': 0.30, 'label': '15k'},
@@ -438,14 +539,14 @@ class AdminHomeScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                           boxShadow: active
                               ? [
-                                  BoxShadow(
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ]
+                            BoxShadow(
+                              color: AppColors.primary.withValues(
+                                alpha: 0.3,
+                              ),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
                               : null,
                         ),
                       ),
@@ -474,11 +575,11 @@ class AdminHomeScreen extends StatelessWidget {
   }
 
   Widget _buildRecentActivities(
-    BuildContext context,
-    Color surfaceColor,
-    Color textColor,
-    Color? textSecondaryColor,
-  ) {
+      BuildContext context,
+      Color surfaceColor,
+      Color textColor,
+      Color? textSecondaryColor,
+      ) {
     return Column(
       children: [
         Row(
