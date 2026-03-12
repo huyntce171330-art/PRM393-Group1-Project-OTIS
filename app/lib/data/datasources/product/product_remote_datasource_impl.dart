@@ -1,4 +1,4 @@
-import 'package:frontend_otis/core/error/exceptions.dart';
+import 'package:frontend_otis/core/error/exceptions.dart' as app_exceptions;
 import 'package:frontend_otis/core/error/failures.dart';
 import 'package:frontend_otis/data/datasources/product/product_remote_datasource.dart';
 import 'package:frontend_otis/data/models/brand_model.dart';
@@ -499,7 +499,7 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
     );
 
     if (result.isEmpty) {
-      throw CacheException(message: 'Failed to fetch created product');
+      throw app_exceptions.CacheException(message: 'Failed to fetch created product');
     }
 
     final createdProduct = ProductModel.fromJson(
@@ -636,7 +636,7 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
     );
 
     if (result.isEmpty) {
-      throw CacheException(message: 'Failed to fetch updated product');
+      throw app_exceptions.CacheException(message: 'Failed to fetch updated product');
     }
 
     final updatedProduct = ProductModel.fromJson(

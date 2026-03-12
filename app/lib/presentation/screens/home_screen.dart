@@ -7,15 +7,22 @@
 // - Featured products horizontal scroll
 // - Bottom navigation bar
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
+import 'package:frontend_otis/domain/entities/shop_location.dart';
+import 'package:frontend_otis/domain/repositories/map_repository.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_event.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
@@ -41,6 +48,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   int _currentBannerPage = 0;
+  final MapRepository _mapRepository = sl<MapRepository>();
+  ShopLocation? _featuredShop;
+  bool _isShopLoading = false;
+  String? _shopLoadError;
 
   // Banner data
   final List<Map<String, String>> _banners = [
@@ -72,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
+    _loadFeaturedShop();
   }
 
   @override
@@ -127,6 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _onRefresh() async {
     _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
+    await _loadFeaturedShop();
   }
 
   @override
@@ -180,6 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 productCardWidth,
                                 isSmallScreen,
                               ),
+                              const SizedBox(height: 16),
+                              _buildShopLocationSection(isSmallScreen),
                               SizedBox(
                                 height:
                                     kBottomNavigationBarHeight +
@@ -745,5 +760,334 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox.shrink(),
       ],
     );
+  }
+
+  Future<void> _loadFeaturedShop() async {
+    if (_isShopLoading) return;
+    setState(() {
+      _isShopLoading = true;
+      _shopLoadError = null;
+    });
+    final result = await _mapRepository.getShopLocations();
+    if (!mounted) return;
+    result.fold(
+      (failure) => setState(() {
+        _featuredShop = null;
+        _shopLoadError = failure.message;
+        _isShopLoading = false;
+      }),
+      (shops) => setState(() {
+        _featuredShop = shops.isNotEmpty ? shops.first : null;
+        _shopLoadError =
+            shops.isEmpty ? 'Chưa có cửa hàng nào được đăng ký.' : null;
+        _isShopLoading = false;
+      }),
+    );
+  }
+
+  Widget _buildShopLocationSection(bool isSmallScreen) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final sectionTitleStyle = TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: isDarkMode ? Colors.white : AppColors.textPrimary,
+    );
+
+    Widget content;
+
+    if (_isShopLoading) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          height: isSmallScreen ? 200 : 240,
+          color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
+          child: const Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+      );
+    } else if (_shopLoadError != null) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Không tải được vị trí',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _shopLoadError!,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.grey[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _loadFeaturedShop,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                ),
+                child: const Text('Thử lại'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (_featuredShop == null) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.location_off,
+                size: 36,
+                color: AppColors.primary,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Cửa hàng sẽ được hiển thị tại đây khi bạn tạo mục đầu tiên.',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.grey[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      final shop = _featuredShop!;
+      final mapCenter = LatLng(shop.latitude, shop.longitude);
+      final mapHeight = isSmallScreen ? 180.0 : 210.0;
+      final imageProvider = _shopImageProvider(shop);
+
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => context.push('/shops-map'),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppColors.surfaceDark : Colors.white,
+              border: Border.all(color: Colors.grey[200]!),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: mapHeight,
+                  child: ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(18)),
+                    child: Stack(
+                      children: [
+                        FlutterMap(
+                          options: MapOptions(
+                            initialCenter: mapCenter,
+                            initialZoom: 15,
+                            minZoom: 3,
+                            maxZoom: 18,
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate:
+                                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName: 'com.example.otis_app',
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: mapCenter,
+                                  width: 48,
+                                  height: 80,
+                                  child: _buildLocationMarker(imageProvider),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Positioned(
+                          bottom: 16,
+                          left: 16,
+                          right: 16,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.55),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  shop.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  shop.address,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        shop.address,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Điện thoại: ${shop.phone}',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white70 : Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Vị trí cửa hàng',
+              style: sectionTitleStyle,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: content,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationMarker(ImageProvider<Object>? imageProvider) {
+    const double imageSize = 32;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        
+        ClipOval(
+          child: Container(
+            width: imageSize,
+            height: imageSize,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: imageProvider != null
+                ? Image(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  )
+                : Center(
+                    child: Icon(
+                      Icons.storefront,
+                      size: imageSize * 0.6,
+                      color: AppColors.primary,
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 1.5),
+        const Icon(
+          Icons.location_pin,
+          color: AppColors.primary,
+          size: 44,
+        ),
+
+      ],
+    );
+  }
+
+  ImageProvider<Object>? _shopImageProvider(ShopLocation shop) {
+    final rawPath = shop.imageUrl?.trim();
+    if (rawPath == null || rawPath.isEmpty) return null;
+
+    final parsed = Uri.tryParse(rawPath);
+    if (parsed != null &&
+        parsed.hasScheme &&
+        (parsed.scheme == 'http' || parsed.scheme == 'https')) {
+      return NetworkImage(rawPath);
+    }
+
+    try {
+      final file = File(parsed?.isAbsolute == true
+          ? parsed!.toFilePath()
+          : rawPath);
+      if (file.existsSync()) {
+        return FileImage(file);
+      }
+    } catch (_) {
+      // Ignore failures reading local file.
+    }
+
+    return null;
   }
 }

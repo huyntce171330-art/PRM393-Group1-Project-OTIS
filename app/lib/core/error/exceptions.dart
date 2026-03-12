@@ -40,3 +40,14 @@ class ValidationException implements Exception {
   @override
   String toString() => 'ValidationException: $message';
 }
+
+/// Exception thrown when database-related errors occur.
+/// Examples: SQLite errors, query failures.
+class DatabaseException implements Exception {
+  final String message;
+
+  const DatabaseException(this.message);
+
+  @override
+  String toString() => 'DatabaseException: $message';
+}

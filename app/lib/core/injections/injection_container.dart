@@ -33,6 +33,11 @@ import 'package:frontend_otis/domain/usecases/product/restore_product_usecase.da
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/product/product_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
+import 'package:frontend_otis/data/datasources/map/map_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/map/map_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/repositories/map_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/map_repository.dart';
 import 'package:frontend_otis/core/network/api_client.dart';
 import 'package:frontend_otis/data/datasources/cart/cart_remote_datasource.dart';
 import 'package:frontend_otis/data/datasources/cart/cart_remote_datasource_impl.dart';
@@ -65,6 +70,8 @@ import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart'
 import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource_impl.dart';
 import 'package:frontend_otis/data/repositories/auth_repository_impl.dart';
 import 'package:frontend_otis/domain/repositories/auth_repository.dart';
+import 'package:frontend_otis/data/repositories/map_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/map_repository.dart';
 import 'package:frontend_otis/domain/usecases/auth/login_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/register_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/logout_usecase.dart';
@@ -119,6 +126,11 @@ Future<void> init() async {
     () => AuthRemoteDatasourceImpl(sl()),
   );
 
+  // Map Data Source
+  sl.registerLazySingleton<MapRemoteDatasource>(
+    () => MapRemoteDatasourceImpl(database: sl()),
+  );
+
   // ========== 4. REPOSITORIES ==========
   // Product Repository
   sl.registerLazySingleton<ProductRepository>(
@@ -143,6 +155,11 @@ Future<void> init() async {
 
   // Auth Repository
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
+
+  // Map Repository
+  sl.registerLazySingleton<MapRepository>(
+    () => MapRepositoryImpl(remoteDatasource: sl()),
+  );
 
   // ========== 5. USE CASES ==========
   // Product Use Cases
@@ -307,6 +324,13 @@ Future<void> init() async {
       restoreProductUsecase: sl(),
       permanentDeleteProductUsecase: sl(),
       updateProductUsecase: sl(),
+    ),
+  );
+
+  // Map BLoC
+  sl.registerLazySingleton<MapBloc>(
+    () => MapBloc(
+      repository: sl(),
     ),
   );
 

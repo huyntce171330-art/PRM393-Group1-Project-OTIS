@@ -91,39 +91,79 @@ class AdminProfileScreen extends StatelessWidget {
   }
 
   Widget _buildLogoutButton(BuildContext context, bool isDarkMode) {
-    return SizedBox(
-      width: double.infinity,
-      child: TextButton(
-        onPressed: () {
-          context.read<AuthBloc>().add(LogoutEvent());
-          context.go('/login');
-        },
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.all(16),
-          backgroundColor: isDarkMode ? const Color(0xFF2a1a1b) : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+    return Column(
+      children: [
+        // Settings Button - Shop Locations
+        SizedBox(
+          width: double.infinity,
+          child: TextButton(
+            onPressed: () {
+              context.push('/admin/shop-locations');
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.all(16),
+              backgroundColor: isDarkMode ? const Color(0xFF2a1a1b) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.store, color: AppColors.primary, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Shop Locations',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.logout, color: AppColors.primary, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Log Out',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+        const SizedBox(height: 16),
+        // Logout Button
+        SizedBox(
+          width: double.infinity,
+          child: TextButton(
+            onPressed: () {
+              context.read<AuthBloc>().add(LogoutEvent());
+              context.go('/login');
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.all(16),
+              backgroundColor: isDarkMode ? const Color(0xFF2a1a1b) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+                ),
               ),
             ),
-          ],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.logout, color: AppColors.primary, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Log Out',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }

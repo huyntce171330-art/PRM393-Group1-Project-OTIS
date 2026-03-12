@@ -4,11 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_create_product_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_edit_product_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_trash_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_shop_location_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_shop_location_form_screen.dart';
+import 'package:frontend_otis/presentation/screens/map/map_picker_screen.dart';
+import 'package:frontend_otis/presentation/screens/map/shop_locations_map_screen.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
@@ -163,8 +168,15 @@ final GoRouter router = GoRouter(
     // Admin Routes - ShellRoute with both AdminLayout (bottom nav) and BlocProvider
     ShellRoute(
       builder: (context, state, child) {
-        return BlocProvider<AdminProductBloc>.value(
-          value: di.sl<AdminProductBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider<AdminProductBloc>.value(
+              value: di.sl<AdminProductBloc>(),
+            ),
+            BlocProvider<MapBloc>.value(
+              value: di.sl<MapBloc>(),
+            ),
+          ],
           child: AdminLayout(child: child),
         );
       },
@@ -218,7 +230,51 @@ final GoRouter router = GoRouter(
             return AdminEditProductScreen(productId: productId);
           },
         ),
+        // Shop Locations Routes
+        GoRoute(
+          path: '/admin/shop-locations',
+          name: 'admin-shop-locations',
+          builder: (context, state) => const AdminShopLocationListScreen(),
+        ),
+        GoRoute(
+          path: '/admin/shop-locations/create',
+          name: 'admin-shop-location-create',
+          builder: (context, state) => const AdminShopLocationFormScreen(),
+        ),
+        GoRoute(
+          path: '/admin/shop-locations/:id',
+          name: 'admin-shop-location-detail',
+          builder: (context, state) {
+            final shopId = state.pathParameters['id']!;
+            return AdminShopLocationFormScreen(shopId: shopId);
+          },
+        ),
+        GoRoute(
+      path: '/admin/shop-locations/:id/edit',
+          name: 'admin-shop-location-edit',
+          builder: (context, state) {
+            final shopId = state.pathParameters['id']!;
+            return AdminShopLocationFormScreen(shopId: shopId);
+          },
+        ),
+        // Map Picker Route
+        GoRoute(
+          path: '/map-picker',
+          name: 'map-picker',
+          builder: (context, state) {
+            final extras = state.extra as Map<String, dynamic>?;
+            return MapPickerScreen(
+              initialLatitude: extras?['latitude'] as double?,
+              initialLongitude: extras?['longitude'] as double?,
+            );
+          },
+        ),
       ],
+    ),
+    GoRoute(
+      path: '/shops-map',
+      name: 'shops-map',
+      builder: (context, state) => const ShopLocationsMapScreen(),
     ),
     GoRoute(
       path: '/order/:id',
@@ -286,6 +342,14 @@ class OtisApp extends StatelessWidget {
         routerConfig: router,
         // Using Thai Phung design system colors
         theme: ThemeData(
+          // Disable smart quotes/dashes at theme level to avoid IME conflicts
+          // while still allowing normal text input behavior
+          useMaterial3: true,
+          textSelectionTheme: const TextSelectionThemeData(
+            cursorColor: AppColors.primary,
+            selectionColor: Color(0x8033B5E5),
+            selectionHandleColor: AppColors.primary,
+          ),
           colorScheme: ColorScheme.fromSeed(
             seedColor: AppColors.primary,
             primary: AppColors.primary,
@@ -293,7 +357,6 @@ class OtisApp extends StatelessWidget {
             surface: AppColors.surfaceLight,
             error: AppColors.error,
           ),
-          useMaterial3: true,
           // Apply app colors to app bar theme
           appBarTheme: const AppBarTheme(
             backgroundColor: AppColors.primary,

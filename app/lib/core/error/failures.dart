@@ -23,3 +23,11 @@ class NetworkFailure extends Failure {
 class ValidationFailure extends Failure {
   const ValidationFailure({required String message}) : super(message);
 }
+
+class DatabaseFailure extends Failure {
+  const DatabaseFailure({String message = 'Database Failure'}) : super(message);
+}
+
+class LocationFailure extends Failure {
+  const LocationFailure({String message = 'Location Failure'}) : super(message);
+}
