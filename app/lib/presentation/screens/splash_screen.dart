@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
+import 'package:frontend_otis/core/injections/injection_container.dart' as di;
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_event.dart';
+import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/notification/notification_event.dart';
 
 /// Splash screen shown at app startup.
 ///
-/// Displays animated logo and app branding,
-/// then automatically navigates to the home screen.
+/// Restores session from DB, then navigates to:
+/// - Admin home  → user is admin
+/// - Customer home → user is customer
+/// - Login       → no session found
 class SplashScreen extends StatefulWidget {
-  /// The screen to navigate to after splash (defaults to [HomeScreen])
-  final Widget? nextScreen;
-
-  const SplashScreen({super.key, this.nextScreen});
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -40,21 +46,10 @@ class _SplashScreenState extends State<SplashScreen>
       curve: const Interval(0.0, 0.5),
     );
 
-    // Navigate after animation completes
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _navigateToLogin();
-      }
-    });
-
     _controller.forward();
-  }
 
-  void _navigateToLogin() {
-    if (mounted) {
-      // Use GoRouter for navigation - go to replace splash in stack
-      context.go('/login');
-    }
+    // Dispatch restore event immediately — StreamBuilder in build() will handle navigation
+    di.sl<AuthBloc>().add(RestoreSessionEvent());
   }
 
   @override
@@ -67,108 +62,124 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppColors.backgroundDark
-          : AppColors.backgroundLight,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo with animation
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return FadeTransition(
-                  opacity: _fadeInAnimation,
-                  child: ScaleTransition(scale: _scaleAnimation, child: child),
-                );
-              },
-              child: const Logo(size: 150, fit: BoxFit.contain),
-            ),
-            const SizedBox(height: 24),
-            // App Name
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: _controller,
-                    curve: const Interval(0.5, 1.0),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (!mounted) return;
+
+        if (state is Authenticated) {
+          // Load notifications for badge
+          di.sl<NotificationBloc>().add(LoadNotificationsEvent());
+
+          if (state.user.isAdmin) {
+            context.go('/admin/home');
+          } else {
+            context.go('/home');
+          }
+        } else if (state is Unauthenticated) {
+          context.go('/login');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDarkMode
+            ? AppColors.backgroundDark
+            : AppColors.backgroundLight,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo with animation
+              AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return FadeTransition(
+                    opacity: _fadeInAnimation,
+                    child: ScaleTransition(scale: _scaleAnimation, child: child),
+                  );
+                },
+                child: const Logo(size: 150, fit: BoxFit.contain),
+              ),
+              const SizedBox(height: 24),
+              // App Name
+              AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: _controller,
+                      curve: const Interval(0.5, 1.0),
+                    ),
+                    child: child,
+                  );
+                },
+                child: const Text(
+                  'OTIS',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                    letterSpacing: 8,
                   ),
-                  child: child,
-                );
-              },
-              child: Text(
-                'OTIS',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                  letterSpacing: 8,
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            // Subtitle
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: _controller,
-                    curve: const Interval(0.7, 1.0),
+              const SizedBox(height: 8),
+              // Subtitle
+              AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: _controller,
+                      curve: const Interval(0.7, 1.0),
+                    ),
+                    child: child,
+                  );
+                },
+                child: Text(
+                  'Premium Tires & Auto Parts',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkMode ? Colors.grey[500] : AppColors.textTertiary,
                   ),
-                  child: child,
-                );
-              },
-              child: Text(
-                'Premium Tires & Auto Parts',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDarkMode ? Colors.grey[500] : AppColors.textTertiary,
                 ),
               ),
-            ),
-            const SizedBox(height: 48),
-            // Loading indicator
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: _controller,
-                    curve: const Interval(0.8, 1.0),
-                  ),
-                  child: child,
-                );
-              },
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.primary,
+              const SizedBox(height: 48),
+              // Loading indicator
+              AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: _controller,
+                      curve: const Interval(0.8, 1.0),
+                    ),
+                    child: child,
+                  );
+                },
+                child: const Column(
+                  children: [
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Loading...',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDarkMode
-                          ? Colors.grey[400]
-                          : AppColors.textSecondary,
+                    SizedBox(height: 16),
+                    Text(
+                      'Loading...',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

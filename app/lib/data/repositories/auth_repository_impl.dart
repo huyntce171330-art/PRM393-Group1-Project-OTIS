@@ -140,4 +140,16 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(message: 'Change password failed'));
     }
   }
+
+  @override
+  Future<Either<Failure, User>> getUserById(int userId) async {
+    try {
+      final userModel = await remoteDatasource.getUserById(userId);
+      return Right(userModel.toDomain());
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (_) {
+      return Left(ServerFailure(message: 'Failed to get user'));
+    }
+  }
 }

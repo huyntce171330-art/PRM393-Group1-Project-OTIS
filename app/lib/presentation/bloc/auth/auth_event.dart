@@ -57,6 +57,9 @@ class RegisterEvent extends AuthEvent {
 /// Event to log out the current user
 class LogoutEvent extends AuthEvent {}
 
+/// Event to restore session from local DB (on app start)
+class RestoreSessionEvent extends AuthEvent {}
+
 /// Optional: Event to check auth status on app start
 class CheckAuthStatusEvent extends AuthEvent {}
 

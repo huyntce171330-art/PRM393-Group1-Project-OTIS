@@ -2,12 +2,12 @@ import 'package:dartz/dartz.dart';
 import 'package:frontend_otis/core/error/failures.dart';
 import 'package:frontend_otis/domain/repositories/notification_repository.dart';
 
-class UpdateNotificationStatusUsecase {
+class MarkAllAsReadUsecase {
   final NotificationRepository repository;
 
-  UpdateNotificationStatusUsecase(this.repository);
+  MarkAllAsReadUsecase(this.repository);
 
-  Future<Either<Failure, void>> call(String id, bool isRead) {
-    return repository.updateNotificationStatus(id, isRead);
+  Future<Either<Failure, void>> call() {
+    return repository.markAllAsRead();
   }
 }

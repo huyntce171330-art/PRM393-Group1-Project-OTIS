@@ -89,6 +89,18 @@ import '../../domain/usecases/category/delete_category_usecase.dart';
 import '../../domain/usecases/category/get_categories_usecase.dart';
 import '../../domain/usecases/category/get_category_detail_usecase.dart';
 import '../../domain/usecases/category/update_category_usecase.dart';
+import 'package:frontend_otis/data/datasources/notification/notification_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/notification/notification_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/repositories/notification_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/notification_repository.dart';
+import 'package:frontend_otis/domain/usecases/notification/create_notification_usecase.dart';
+import 'package:frontend_otis/domain/usecases/notification/delete_notification_usecase.dart';
+import 'package:frontend_otis/domain/usecases/notification/get_notification_detail_usecase.dart';
+import 'package:frontend_otis/domain/usecases/notification/get_notifications_usecase.dart';
+import 'package:frontend_otis/domain/usecases/notification/mark_all_as_read_usecase.dart';
+import 'package:frontend_otis/domain/usecases/notification/search_notifications_usecase.dart';
+import 'package:frontend_otis/domain/usecases/notification/update_notification_status_usecase.dart';
+import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import '../../presentation/bloc/category/category_bloc.dart';
 
 final sl = GetIt.instance;
@@ -303,8 +315,8 @@ Future<void> init() async {
     ),
   );
 
-  // Auth BLoC
-  sl.registerFactory<AuthBloc>(
+  // Auth BLoC — singleton so auth state persists across screens
+  sl.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
       loginUsecase: sl(),
       registerUsecase: sl(),
@@ -405,6 +417,35 @@ Future<void> init() async {
       tireBrandRepository: sl<TireBrandRepository>(),
       vehicleMakeRepository: sl<VehicleMakeRepository>(),
       tireSpecRepository: sl<TireSpecRepository>(),
+    ),
+  );
+
+  // ========== NOTIFICATION FEATURE ==========
+  sl.registerLazySingleton<NotificationRemoteDatasource>(
+    () => NotificationRemoteDatasourceImpl(),
+  );
+
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(datasource: sl()),
+  );
+
+  sl.registerLazySingleton(() => GetNotificationsUsecase(sl()));
+  sl.registerLazySingleton(() => GetNotificationDetailUsecase(sl()));
+  sl.registerLazySingleton(() => UpdateNotificationStatusUsecase(sl()));
+  sl.registerLazySingleton(() => DeleteNotificationUsecase(sl()));
+  sl.registerLazySingleton(() => SearchNotificationsUsecase(sl()));
+  sl.registerLazySingleton(() => CreateNotificationUsecase(sl()));
+  sl.registerLazySingleton(() => MarkAllAsReadUsecase(sl()));
+
+  sl.registerLazySingleton<NotificationBloc>(
+    () => NotificationBloc(
+      getNotifications: sl(),
+      getNotificationDetail: sl(),
+      updateNotificationStatus: sl(),
+      deleteNotification: sl(),
+      searchNotifications: sl(),
+      createNotification: sl(),
+      markAllAsRead: sl(),
     ),
   );
 

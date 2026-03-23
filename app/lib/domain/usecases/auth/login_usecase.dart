@@ -23,4 +23,9 @@ class LoginUsecase {
   }) {
     return repository.login(phone: phone, password: password);
   }
+
+  /// Restore a session by user ID (no password needed).
+  Future<Either<Failure, User>> fromUserId(int userId) {
+    return repository.getUserById(userId);
+  }
 }

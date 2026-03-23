@@ -41,6 +41,9 @@
 
     /// Change password (logged-in user)
     Future<void> changePassword(String phone, String newPassword);
+
+    /// Fetch a user by their ID (for session restore)
+    Future<UserModel> getUserById(int userId);
   }
 
 

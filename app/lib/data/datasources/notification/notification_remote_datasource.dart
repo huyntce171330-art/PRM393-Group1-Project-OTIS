@@ -1,11 +1,10 @@
-// Interface for Notification Remote Data Source.
-//
-// Steps:
-// 1. Define `NotificationRemoteDatasource`.
-// 2. Methods matching the repository (returning `Future<List<NotificationModel>>` etc.):
-//    - `fetchNotifications(Map<String, dynamic>? filterParams)`
-//    - `fetchNotificationDetail(String id)`
-//    - `searchNotifications(String query)`
-//    - `createNotification(Map<String, dynamic> data)`
-//    - `updateNotificationStatus(String id, bool status)`
-//    - `deleteNotification(String id)`
+import 'package:frontend_otis/data/models/notification_model.dart';
+
+abstract class NotificationRemoteDatasource {
+  Future<List<NotificationModel>> fetchNotifications({Map<String, dynamic>? filterParams});
+  Future<NotificationModel> fetchNotificationDetail(String id);
+  Future<NotificationModel> createNotification(NotificationModel notification);
+  Future<void> updateNotificationStatus(String id, bool isRead);
+  Future<void> deleteNotification(String id);
+  Future<void> markAllAsRead();
+}

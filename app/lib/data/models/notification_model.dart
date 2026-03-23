@@ -1,4 +1,5 @@
 import 'package:frontend_otis/domain/entities/notification.dart';
+import 'package:frontend_otis/domain/entities/notification_filter.dart';
 
 /// Data model for Notification entity with JSON serialization support.
 /// Handles conversion between JSON API responses and domain entities.
@@ -11,6 +12,8 @@ class NotificationModel {
     required this.isRead,
     required this.userId,
     required this.createdAt,
+    this.type,
+    this.payload,
   });
 
   /// Unique identifier for the notification
@@ -25,6 +28,18 @@ class NotificationModel {
   /// Whether the notification has been read (mapped from 0/1)
   final bool isRead;
 
+  /// User ID this notification belongs to
+  final String userId;
+
+  /// When the notification was created
+  final DateTime createdAt;
+
+  /// Notification type
+  final NotificationType? type;
+
+  /// Additional payload/metadata
+  final String? payload;
+
   /// Convert NotificationModel to JSON for API requests.
   Map<String, dynamic> toJson() {
     return {
@@ -34,14 +49,9 @@ class NotificationModel {
       'is_read': isRead ? 1 : 0,
       'user_id': userId,
       'created_at': createdAt.toIso8601String(),
+      'type': type?.toString().split('.').last,
     };
   }
-
-  /// User ID this notification belongs to
-  final String userId;
-
-  /// When the notification was created
-  final DateTime createdAt;
 
   /// Factory constructor to create NotificationModel from JSON.
   /// Implements defensive parsing to handle null values and invalid data.
@@ -53,23 +63,26 @@ class NotificationModel {
       isRead: _parseBoolFromInt(json['is_read'], defaultValue: false),
       userId: _parseUserId(json['user_id']),
       createdAt: _parseDateTime(json['created_at']),
+      type: _parseType(json['type']),
+      payload: _parseString(json['payload'], defaultValue: null),
     );
   }
 
-  /// Convert NotificationModel to domain Notification entity.
-  Notification toDomain() {
-    return Notification(
+  /// Convert NotificationModel to domain AppNotification entity.
+  AppNotification toDomain() {
+    return AppNotification(
       id: id,
       title: title,
       body: body,
       isRead: isRead,
       userId: userId,
       createdAt: createdAt,
+      type: type,
+      payload: payload,
     );
   }
 
-  /// Create NotificationModel from domain Notification entity.
-  factory NotificationModel.fromDomain(Notification notification) {
+  factory NotificationModel.fromDomain(AppNotification notification) {
     return NotificationModel(
       id: notification.id,
       title: notification.title,
@@ -77,6 +90,8 @@ class NotificationModel {
       isRead: notification.isRead,
       userId: notification.userId,
       createdAt: notification.createdAt,
+      type: notification.type,
+      payload: notification.payload,
     );
   }
 
@@ -113,8 +128,8 @@ class NotificationModel {
   }
 
   /// Parse string values with null safety and default values.
-  static String _parseString(dynamic value, {String defaultValue = ''}) {
-    if (value == null) return defaultValue;
+  static String _parseString(dynamic value, {String? defaultValue}) {
+    if (value == null) return defaultValue ?? '';
 
     if (value is String) {
       return value.trim();
@@ -122,6 +137,15 @@ class NotificationModel {
 
     // Convert other types to string
     return value.toString().trim();
+  }
+
+  static NotificationType? _parseType(dynamic value) {
+    if (value == null) return null;
+    final str = value.toString().toLowerCase().trim();
+    for (final type in NotificationType.values) {
+      if (type.toString().split('.').last == str) return type;
+    }
+    return NotificationType.general;
   }
 
   /// Parse boolean from integer (0/1) with defensive handling.

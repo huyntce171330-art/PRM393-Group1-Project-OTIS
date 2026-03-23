@@ -20,6 +20,8 @@ import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/core/utils/ui_utils.dart';
+import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
 
 /// Product list screen.
 class ProductListScreen extends StatefulWidget {
@@ -219,10 +221,81 @@ class _ProductListScreenState extends State<ProductListScreen> {
             ),
           ),
           const SizedBox(width: 12),
+          // Notifications Bell
+          _buildNotificationBell(context),
+          const SizedBox(width: 8),
           // Avatar
           _buildAvatar(context),
         ],
       ),
+    );
+  }
+
+  Widget _buildNotificationBell(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    const size = 40.0;
+
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        final unreadCount = state is NotificationLoaded
+            ? state.notifications.where((n) => !n.isRead).length
+            : 0;
+
+        return GestureDetector(
+          onTap: () => context.push('/notifications'),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(size / 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  Icons.notifications_outlined,
+                  color: isDarkMode ? Colors.white : Colors.grey[600],
+                  size: 24,
+                ),
+                if (unreadCount > 0)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        unreadCount > 99 ? '99+' : unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

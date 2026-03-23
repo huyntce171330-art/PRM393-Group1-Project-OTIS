@@ -6,6 +6,7 @@ import 'package:frontend_otis/domain/usecases/auth/logout_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/otp_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/forgot_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/change_usecase.dart';
+import 'package:frontend_otis/core/injections/database_helper.dart';
 
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -36,10 +37,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
 
-      result.fold(
-            (failure) => emit(AuthError(failure.message)),
-            (user) => emit(Authenticated(user)),
-      );
+      if (result.isRight()) {
+        final user = result.getOrElse(() => throw UnimplementedError());
+        await DatabaseHelper.saveCurrentUser(int.parse(user.id));
+        emit(Authenticated(user));
+      } else {
+        final failure = result.swap().getOrElse(() => throw UnimplementedError());
+        emit(AuthError(failure.message));
+      }
     });
 
     /// ───────────── REGISTER ─────────────
@@ -52,22 +57,48 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
 
-      result.fold(
-            (failure) => emit(AuthError(failure.message)),
-            (user) => emit(Authenticated(user)),
-      );
+      if (result.isRight()) {
+        final user = result.getOrElse(() => throw UnimplementedError());
+        await DatabaseHelper.saveCurrentUser(int.parse(user.id));
+        emit(Authenticated(user));
+      } else {
+        final failure = result.swap().getOrElse(() => throw UnimplementedError());
+        emit(AuthError(failure.message));
+      }
     });
 
     /// ───────────── LOGOUT ─────────────
     on<LogoutEvent>((event, emit) async {
       emit(AuthLoading());
 
+      await DatabaseHelper.clearCurrentUser();
+
       final result = await logoutUsecase();
 
       result.fold(
-            (failure) => emit(AuthError(failure.message)),
-            (_) => emit(Unauthenticated()),
+        (failure) => emit(AuthError(failure.message)),
+        (_) => emit(Unauthenticated()),
       );
+    });
+
+    /// ───────────── RESTORE SESSION ─────────────
+    on<RestoreSessionEvent>((event, emit) async {
+      emit(AuthLoading());
+
+      final userId = await DatabaseHelper.getCurrentUserId();
+      if (userId == null) {
+        emit(Unauthenticated());
+        return;
+      }
+
+      final result = await loginUsecase.fromUserId(userId);
+
+      if (result.isRight()) {
+        emit(Authenticated(result.getOrElse(() => throw UnimplementedError())));
+      } else {
+        await DatabaseHelper.clearCurrentUser();
+        emit(Unauthenticated());
+      }
     });
 
     /// ───────────── REQUEST OTP ─────────────
@@ -78,15 +109,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthLoading());
       }
 
-      final result = await otpUseCase.requestOtp(
-        phone: event.phone,
-      );
+      final result = await otpUseCase.requestOtp(phone: event.phone);
 
       result.fold(
-            (failure) => emit(AuthError(failure.message)),
-            (_) {
+        (failure) => emit(AuthError(failure.message)),
+        (_) {
           emit(OtpSent());
-
           if (previousState is Authenticated) {
             emit(previousState);
           }
@@ -108,10 +136,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       result.fold(
-            (failure) => emit(AuthError(failure.message)),
-            (_) {
+        (failure) => emit(AuthError(failure.message)),
+        (_) {
           emit(OtpVerified());
-
           if (previousState is Authenticated) {
             emit(previousState);
           }
@@ -133,10 +160,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       result.fold(
-            (failure) => emit(AuthError(failure.message)),
-            (_) {
+        (failure) => emit(AuthError(failure.message)),
+        (_) {
           emit(PasswordChanged());
-
           if (previousState is Authenticated) {
             emit(previousState);
           }
@@ -158,10 +184,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       result.fold(
-            (failure) => emit(AuthError(failure.message)),
-            (_) {
+        (failure) => emit(AuthError(failure.message)),
+        (_) {
           emit(PasswordChanged());
-
           if (previousState is Authenticated) {
             emit(previousState);
           }
@@ -171,7 +196,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     /// ───────────── CHECK AUTH ─────────────
     on<CheckAuthStatusEvent>((event, emit) async {
-      emit(Unauthenticated());
+      // Delegate to RestoreSessionEvent logic
+      add(RestoreSessionEvent());
     });
 
     on<AuthUserUpdated>((event, emit) {

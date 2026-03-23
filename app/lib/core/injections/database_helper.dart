@@ -5,11 +5,18 @@ import 'package:path/path.dart';
 
 class DatabaseHelper {
   static Database? _database;
+  static bool _migrationChecked = false;
 
   static Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB();
     return _database!;
+  }
+
+  /// Warm up database at app startup — call this in main() before runApp.
+  /// Runs the full init flow silently so first real query is instant.
+  static Future<void> warmUp() async {
+    await database;
   }
 
   static Future<Database> _initDB() async {
@@ -39,7 +46,65 @@ class DatabaseHelper {
       print("Opening existing database $path");
     }
 
-    return openDatabase(path, version: 1);
+    final db = await openDatabase(path, version: 1);
+
+    // Migration: ensure 'type' and 'payload' columns exist — run once only
+    if (!_migrationChecked) {
+      _migrationChecked = true;
+      await _ensureNotificationColumns(db);
+      await _ensureAppSessionTable(db);
+    }
+
+    return db;
+  }
+
+  static Future<void> _ensureAppSessionTable(Database db) async {
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS app_session (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+    } catch (e) {
+      print("Failed to create app_session table: $e");
+    }
+  }
+
+  static Future<void> _ensureNotificationColumns(Database db) async {
+    try {
+      final result = await db.rawQuery("PRAGMA table_info(notifications)");
+      final columns = result.map((col) => col['name'] as String).toSet();
+
+      if (!columns.contains('type')) {
+        print("Adding 'type' column to notifications table...");
+        await db.execute(
+          "ALTER TABLE notifications ADD COLUMN type TEXT DEFAULT 'general'",
+        );
+      }
+
+      if (!columns.contains('payload')) {
+        print("Adding 'payload' column to notifications table...");
+        await db.execute(
+          "ALTER TABLE notifications ADD COLUMN payload TEXT",
+        );
+      }
+
+      // Speed up ORDER BY created_at queries
+      final indexes = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='notifications'",
+      );
+      final indexNames = indexes.map((r) => r['name'] as String).toSet();
+      if (!indexNames.contains('idx_notifications_created_at')) {
+        print("Creating index on notifications.created_at...");
+        await db.execute(
+          "CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC)",
+        );
+      }
+    } catch (e) {
+      print("Migration check failed: $e");
+    }
   }
 
   // ===== USER PROFILE: UPDATE + READ =====
@@ -348,6 +413,34 @@ class DatabaseHelper {
       )
       ORDER BY COALESCE(last_msg.created_at, r.updated_at) DESC
     ''', [viewerId]);
+  }
+
+  // ===== SESSION PERSISTENCE =====
+
+  /// Saves the currently logged-in user ID to local storage.
+  static Future<void> saveCurrentUser(int userId) async {
+    final db = await DatabaseHelper.database;
+    await db.delete('app_session');
+    await db.insert('app_session', {
+      'user_id': userId,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Returns the currently logged-in user ID, or null if no session.
+  static Future<int?> getCurrentUserId() async {
+    final db = await DatabaseHelper.database;
+    final rows = await db.query('app_session', limit: 1);
+    if (rows.isEmpty) return null;
+    final val = rows.first['user_id'];
+    if (val is int) return val;
+    return int.tryParse(val.toString());
+  }
+
+  /// Clears the current session (on logout).
+  static Future<void> clearCurrentUser() async {
+    final db = await DatabaseHelper.database;
+    await db.delete('app_session');
   }
 
   static Future<int?> getRoomIdByUserId(int userId) async {

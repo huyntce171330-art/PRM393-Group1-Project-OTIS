@@ -1,7 +1,14 @@
-// Use case to search notifications.
-//
-// Steps:
-// 1. Create `SearchNotificationsUsecase`.
-// 2. Inject `NotificationRepository`.
-// 3. `call` method accepts `String query`.
-// 4. Invoke `repository.searchNotifications(query)`.
+import 'package:dartz/dartz.dart';
+import 'package:frontend_otis/core/error/failures.dart';
+import 'package:frontend_otis/domain/entities/notification.dart';
+import 'package:frontend_otis/domain/repositories/notification_repository.dart';
+
+class SearchNotificationsUsecase {
+  final NotificationRepository repository;
+
+  SearchNotificationsUsecase(this.repository);
+
+  Future<Either<Failure, List<AppNotification>>> call(String query) {
+    return repository.searchNotifications(query);
+  }
+}
