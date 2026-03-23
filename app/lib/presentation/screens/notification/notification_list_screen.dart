@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/domain/entities/notification.dart';
 import 'package:frontend_otis/domain/entities/notification_filter.dart';
@@ -44,10 +43,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   void _onFilterChanged(BuildContext context, int index) {
     setState(() => _selectedFilterIndex = index);
     context.read<NotificationBloc>().add(LoadNotificationsEvent(filter: _buildFilter(index)));
-  }
-
-  void _onMarkAllRead(BuildContext context) {
-    context.read<NotificationBloc>().add(const MarkAllAsReadEvent());
   }
 
   void _onDelete(BuildContext context, String id) {
@@ -155,11 +150,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/notifications/create'),
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 
@@ -230,7 +220,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
     final yesterdayStart = todayStart.subtract(const Duration(days: 1));
-    final weekStart = todayStart.subtract(const Duration(days: 7));
 
     for (final n in notifications) {
       if (n.createdAt.isAfter(todayStart)) {
@@ -363,18 +352,12 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     final icon = _getIconForNotification(notification);
 
     return InkWell(
-<<<<<<< HEAD
-      onTap: () => context.push(
-        '/notifications/${notification.id}',
-        extra: notification,
-      ),
-=======
       onTap: () {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Chi tiết thông báo!')),
         );
       },
->>>>>>> e87bca4d7e26a3989744b10d77928b91bee15c17
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
