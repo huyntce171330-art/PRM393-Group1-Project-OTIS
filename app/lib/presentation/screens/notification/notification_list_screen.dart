@@ -10,7 +10,16 @@ import 'package:frontend_otis/presentation/bloc/notification/notification_state.
 import 'package:frontend_otis/presentation/widgets/header_bar.dart';
 
 class NotificationListScreen extends StatefulWidget {
-  const NotificationListScreen({super.key});
+  final bool isAdminMode;
+  final bool isInboxView;
+  final String? userId;
+
+  const NotificationListScreen({
+    super.key,
+    this.isAdminMode = false,
+    this.isInboxView = false,
+    this.userId,
+  });
 
   @override
   State<NotificationListScreen> createState() => _NotificationListScreenState();
@@ -75,11 +84,18 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: HeaderBar(
-        title: 'Notifications',
+        title: widget.isInboxView
+            ? 'Thông báo'
+            : (widget.isAdminMode ? 'Quản lý thông báo' : 'Notifications'),
         showBack: true,
         actions: [
           TextButton(
-            onPressed: () => _onMarkAllRead(context),
+            onPressed: () {
+              ScaffoldMessenger.of(context).clearSnackBars();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Chi tiết thông báo!')),
+              );
+            },
             child: const Text(
               'Mark all as read',
               style: TextStyle(
@@ -94,6 +110,17 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             ? const Color(0xFF1a0c0c).withOpacity(0.95)
             : Colors.white.withOpacity(0.95),
       ),
+      floatingActionButton: (widget.isAdminMode && !widget.isInboxView)
+          ? FloatingActionButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Chức năng tạo thông báo sẽ sớm có!')),
+                );
+              },
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
       body: Column(
         children: [
           _buildFilterTabs(context),
@@ -336,10 +363,18 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     final icon = _getIconForNotification(notification);
 
     return InkWell(
+<<<<<<< HEAD
       onTap: () => context.push(
         '/notifications/${notification.id}',
         extra: notification,
       ),
+=======
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chi tiết thông báo!')),
+        );
+      },
+>>>>>>> e87bca4d7e26a3989744b10d77928b91bee15c17
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
