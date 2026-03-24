@@ -130,6 +130,8 @@ CREATE TABLE notifications (
   notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT,
   body TEXT,
+  type TEXT,
+  payload TEXT,
   is_read INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   user_id INTEGER,
@@ -194,6 +196,14 @@ CREATE TABLE payments (
   bank_account_id INTEGER,
   FOREIGN KEY (bank_account_id) REFERENCES bank_accounts (bank_account_id),
   FOREIGN KEY (order_id) REFERENCES orders (order_id)
+);
+
+-- ========== 15. APP_SESSION ==========
+DROP TABLE IF EXISTS app_session;
+CREATE TABLE app_session (
+  user_id INTEGER PRIMARY KEY,
+  updated_at TEXT,
+  FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
 
 -- =====================================================
@@ -889,66 +899,6 @@ VALUES
     1
   );
 
--- 7. CART ITEMS
-INSERT INTO
-  cart_items (user_id, product_id, quantity)
-VALUES
-  (2, 1, 2),
-  (2, 5, 1),
-  (3, 6, 3),
-  (3, 9, 1),
-  (4, 3, 2);
-
--- 8. ORDERS (total_amount = sum of order_items)
--- Order 1: product 1 (qty=2, price=1510000) + product 5 (qty=1, price=1550000) = 2*1510000 + 1550000 = 4570000
--- Order 2: product 6 (qty=2, price=1560000) + product 9 (qty=1, price=1590000) = 2*1560000 + 1590000 = 4710000
--- Order 3: product 3 (qty=1, price=1530000) + product 4 (qty=1, price=1540000) = 3070000
-INSERT INTO
-  orders (
-    code,
-    total_amount,
-    status,
-    shipping_address,
-    user_id,
-    source
-  )
-VALUES
-  (
-    'ORD-001',
-    4570000,
-    'pending_payment',
-    'HCM',
-    2,
-    'cart'
-  ),
-  (
-    'ORD-002',
-    4710000,
-    'completed',
-    'Ha Noi',
-    3,
-    'buy_now'
-  ),
-  (
-    'ORD-003',
-    3070000,
-    'shipping',
-    'Da Nang',
-    4,
-    'cart'
-  );
-
--- 9. ORDER ITEMS
-INSERT INTO
-  order_items (order_id, product_id, quantity, unit_price)
-VALUES
-  (1, 1, 2, 1510000),
-  (1, 5, 1, 1550000),
-  (2, 6, 2, 1560000),
-  (2, 9, 1, 1590000),
-  (3, 3, 1, 1530000),
-  (3, 4, 1, 1540000);
-
 -- 10. NOTIFICATIONS
 INSERT INTO
   notifications (title, body, user_id)
@@ -1006,45 +956,5 @@ VALUES
     'NGUYEN TAN HUY',
     'Ho Chi Minh Branch',
     'https://png.pngtree.com/png-clipart/20220824/original/pngtree-scan-me-qr-code-png-image_8488220.png',
-    1
-  );
-
--- 14. PAYMENTS
-INSERT INTO
-  payments (
-    order_id,
-    payment_code,
-    amount,
-    method,
-    status,
-    paid_at,
-    bank_account_id
-  )
-VALUES
-  (
-    1,
-    'PAY-ORD-001',
-    4570000,
-    'bank',
-    'pending',
-    NULL,
-    1
-  ),
-  (
-    2,
-    'PAY-ORD-002',
-    4710000,
-    'cod',
-    'success',
-    '2026-01-05 10:15:00',
-    NULL
-  ),
-  (
-    3,
-    'PAY-ORD-003',
-    3070000,
-    'bank',
-    'success',
-    '2026-01-06 14:20:00',
     1
   );
