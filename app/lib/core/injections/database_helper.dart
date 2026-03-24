@@ -74,6 +74,10 @@ class DatabaseHelper {
 
   static Future<void> _ensureNotificationColumns(Database db) async {
     try {
+      // First check if table exists, if not create it
+      final tableExists = await _ensureNotificationsTable(db);
+      if (!tableExists) return;
+
       final result = await db.rawQuery("PRAGMA table_info(notifications)");
       final columns = result.map((col) => col['name'] as String).toSet();
 
@@ -102,9 +106,49 @@ class DatabaseHelper {
           "CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC)",
         );
       }
+
+      // Migration: ensure 'is_deleted' column exists for soft delete
+      if (!columns.contains('is_deleted')) {
+        print("Adding 'is_deleted' column to notifications table...");
+        await db.execute(
+          "ALTER TABLE notifications ADD COLUMN is_deleted INTEGER DEFAULT 0",
+        );
+      }
     } catch (e) {
       print("Migration check failed: $e");
     }
+  }
+
+  static Future<bool> _ensureNotificationsTable(Database db) async {
+    // Check if notifications table exists
+    final result = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='notifications'"
+    );
+
+    if (result.isEmpty) {
+      print("Creating 'notifications' table...");
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS notifications (
+            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            body TEXT NOT NULL,
+            is_read INTEGER DEFAULT 0,
+            user_id TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            type TEXT DEFAULT 'general',
+            payload TEXT,
+            is_deleted INTEGER DEFAULT 0
+          )
+        ''');
+        print("'notifications' table created successfully");
+        return true;
+      } catch (e) {
+        print("Failed to create notifications table: $e");
+        return false;
+      }
+    }
+    return true;
   }
 
   // ===== USER PROFILE: UPDATE + READ =====
