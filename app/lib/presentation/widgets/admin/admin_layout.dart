@@ -29,9 +29,6 @@ class AdminLayout extends StatelessWidget {
     if (location.startsWith('/admin/categories')) {
       return 3;
     }
-    if (location.startsWith('/admin/settings')) {
-      return 4;
-    }
     return 0; // Default to Home
   }
 }

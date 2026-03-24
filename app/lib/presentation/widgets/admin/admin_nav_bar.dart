@@ -34,7 +34,6 @@ class AdminNavBar extends StatelessWidget {
           _buildNavItem(context, Icons.receipt_long, 'Orders', 1),
           _buildNavItem(context, Icons.tire_repair, 'Products', 2),
           _buildNavItem(context, Icons.category, 'Categories', 3),
-          _buildNavItem(context, Icons.settings, 'Settings', 4),
         ],
       ),
     );
@@ -67,9 +66,6 @@ class AdminNavBar extends StatelessWidget {
             break;
           case 3:
             context.go('/admin/categories');
-            break;
-          case 4:
-            context.go('/admin/settings');
             break;
         }
       },

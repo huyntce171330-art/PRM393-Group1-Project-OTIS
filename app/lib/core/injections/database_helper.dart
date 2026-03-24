@@ -1,7 +1,6 @@
-import 'dart:io';
-import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/services.dart';
 
 class DatabaseHelper {
   static Database? _database;
@@ -14,32 +13,25 @@ class DatabaseHelper {
 
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'otis_v1.0.1.db');
+    final path = join(dbPath, 'otis_database.db');
 
-    final exists = await databaseExists(path);
-
-    if (!exists) {
-      print("Creating new copy from asset $path");
-
-      try {
-        await Directory(dirname(path)).create(recursive: true);
-      } catch (_) {}
-
-      final ByteData data = await rootBundle.load(
-        join("assets", "database", "otis_v1.0.1.db"),
-      );
-      final List<int> bytes = data.buffer.asUint8List(
-        data.offsetInBytes,
-        data.lengthInBytes,
-      );
-
-      await File(path).writeAsBytes(bytes, flush: true);
-      print("Database copied successfully $path");
-    } else {
-      print("Opening existing database $path");
-    }
-
-    return openDatabase(path, version: 1);
+    return openDatabase(
+      path,
+      version: 1,
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
+      onCreate: (db, version) async {
+        final script = await rootBundle.loadString("assets/database/otis_v1.0.1.sql");
+        final statements = script.split(';');
+        for (var statement in statements) {
+          final trimmed = statement.trim();
+          if (trimmed.isNotEmpty) {
+            await db.execute(trimmed);
+          }
+        }
+      },
+    );
   }
 
   // ===== USER PROFILE: UPDATE + READ =====
