@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/constants/app_strings.dart';
-import 'custom_button.dart';
+import 'package:frontend_otis/presentation/widgets/common/custom_button.dart';
 
 /// A reusable premium dialog for features that are coming soon.
 class ComingSoonDialog extends StatelessWidget {
