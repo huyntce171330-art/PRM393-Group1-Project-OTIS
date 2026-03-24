@@ -5,7 +5,7 @@ import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
 import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
-import 'package:frontend_otis/presentation/screens/admin/admin_profile_screen.dart';
+
 
 class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -79,13 +79,7 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
             const SizedBox(width: 8),
             InkWell(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const AdminProfileScreen(),
-                  ),
-                );
-              },
+              onTap: () => context.push('/admin/profile'),
               child: Container(
                 width: 40,
                 height: 40,

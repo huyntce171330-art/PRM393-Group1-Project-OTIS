@@ -5,11 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:frontend_otis/core/constants/app_colors.dart';
-import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/shop_location.dart';
-import 'package:frontend_otis/domain/repositories/map_repository.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_event.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_state.dart';
 
 class ShopLocationsMapScreen extends StatefulWidget {
   const ShopLocationsMapScreen({super.key});
@@ -19,38 +21,12 @@ class ShopLocationsMapScreen extends StatefulWidget {
 }
 
 class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
-  final MapRepository _mapRepository = sl<MapRepository>();
   final MapController _mapController = MapController();
-
-  List<ShopLocation>? _shopLocations;
-  bool _isLoading = true;
-  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadShops();
-  }
-
-  Future<void> _loadShops() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    final result = await _mapRepository.getShopLocations();
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _shopLocations = null;
-        _errorMessage = failure.message;
-        _isLoading = false;
-      }),
-      (shops) => setState(() {
-        _shopLocations = shops;
-        _isLoading = false;
-      }),
-    );
+    context.read<MapBloc>().add(const LoadShopLocationsEvent());
   }
 
   void _moveToShop(ShopLocation shop) {
@@ -58,9 +34,9 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
     _mapController.move(target, 15);
   }
 
-  LatLng _defaultCenter() {
-    if (_shopLocations != null && _shopLocations!.isNotEmpty) {
-      final first = _shopLocations!.first;
+  LatLng _defaultCenter(List<ShopLocation> shopLocations) {
+    if (shopLocations.isNotEmpty) {
+      final first = shopLocations.first;
       return LatLng(first.latitude, first.longitude);
     }
     return const LatLng(10.8231, 106.6297);
@@ -68,11 +44,11 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
 
   void _copyToClipboard(ShopLocation shop) {
     final text =
-        '${shop.name}\nLat: ${shop.latitude.toStringAsFixed(6)}, Lng: ${shop.longitude.toStringAsFixed(6)}\n${shop.address}\nĐiện thoại: ${shop.phone}';
+        '${shop.name}\nLat: ${shop.latitude.toStringAsFixed(6)}, Lng: ${shop.longitude.toStringAsFixed(6)}\n${shop.address}\nPhone: ${shop.phone}';
     Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã sao chép thông tin cửa hàng bao gồm tọa độ')),
+      const SnackBar(content: Text('Shop info copied to clipboard')),
     );
   }
 
@@ -103,7 +79,7 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shop Addresses'),
+        title: const Text('Store Addresses'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
@@ -112,26 +88,33 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(
+      body: BlocBuilder<MapBloc, MapState>(
+        builder: (context, state) {
+          if (state is MapLoading) {
+            return const Center(
               child: CircularProgressIndicator(
                 color: AppColors.primary,
               ),
-            )
-          : _errorMessage != null
-              ? _buildErrorContent(context)
-              : _buildMapContent(context),
+            );
+          } else if (state is ShopLocationsLoaded) {
+            return _buildMapContent(context, state.shopLocations);
+          } else if (state is MapError) {
+            return _buildErrorContent(context, state.message);
+          }
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 
-  Widget _buildErrorContent(BuildContext context) {
+  Widget _buildErrorContent(BuildContext context, String message) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Không thể tải dữ liệu',
+            'Unable to load data',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: isDarkMode ? Colors.white : AppColors.textPrimary,
@@ -139,7 +122,7 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _errorMessage ?? 'Đã có lỗi xảy ra.',
+            message,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: isDarkMode ? Colors.white70 : Colors.grey[700],
@@ -147,106 +130,106 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
           ),
           const SizedBox(height: 12),
           ElevatedButton(
-            onPressed: _loadShops,
+            onPressed: () =>
+                context.read<MapBloc>().add(const LoadShopLocationsEvent()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
             ),
-            child: const Text('Thử lại'),
+            child: const Text('Retry'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMapContent(BuildContext context) {
-    final shops = _shopLocations ?? [];
-    final center = _defaultCenter();
+  Widget _buildMapContent(BuildContext context, List<ShopLocation> shops) {
+    final center = _defaultCenter(shops);
     return SafeArea(
       child: Column(
         children: [
           SizedBox(
-          height: 320,
-          child: FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: center,
-              initialZoom: 13,
-              minZoom: 3,
-              maxZoom: 18,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.otis_app',
+            height: 320,
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: center,
+                initialZoom: 13,
+                minZoom: 3,
+                maxZoom: 18,
               ),
-              MarkerLayer(
-                markers: shops
-                    .map(
-                      (shop) => Marker(
-                        point: LatLng(shop.latitude, shop.longitude),
-                        width: 56,
-                        height: 110,
-                        child: _MapMarker(
-                          shop: shop,
-                          imageProvider: _shopImageProvider(shop),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.example.otis_app',
+                ),
+                MarkerLayer(
+                  markers: shops
+                      .map(
+                        (shop) => Marker(
+                          point: LatLng(shop.latitude, shop.longitude),
+                          width: 80,
+                          height: 120,
+                          child: _MapMarker(
+                            shop: shop,
+                            imageProvider: _shopImageProvider(shop),
+                          ),
                         ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: shops.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final shop = shops[index];
+                return ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.grey[200]!),
+                  ),
+                  tileColor: Theme.of(context).colorScheme.surface,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  title: Text(
+                    shop.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SelectableText(
+                        shop.address,
+                        maxLines: 2,
                       ),
-                    )
-                    .toList(),
-              ),
-            ],
+                      const SizedBox(height: 4),
+                      SelectableText('Phone: ${shop.phone}'),
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => _moveToShop(shop),
+                        icon: const Icon(Icons.my_location),
+                        color: AppColors.primary,
+                      ),
+                      IconButton(
+                        onPressed: () => _copyToClipboard(shop),
+                        icon: const Icon(Icons.copy),
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                  onTap: () => _moveToShop(shop),
+                );
+              },
+            ),
           ),
-        ),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: shops.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final shop = shops[index];
-              return ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey[200]!),
-                ),
-                tileColor: Theme.of(context).colorScheme.surface,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                title: Text(
-                  shop.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SelectableText(
-                      shop.address,
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: 4),
-                    SelectableText('Điện thoại: ${shop.phone}'),
-                  ],
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () => _moveToShop(shop),
-                      icon: const Icon(Icons.my_location),
-                      color: AppColors.primary,
-                    ),
-                    IconButton(
-                      onPressed: () => _copyToClipboard(shop),
-                      icon: const Icon(Icons.copy),
-                      color: AppColors.primary,
-                    ),
-                  ],
-                ),
-                onTap: () => _moveToShop(shop),
-              );
-            },
-          ),
-        ),
         ],
       ),
     );
@@ -273,7 +256,7 @@ class _MapMarker extends StatelessWidget {
               border: Border.all(color: Colors.white, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
+                  color: Colors.black.withValues(alpha: 0.25),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -309,7 +292,7 @@ class _MapMarker extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),

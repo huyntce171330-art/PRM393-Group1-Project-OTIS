@@ -56,6 +56,11 @@ import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
 import 'package:frontend_otis/presentation/screens/chat/chat_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_chat_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_chat_detail_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_shop_location_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_shop_location_form_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_profile_screen.dart';
+import 'package:frontend_otis/presentation/screens/map/shop_locations_map_screen.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
 
 import 'core/enums/category_type.dart';
 
@@ -311,6 +316,38 @@ final GoRouter router = GoRouter(
           name: 'admin-product-list',
           builder: (context, state) => const AdminProductListScreen(),
         ),
+        GoRoute(
+          path: '/admin/profile',
+          name: 'admin-profile',
+          builder: (context, state) => const AdminProfileScreen(),
+        ),
+        GoRoute(
+          path: '/admin/shop-locations',
+          name: 'admin-shop-locations',
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<MapBloc>(),
+            child: const AdminShopLocationListScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/admin/shop-locations/create',
+          name: 'admin-shop-locations-create',
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<MapBloc>(),
+            child: const AdminShopLocationFormScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/admin/shop-locations/:id/edit',
+          name: 'admin-shop-locations-edit',
+          builder: (context, state) {
+            final shopId = state.pathParameters['id']!;
+            return BlocProvider(
+              create: (context) => di.sl<MapBloc>(),
+              child: AdminShopLocationFormScreen(shopId: shopId),
+            );
+          },
+        ),
       ],
     ),
     // Customer notification routes — no AdminLayout wrap so customer sees clean UI
@@ -401,6 +438,14 @@ final GoRouter router = GoRouter(
 
         return ChangePasswordOtpScreen(phone: phone);
       },
+    ),
+    GoRoute(
+      path: '/shop-locations',
+      name: 'shop-locations',
+      builder: (context, state) => BlocProvider(
+        create: (context) => di.sl<MapBloc>(),
+        child: const ShopLocationsMapScreen(),
+      ),
     ),
   ],
   errorPageBuilder: (context, state) => MaterialPage(

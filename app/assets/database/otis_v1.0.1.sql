@@ -207,6 +207,23 @@ CREATE TABLE app_session (
   FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
 
+-- ========== 16. SHOP_LOCATIONS ==========
+DROP TABLE IF EXISTS shop_locations;
+
+CREATE TABLE shop_locations (
+  shop_id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  address TEXT NOT NULL,
+  latitude REAL NOT NULL,
+  longitude REAL NOT NULL,
+  image_url TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+
 -- =====================================================
 -- ========== INSERT SAMPLE DATA ==========
 -- =====================================================
@@ -899,27 +916,6 @@ VALUES
     100,
     1
   );
-
--- 10. NOTIFICATIONS
-INSERT INTO
-  notifications (title, body, user_id)
-VALUES
-  (
-    'Don hang moi',
-    'Don hang #1 dang cho xac nhan',
-    2
-  ),
-  (
-    'Thanh toan thanh cong',
-    'Don hang #2 da hoan tat',
-    3
-  ),
-  (
-    'Dang giao hang',
-    'Don hang #3 dang van chuyen',
-    4
-  ),
-  ('Khuyen mai', 'Giam 10% cho lop Michelin', 2);
 
 -- 11. CHAT ROOMS
 INSERT INTO

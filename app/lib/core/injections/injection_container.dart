@@ -63,6 +63,11 @@ import 'package:frontend_otis/data/datasources/profile/profile_remote_datasource
 import 'package:frontend_otis/data/datasources/profile/profile_remote_datasource_impl.dart';
 import 'package:frontend_otis/data/datasources/chat/chat_remote_datasource.dart';
 import 'package:frontend_otis/data/datasources/chat/chat_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/datasources/map/map_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/map/map_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/repositories/map_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/map_repository.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
 
 // AUTH IMPORTS
 import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart';
@@ -186,6 +191,11 @@ Future<void> init() async {
     () => ChatRemoteDatasourceImpl(sl()),
   );
 
+  // Map Data Source
+  sl.registerLazySingleton<MapRemoteDatasource>(
+    () => MapRemoteDatasourceImpl(database: sl()),
+  );
+
   // ========== 4. REPOSITORIES ==========
   // Product Repository
   sl.registerLazySingleton<ProductRepository>(
@@ -219,6 +229,11 @@ Future<void> init() async {
   // Chat Repository
   sl.registerLazySingleton<ChatRepository>(
     () => ChatRepositoryImpl(sl()),
+  );
+
+  // Map Repository
+  sl.registerLazySingleton<MapRepository>(
+    () => MapRepositoryImpl(remoteDatasource: sl<MapRemoteDatasource>()),
   );
 
   // ========== 5. USE CASES ==========
@@ -332,6 +347,11 @@ Future<void> init() async {
     () => ProductBloc(getProductsUsecase: sl(), getProductDetailUsecase: sl()),
   );
 
+  // Map BLoC
+  sl.registerFactory<MapBloc>(
+    () => MapBloc(repository: sl<MapRepository>()),
+  );
+
   // Cart BLoC
   sl.registerLazySingleton<CartBloc>(
     () => CartBloc(
@@ -382,9 +402,9 @@ Future<void> init() async {
   sl.registerFactory<ChatBloc>(
     () => ChatBloc(
       datasource: ChatSocketDatasource(SocketService.instance),
-      getMessagesByRoomUseCase: sl(),
-      insertMessageUseCase: sl(),
-      markRoomMessagesAsReadUseCase: sl(),
+      getMessagesByRoomUseCase: sl<GetMessagesByRoomUseCase>(),
+      insertMessageUseCase: sl<InsertMessageUseCase>(),
+      markRoomMessagesAsReadUseCase: sl<MarkRoomMessagesAsReadUseCase>(),
     ),
   );
 

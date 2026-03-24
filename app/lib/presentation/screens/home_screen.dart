@@ -36,6 +36,10 @@ import 'package:frontend_otis/domain/usecases/chat/get_room_by_user_id_usecase.d
 import 'package:frontend_otis/domain/usecases/chat/insert_message_usecase.dart';
 import 'package:frontend_otis/domain/usecases/chat/mark_room_messages_as_read_usecase.dart';
 import 'package:frontend_otis/domain/usecases/chat/get_unread_count_for_room_usecase.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_event.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_state.dart';
+import 'package:frontend_otis/domain/entities/shop_location.dart';
 
 /// Home screen - Main landing page.
 class HomeScreen extends StatefulWidget {
@@ -113,19 +117,18 @@ class _HomeScreenState extends State<HomeScreen> {
   // Banner data
   final List<Map<String, String>> _banners = [
     {
-      'imageUrl':
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCyc2sGVAca2Hw2aS4Y_yRr3Gs5HWz9pU4Vo4gA3DyIiH6CxKUQZM9KBnWsDrm6vUHjvalu5KFk2bqELSmtQTX6FHAyC8ugZyVJSkIwB4gJacnqvzewp6a068UQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW-gpOnMXrouIAk-CfEQDty2j_IyRoVWxLGxgTpoZPkOiBdsrKMr11t_toXU241N8Ja6dUF9OLHqJr0gtsGJGDLSAPPRVeX6Ish-URE',
+      'imageUrl': 'assets/images/car_promotion.png',
       'title': 'Summer Sale',
       'subtitle': '15% off all Michelin Tires',
       'badge': 'PROMO',
     },
-    {
-      'imageUrl':
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCsAl8SBoQTX23DBYA0h8vlyPvXJeoaQNmGIcyjbZnAVEpHii-NZpA7Fw6yOFQhV_9aQCt7RKwkI2pSgT3gcuPzLI7T5U8rP0cjFht7N8ceWpi9U5VFMUQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW_WzqGzGdLBjQlCOpvNJi9zrdgkVMHNA3OMRHfV3r2DYQceWoAbrG8Y8Sd0FSWye0kd1CYzyVZzqZjuOrlX_tMB7075TbByjMzwik2bskLA',
-      'title': 'Bridgestone Deals',
-      'subtitle': 'Buy 3 Get 1 Free on select models',
-      'badge': 'NEW',
-    },
+    // {
+    //   'imageUrl':
+    //       'https://lh3.googleusercontent.com/aida-public/AB6AXuCsAl8SBoQTX23DBYA0h8vlyPvXJeoaQNmGIcyjbZnAVEpHii-NZpA7Fw6yOFQhV_9aQCt7RKwkI2pSgT3gcuPzLI7T5U8rP0cjFht7N8ceWpi9U5VFMUQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW_WzqGzGdLBjQlCOpvNJi9zrdgkVMHNA3OMRHfV3r2DYQceWoAbrG8Y8Sd0FSWye0kd1CYzyVZzqZjuOrlX_tMB7075TbByjMzwik2bskLA',
+    //   'title': 'Bridgestone Deals',
+    //   'subtitle': 'Buy 3 Get 1 Free on select models',
+    //   'badge': 'NEW',
+    // },
   ];
 
   // Services categories data
@@ -285,11 +288,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                 isSmallScreen,
                               ),
                               const SizedBox(height: 16),
+                              const SizedBox(height: 16),
                               // All Products Section
                               _buildAllProductsSection(
                                 context,
                                 state,
                                 productCardWidth,
+                                isSmallScreen,
+                              ),
+                              const SizedBox(height: 24),
+                              // Store Locations Section
+                              _buildStoreLocationsSection(
+                                context,
                                 isSmallScreen,
                               ),
                               SizedBox(
@@ -556,18 +566,31 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // Background image
                       Positioned.fill(
-                        child: Image.network(
-                          banner['imageUrl']!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[300],
-                              child: const Center(
-                                child: Icon(Icons.image_not_supported),
+                        child: banner['imageUrl']!.startsWith('http')
+                            ? Image.network(
+                                banner['imageUrl']!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Center(
+                                      child: Icon(Icons.image_not_supported),
+                                    ),
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                banner['imageUrl']!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Center(
+                                      child: Icon(Icons.image_not_supported),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
                       ),
                       // Gradient overlay
                       Positioned.fill(
@@ -762,10 +785,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: IconButton(
                       onPressed: () {
-                        UiUtils.showComingSoon(
-                          context,
-                          featureName: service['label'] as String,
-                        );
+                        if (service['label'] == 'Stores') {
+                          context.push('/shop-locations');
+                        } else {
+                          UiUtils.showComingSoon(
+                            context,
+                            featureName: service['label'] as String,
+                          );
+                        }
                       },
                       icon: Icon(
                         service['icon'] as IconData,
@@ -883,6 +910,156 @@ class _HomeScreenState extends State<HomeScreen> {
               : const SizedBox.shrink(),
         ),
       ],
+    );
+  }
+
+  Widget _buildStoreLocationsSection(BuildContext context, bool isSmallScreen) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return BlocProvider(
+      create: (context) => sl<MapBloc>()..add(const LoadShopLocationsEvent()),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Our Stores',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => context.push('/shop-locations'),
+                  child: Text(
+                    'See Map',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 180,
+            child: BlocBuilder<MapBloc, MapState>(
+              builder: (context, state) {
+                if (state is MapLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  );
+                }
+
+                if (state is ShopLocationsLoaded) {
+                  final stores = state.shopLocations;
+                  if (stores.isEmpty) {
+                    return const Center(child: Text('No stores found'));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.only(left: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: stores.length,
+                    itemBuilder: (context, index) {
+                      final store = stores[index];
+                      return _buildStoreCard(context, store, isDarkMode);
+                    },
+                  );
+                }
+
+                if (state is MapError) {
+                  return Center(child: Text(state.message));
+                }
+
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStoreCard(
+    BuildContext context,
+    ShopLocation store,
+    bool isDarkMode,
+  ) {
+    return Container(
+      width: 260,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: isDarkMode ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Store Image
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Image.network(
+              store.imageUrl ??
+                  'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=800',
+              height: 100,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  store.name,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on, size: 12, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        store.address,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
