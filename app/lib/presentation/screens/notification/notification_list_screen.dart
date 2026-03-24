@@ -82,7 +82,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: HeaderBar(
-        title: 'Thông báo',
+        title: 'Notifications',
         showBack: true,
         actions: [
           TextButton(
@@ -90,7 +90,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               context.read<NotificationBloc>().add(const MarkAllAsReadEvent());
             },
             child: const Text(
-              'Đánh dấu tất cả đã đọc',
+              'Mark all as read',
               style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -232,15 +232,15 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         padding: EdgeInsets.zero,
         children: [
           if (today.isNotEmpty) ...[
-            _buildSectionHeader(context, 'Hôm nay'),
+            _buildSectionHeader(context, 'Today'),
             ...today.map((n) => _buildSwipeItem(context, n, isDarkMode)),
           ],
           if (yesterday.isNotEmpty) ...[
-            _buildSectionHeader(context, 'Hôm qua'),
+            _buildSectionHeader(context, 'Yesterday'),
             ...yesterday.map((n) => _buildSwipeItem(context, n, isDarkMode)),
           ],
           if (earlier.isNotEmpty) ...[
-            _buildSectionHeader(context, 'Trước đó'),
+            _buildSectionHeader(context, 'Earlier'),
             ...earlier.map((n) => _buildSwipeItem(context, n, isDarkMode)),
           ],
           const SizedBox(height: 80),
@@ -275,7 +275,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              notification.isRead ? 'Chưa đọc' : 'Đã đọc',
+              notification.isRead ? 'Unread' : 'Read',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -304,7 +304,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.check_circle_outline),
-              title: const Text('Đánh dấu đã đọc'),
+              title: const Text('Mark as read'),
               onTap: () {
                 Navigator.pop(ctx);
                 context.read<NotificationBloc>().add(
@@ -314,7 +314,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.check_circle),
-              title: const Text('Đánh dấu chưa đọc'),
+              title: const Text('Mark as unread'),
               onTap: () {
                 Navigator.pop(ctx);
                 context.read<NotificationBloc>().add(
@@ -549,7 +549,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               );
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Thử lại'),
+            label: const Text('Try again'),
           ),
         ],
       ),
@@ -564,7 +564,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           Icon(Icons.notifications_none, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'Chưa có thông báo nào',
+            'No notifications yet',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -573,7 +573,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Bạn sẽ nhận được thông báo tại đây!',
+            'You will receive notifications here!',
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],

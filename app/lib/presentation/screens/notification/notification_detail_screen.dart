@@ -109,7 +109,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
             ? AppColors.backgroundDark
             : AppColors.backgroundLight,
         appBar: HeaderBar(
-          title: 'Chi tiết thông báo',
+          title: 'Notification Details',
           showBack: true,
           onBack: () => context.pop(true),
           actions: [
@@ -124,8 +124,8 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                       : Colors.green,
                 ),
                 tooltip: _localNotification!.isRead
-                    ? 'Đánh dấu chưa đọc'
-                    : 'Đánh dấu đã đọc',
+                    ? 'Mark as unread'
+                    : 'Mark as read',
                 onPressed: () {
                   if (_localNotification!.isRead) {
                     context.read<NotificationBloc>().add(
@@ -173,7 +173,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadFromDb,
-              child: const Text('Thử lại'),
+              child: const Text('Try again'),
             ),
           ],
         ),
@@ -234,7 +234,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                           ),
                         ),
                         child: const Text(
-                          'Đã đọc',
+                          'Read',
                           style: TextStyle(
                             color: Colors.green,
                             fontSize: 12,
@@ -256,7 +256,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                           ),
                         ),
                         child: const Text(
-                          'Chưa đọc',
+                          'Unread',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 12,
@@ -313,19 +313,19 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
 
   String _formatDateTime(DateTime dt) {
     final months = [
-      'Tháng 1',
-      'Tháng 2',
-      'Tháng 3',
-      'Tháng 4',
-      'Tháng 5',
-      'Tháng 6',
-      'Tháng 7',
-      'Tháng 8',
-      'Tháng 9',
-      'Tháng 10',
-      'Tháng 11',
-      'Tháng 12',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
-    return '${dt.day} ${months[dt.month - 1]}, ${dt.year} lúc ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year} at ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 }

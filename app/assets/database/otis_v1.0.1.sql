@@ -236,7 +236,7 @@ VALUES
     'Admin System',
     'HCM',
     'Admin Shop',
-    'https://example.com/avatar-admin.png',
+    '',
     1,
     'active'
   ),
@@ -246,7 +246,7 @@ VALUES
     'Nguyen Van A',
     'HCM',
     'Shop A',
-    'https://example.com/avatar-user1.png',
+    '',
     2,
     'active'
   ),
@@ -256,7 +256,7 @@ VALUES
     'Tran Thi B',
     'Ha Noi',
     'Shop B',
-    'https://example.com/avatar-user2.png',
+    '',
     2,
     'active'
   ),
@@ -266,7 +266,7 @@ VALUES
     'Le Van C',
     'Da Nang',
     'Shop C',
-    'https://example.com/avatar-user3.png',
+    '',
     2,
     'active'
   );

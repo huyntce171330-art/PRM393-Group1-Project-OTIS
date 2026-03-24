@@ -92,14 +92,12 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               child: ClipOval(
-                child: Image.network(
-                  user.avatarUrl.isNotEmpty
-                      ? user.avatarUrl
-                      : 'https://lh3.googleusercontent.com/aida-public/AB6AXuDwbPtScd3S9F3PJ277MLBoH3geE1lAfavSnd7ymyiKS-DJ4MqK4VqD8a8QVIP6nDWo6CdO2D0JeVFDH-ulPAR9CWP0egvFBOenPKX6Hd4SHnq6k4DnYutpYQYuY3CfzHOOoQz7yOuIwBPff8myWOKuDseq0pMBArwhNr-rhyyTjXzB0_xaJejqihElwUDzca0TPO6959MbTDIfTSIGqCSXWcT_m0BaUMoQACq1DN8eEOihZ_tYm_bYb7YUzFB_5TPjSAlUAbBftlw',
+                child: (user.avatarUrl.isNotEmpty) ? Image.network(
+                  user.avatarUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) =>
                       const Icon(Icons.person, size: 60),
-                ),
+                ) : const Icon(Icons.person, size: 60, color: Colors.grey),
               ),
             ),
             Positioned(
