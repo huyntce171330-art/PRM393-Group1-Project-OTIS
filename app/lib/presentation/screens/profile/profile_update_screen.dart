@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
@@ -42,9 +41,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cập nhật thông tin'),
-      ),
+      appBar: AppBar(title: const Text('Cập nhật thông tin')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -95,7 +92,11 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
 
                   if (affected == 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Update FAILED (affected=0). userId=$userId')),
+                      SnackBar(
+                        content: Text(
+                          'Update FAILED (affected=0). userId=$userId',
+                        ),
+                      ),
                     );
                     return;
                   }
@@ -108,19 +109,22 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                   }
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Updated OK! affected=$affected userId=$userId')),
+                    SnackBar(
+                      content: Text(
+                        'Updated OK! affected=$affected userId=$userId',
+                      ),
+                    ),
                   );
-                  
+
                   final authState = context.read<AuthBloc>().state;
                   if (authState is Authenticated && user != null) {
                     context.read<AuthBloc>().add(AuthUserUpdated(user));
                   }
-                  
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('ERROR: $e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('ERROR: $e')));
                   }
                 }
               },
