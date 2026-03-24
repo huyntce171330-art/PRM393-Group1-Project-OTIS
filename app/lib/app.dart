@@ -58,8 +58,6 @@ import 'package:frontend_otis/presentation/screens/admin/admin_chat_list_screen.
 import 'package:frontend_otis/presentation/screens/admin/admin_chat_detail_screen.dart';
 
 import 'core/enums/category_type.dart';
-import 'core/injections/database_helper.dart';
-import 'presentation/bloc/auth/auth_state.dart';
 
 /// GoRouter configuration for the OTIS app.
 ///
@@ -204,9 +202,9 @@ final GoRouter router = GoRouter(
           path: '/admin/products/:id/edit',
           name: 'admin-product-edit',
           builder: (context, state) {
-          final productId = state.pathParameters['id']!;
-          return AdminEditProductScreen(productId: productId);
-        },
+            final productId = state.pathParameters['id']!;
+            return AdminEditProductScreen(productId: productId);
+          },
         ),
       ],
     ),
@@ -385,16 +383,15 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/admin/notifications-inbox',
       name: 'admin-notifications-inbox',
-      builder: (context, state) => const NotificationListScreen(
-        isAdminMode: true,
-        isInboxView: true,
-      ),
+      builder: (context, state) =>
+          const NotificationListScreen(isAdminMode: true, isInboxView: true),
     ),
     // Admin Notifications CRUD (from Settings > Quản lý thông báo)
     GoRoute(
       path: '/admin/notifications',
       name: 'admin-notifications',
-      builder: (context, state) => const NotificationListScreen(isAdminMode: true),
+      builder: (context, state) =>
+          const NotificationListScreen(isAdminMode: true),
     ),
     GoRoute(
       path: '/otp',
@@ -442,9 +439,7 @@ class OtisApp extends StatelessWidget {
           value: di.sl<CartBloc>()..add(LoadCartEvent()),
         ),
         BlocProvider<OrderBloc>(create: (context) => di.sl<OrderBloc>()),
-        BlocProvider<NotificationBloc>.value(
-          value: di.sl<NotificationBloc>(),
-        ),
+        BlocProvider<NotificationBloc>.value(value: di.sl<NotificationBloc>()),
       ],
       child: MaterialApp.router(
         title: 'OTIS Project',
