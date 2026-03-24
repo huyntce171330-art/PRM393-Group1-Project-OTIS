@@ -337,10 +337,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 product: product,
                 isBuyNow: false,
               ),
-              onBuyNow: () => _showQuantityBottomSheet(
-                product: product,
-                isBuyNow: true,
-              ),
+              onBuyNow: () {
+                if (isInCart) {
+                  context.push('/cart');
+                } else {
+                  _showQuantityBottomSheet(
+                    product: product,
+                    isBuyNow: true,
+                  );
+                }
+              },
               isDisabled: product.stockQuantity <= 0,
             );
           },
