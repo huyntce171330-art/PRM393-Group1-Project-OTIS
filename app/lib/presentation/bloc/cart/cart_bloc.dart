@@ -50,6 +50,26 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     AddProductToCartEvent event,
     Emitter<CartState> emit,
   ) async {
+    // Rule: Total in cart cannot exceed stock
+    int currentInCart = 0;
+    if (state is CartLoaded) {
+      final existing = (state as CartLoaded).cartItems.firstWhere(
+        (i) => i.productId == event.product.id,
+        orElse: () => CartItem(productId: event.product.id, quantity: 0),
+      );
+      currentInCart = existing.quantity;
+    }
+
+    if (currentInCart + event.quantity > event.product.stockQuantity) {
+      final availableToAdd = event.product.stockQuantity - currentInCart;
+      String msg = availableToAdd <= 0 
+          ? "Sản phẩm đã đạt giới hạn trong giỏ hàng (Tối đa ${event.product.stockQuantity})"
+          : "Chỉ có thể thêm tối đa $availableToAdd sản phẩm nữa (Kho còn ${event.product.stockQuantity})";
+      
+      emit(CartError(message: msg, previousState: state));
+      return;
+    }
+
     final result = await addProductToCartUsecase(
       event.product.id,
       event.quantity,
@@ -88,6 +108,20 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     UpdateCartItemEvent event,
     Emitter<CartState> emit,
   ) async {
+    // Check stock if we have product info in current state
+    if (state is CartLoaded) {
+      try {
+        final item = (state as CartLoaded).cartItems.firstWhere((i) => i.productId == event.productId);
+        if (item.product != null && event.quantity > item.product!.stockQuantity) {
+          emit(CartError(
+            message: "Không thể vượt quá số lượng trong kho (${item.product!.stockQuantity})",
+            previousState: state,
+          ));
+          return;
+        }
+      } catch (_) {}
+    }
+
     final result = await updateCartUsecase(event.productId, event.quantity);
     await result.fold(
       (failure) async => emit(CartError(message: _mapFailureToMessage(failure))),
@@ -159,12 +193,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   String _mapFailureToMessage(Failure failure) {
-    if (failure is ServerFailure) {
-      return 'Server Failure';
-    } else if (failure is CacheFailure) {
-      return 'Cache Failure';
-    } else {
-      return 'Unexpected Error';
-    }
+    return failure.message;
   }
 }

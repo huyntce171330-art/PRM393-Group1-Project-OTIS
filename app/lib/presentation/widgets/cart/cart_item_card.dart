@@ -202,7 +202,7 @@ class CartItemCard extends StatelessWidget {
                           ),
                         );
                       },
-                      isEnabled: cartItem.isInStock,
+                      isEnabled: cartItem.canIncrement,
                     ),
                   ],
                 ),

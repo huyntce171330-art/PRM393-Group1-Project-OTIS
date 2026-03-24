@@ -57,9 +57,10 @@ class CartLoaded extends CartState {
 
 class CartError extends CartState {
   final String message;
+  final CartState? previousState;
 
-  const CartError({required this.message});
+  const CartError({required this.message, this.previousState});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, previousState];
 }

@@ -65,33 +65,71 @@ class _CartScreenState extends State<CartScreen> {
                 ? AppColors.backgroundDark
                 : const Color(0xFFF8F6F6),
             appBar: HeaderBar(
-              title: 'My Cart ($count)',
+              title: 'Giỏ hàng ($count)',
               onBack: () => context.pop(),
             ),
-            body: SafeArea(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Builder(
-                      builder: (context) {
-                        if (state is CartLoading) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        } else if (state is CartLoaded) {
-                          if (state.cartItems.isEmpty) {
-                            return _buildEmptyCart(context);
-                          }
-                          _initializeSelection(state);
-                          return _buildCartContent(context, state);
-                        } else if (state is CartError) {
-                          return Center(child: Text('Error: ${state.message}'));
-                        }
-                        return const SizedBox();
-                      },
+            body: BlocListener<CartBloc, CartState>(
+              listener: (context, state) {
+                if (state is CartError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: Colors.redAccent,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
-                ],
+                  );
+                }
+              },
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Builder(
+                        builder: (context) {
+                          if (state is CartLoading) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+
+                          CartState displayState = state;
+                          if (state is CartError && state.previousState != null) {
+                            displayState = state.previousState!;
+                          }
+
+                          if (displayState is CartLoaded) {
+                            if (displayState.cartItems.isEmpty) {
+                              return _buildEmptyCart(context);
+                            }
+                            _initializeSelection(displayState);
+                            return _buildCartContent(context, displayState);
+                          }
+
+                          if (state is CartError) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.error_outline, size: 60, color: Colors.grey),
+                                  const SizedBox(height: 16),
+                                  Text('Lỗi: ${state.message}'),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () => context.read<CartBloc>().add(LoadCartEvent()),
+                                    child: const Text('Thử lại'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return const SizedBox();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
