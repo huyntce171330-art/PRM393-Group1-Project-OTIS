@@ -696,7 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               GestureDetector(
                 onTap: () {
-                  // TODO: View all services
+                  UiUtils.showComingSoon(context, featureName: 'All Services');
                 },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -762,7 +762,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: IconButton(
                       onPressed: () {
-                        // TODO: Navigate to service
+                        UiUtils.showComingSoon(
+                          context,
+                          featureName: service['label'] as String,
+                        );
                       },
                       icon: Icon(
                         service['icon'] as IconData,

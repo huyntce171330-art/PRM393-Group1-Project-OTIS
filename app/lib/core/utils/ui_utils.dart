@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:frontend_otis/core/constants/app_colors.dart';
+import 'package:frontend_otis/presentation/widgets/common/coming_soon_dialog.dart';
 
 class UiUtils {
   static void showSuccessPopup(BuildContext context, String message) {
@@ -73,6 +74,16 @@ class UiUtils {
             ),
           ),
         );
+      },
+    );
+  }
+
+  static void showComingSoon(BuildContext context, {String? featureName}) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return ComingSoonDialog(featureName: featureName);
       },
     );
   }
