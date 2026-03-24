@@ -91,7 +91,7 @@ PaymentMethod paymentMethodFromJson(dynamic json) {
       case 'cash':
         return PaymentMethod.cash;
       case 'transfer':
-        return PaymentMethod.transfer;
+        return PaymentMethod.bank;
       default:
         return PaymentMethod.cash;
     }
@@ -104,7 +104,7 @@ String paymentMethodToJson(PaymentMethod object) {
   switch (object) {
     case PaymentMethod.cash:
       return 'cash';
-    case PaymentMethod.transfer:
+    case PaymentMethod.bank:
       return 'transfer';
   }
 }

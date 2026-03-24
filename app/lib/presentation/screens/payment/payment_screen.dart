@@ -110,7 +110,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               body: SingleChildScrollView(
                 child:
                     paymentState is PaymentInitiated &&
-                        paymentState.payment.method == PaymentMethod.transfer
+                        paymentState.payment.method == PaymentMethod.bank
                     ? _buildQRCodeView(
                         context,
                         paymentState.payment.paymentCode,
@@ -203,7 +203,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
           const SizedBox(height: 12),
           _buildMethodOption(
-            PaymentMethod.transfer,
+            PaymentMethod.bank,
             "Bank Transfer",
             Icons.account_balance,
           ),

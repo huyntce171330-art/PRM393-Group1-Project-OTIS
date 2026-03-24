@@ -97,7 +97,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
             'payment_code':
                 'TRX-FORCE-${DateTime.now().millisecondsSinceEpoch}',
             'amount': 0.0, // Unknown
-            'method': 'transfer',
+            'method': 'bank',
             'status': 'success',
             'created_at': DateTime.now().toIso8601String(),
             'paid_at': DateTime.now().toIso8601String(),
@@ -108,7 +108,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
             orderId: orderId,
             paymentCode: 'TRX-FORCE',
             amount: 0.0,
-            method: PaymentMethod.transfer,
+            method: PaymentMethod.bank,
             status: PaymentStatus.success,
             createdAt: DateTime.now(),
           );

@@ -1,8 +1,9 @@
 import 'package:equatable/equatable.dart';
+import 'package:frontend_otis/domain/entities/notification_filter.dart';
 
 /// Domain entity representing a notification in the system.
 /// This entity contains business logic and is immutable.
-class Notification extends Equatable {
+class AppNotification extends Equatable {
   /// Unique identifier for the notification
   final String id;
 
@@ -21,34 +22,46 @@ class Notification extends Equatable {
   /// When the notification was created
   final DateTime createdAt;
 
-  const Notification({
+  /// Notification type (order, promotion, system, general)
+  final NotificationType? type;
+
+  /// Additional payload/metadata (JSON string)
+  final String? payload;
+
+  const AppNotification({
     required this.id,
     required this.title,
     required this.body,
     required this.isRead,
     required this.userId,
     required this.createdAt,
+    this.type,
+    this.payload,
   });
 
   @override
-  List<Object?> get props => [id, title, body, isRead, userId, createdAt];
+  List<Object?> get props => [id, title, body, isRead, userId, createdAt, type, payload];
 
-  /// Create a copy of Notification with modified fields
-  Notification copyWith({
+  /// Create a copy of AppNotification with modified fields
+  AppNotification copyWith({
     String? id,
     String? title,
     String? body,
     bool? isRead,
     String? userId,
     DateTime? createdAt,
+    NotificationType? type,
+    String? payload,
   }) {
-    return Notification(
+    return AppNotification(
       id: id ?? this.id,
       title: title ?? this.title,
       body: body ?? this.body,
       isRead: isRead ?? this.isRead,
       userId: userId ?? this.userId,
       createdAt: createdAt ?? this.createdAt,
+      type: type ?? this.type,
+      payload: payload ?? this.payload,
     );
   }
 
@@ -91,12 +104,12 @@ class Notification extends Equatable {
   }
 
   /// Create a read version of this notification
-  Notification markAsRead() {
+  AppNotification markAsRead() {
     return copyWith(isRead: true);
   }
 
   /// Create an unread version of this notification
-  Notification markAsUnread() {
+  AppNotification markAsUnread() {
     return copyWith(isRead: false);
   }
 }

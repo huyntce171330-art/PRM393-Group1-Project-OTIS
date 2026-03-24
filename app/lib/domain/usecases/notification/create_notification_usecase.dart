@@ -1,7 +1,14 @@
-// Use case to create a new notification (e.g., manually triggering one).
-//
-// Steps:
-// 1. Create `CreateNotificationUsecase`.
-// 2. Inject `NotificationRepository`.
-// 3. `call` method accepts `Notification` data.
-// 4. Invoke `repository.createNotification(data)`.
+import 'package:dartz/dartz.dart';
+import 'package:frontend_otis/core/error/failures.dart';
+import 'package:frontend_otis/domain/entities/notification.dart';
+import 'package:frontend_otis/domain/repositories/notification_repository.dart';
+
+class CreateNotificationUsecase {
+  final NotificationRepository repository;
+
+  CreateNotificationUsecase(this.repository);
+
+  Future<Either<Failure, AppNotification>> call(AppNotification notification) {
+    return repository.createNotification(notification);
+  }
+}

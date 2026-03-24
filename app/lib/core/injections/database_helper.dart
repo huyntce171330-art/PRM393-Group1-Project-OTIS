@@ -11,9 +11,17 @@ class DatabaseHelper {
     return _database!;
   }
 
+  /// Warm up database at app startup — call this in main() before runApp.
+  /// Runs the full init flow silently so first real query is instant.
+  static Future<void> warmUp() async {
+    await database;
+  }
+
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'otis_database.db');
+    final path = join(dbPath, 'otis.db');
+
+    await deleteDatabase(path);
 
     return openDatabase(
       path,
@@ -22,13 +30,21 @@ class DatabaseHelper {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: (db, version) async {
-        final script = await rootBundle.loadString("assets/database/otis_v1.0.1.sql");
-        final statements = script.split(';');
-        for (var statement in statements) {
-          final trimmed = statement.trim();
-          if (trimmed.isNotEmpty) {
-            await db.execute(trimmed);
+        try {
+          final script = await rootBundle.loadString(
+            "assets/database/otis_v1.0.1.sql",
+          );
+          final statements = script.split(';');
+          for (var statement in statements) {
+            final trimmed = statement.trim();
+            if (trimmed.isNotEmpty) {
+              await db.execute(trimmed);
+            }
           }
+          print('--- Database Created and Seeded Successfully ---');
+        } catch (e) {
+          print('--- ERROR during database creation: $e ---');
+          rethrow;
         }
       },
     );
@@ -46,11 +62,7 @@ class DatabaseHelper {
 
     return db.update(
       'users',
-      {
-        'full_name': fullName,
-        'address': address,
-        'phone': phone,
-      },
+      {'full_name': fullName, 'address': address, 'phone': phone},
       where: 'user_id = ?',
       whereArgs: [userId],
       conflictAlgorithm: ConflictAlgorithm.abort,
@@ -124,17 +136,18 @@ class DatabaseHelper {
 
   // ===== ADMIN CHAT =====
 
-  static Future<int> getAdminUnreadMessageCount({
-    int adminId = 1,
-  }) async {
+  static Future<int> getAdminUnreadMessageCount({int adminId = 1}) async {
     final db = await DatabaseHelper.database;
 
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT COUNT(*) AS cnt
       FROM messages
       WHERE sender_id != ?
         AND IFNULL(is_read, 0) = 0
-    ''', [adminId]);
+    ''',
+      [adminId],
+    );
 
     final v = rows.first['cnt'];
     if (v is int) return v;
@@ -147,7 +160,8 @@ class DatabaseHelper {
   }) async {
     final db = await DatabaseHelper.database;
 
-    return db.rawQuery('''
+    return db.rawQuery(
+      '''
       SELECT
         r.room_id,
         r.user_id,
@@ -174,7 +188,9 @@ class DatabaseHelper {
         LIMIT 1
       )
       ORDER BY COALESCE(last_msg.created_at, r.updated_at) DESC
-    ''', [adminId]);
+    ''',
+      [adminId],
+    );
   }
 
   // ===== CHAT HISTORY =====
@@ -230,20 +246,18 @@ class DatabaseHelper {
       }
     }
 
-    return db.insert(
-      'messages',
-      {
-        'room_id': roomId,
-        'sender_id': senderId,
-        'content': content,
-        'is_read': isRead,
-        'created_at': safeCreatedAt,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    return db.insert('messages', {
+      'room_id': roomId,
+      'sender_id': senderId,
+      'content': content,
+      'is_read': isRead,
+      'created_at': safeCreatedAt,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  static Future<List<Map<String, Object?>>> getMessagesByRoom(int roomId) async {
+  static Future<List<Map<String, Object?>>> getMessagesByRoom(
+    int roomId,
+  ) async {
     final db = await DatabaseHelper.database;
 
     return db.query(
@@ -262,13 +276,16 @@ class DatabaseHelper {
   }) async {
     final db = await DatabaseHelper.database;
 
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT COUNT(*) AS cnt
       FROM messages
       WHERE room_id = ?
         AND sender_id != ?
         AND IFNULL(is_read, 0) = 0
-    ''', [roomId, viewerId]);
+    ''',
+      [roomId, viewerId],
+    );
 
     final v = rows.first['cnt'];
     if (v is int) return v;
@@ -276,17 +293,18 @@ class DatabaseHelper {
     return int.tryParse(v.toString()) ?? 0;
   }
 
-  static Future<int> getTotalUnreadCount({
-    required int viewerId,
-  }) async {
+  static Future<int> getTotalUnreadCount({required int viewerId}) async {
     final db = await DatabaseHelper.database;
 
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT COUNT(*) AS cnt
       FROM messages
       WHERE sender_id != ?
         AND IFNULL(is_read, 0) = 0
-    ''', [viewerId]);
+    ''',
+      [viewerId],
+    );
 
     final v = rows.first['cnt'];
     if (v is int) return v;
@@ -313,7 +331,8 @@ class DatabaseHelper {
   }) async {
     final db = await DatabaseHelper.database;
 
-    return db.rawQuery('''
+    return db.rawQuery(
+      '''
       SELECT
         r.room_id,
         r.user_id,
@@ -339,7 +358,37 @@ class DatabaseHelper {
         LIMIT 1
       )
       ORDER BY COALESCE(last_msg.created_at, r.updated_at) DESC
-    ''', [viewerId]);
+    ''',
+      [viewerId],
+    );
+  }
+
+  // ===== SESSION PERSISTENCE =====
+
+  /// Saves the currently logged-in user ID to local storage.
+  static Future<void> saveCurrentUser(int userId) async {
+    final db = await DatabaseHelper.database;
+    await db.delete('app_session');
+    await db.insert('app_session', {
+      'user_id': userId,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Returns the currently logged-in user ID, or null if no session.
+  static Future<int?> getCurrentUserId() async {
+    final db = await DatabaseHelper.database;
+    final rows = await db.query('app_session', limit: 1);
+    if (rows.isEmpty) return null;
+    final val = rows.first['user_id'];
+    if (val is int) return val;
+    return int.tryParse(val.toString());
+  }
+
+  /// Clears the current session (on logout).
+  static Future<void> clearCurrentUser() async {
+    final db = await DatabaseHelper.database;
+    await db.delete('app_session');
   }
 
   static Future<int?> getRoomIdByUserId(int userId) async {

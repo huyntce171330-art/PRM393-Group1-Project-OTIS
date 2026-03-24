@@ -71,7 +71,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
       'phone': phone,
       'password_hash': password,
       'status': 'active',
-      'role_id': 0,
+      'role_id': 2, // customer
       'created_at': DateTime.now().toIso8601String(),
     });
 
@@ -183,6 +183,22 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     if (count == 0) {
       throw ServerFailure(message: 'Failed to change password');
     }
+  }
+
+  @override
+  Future<UserModel> getUserById(int userId) async {
+    final result = await database.query(
+      'users',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      limit: 1,
+    );
+
+    if (result.isEmpty) {
+      throw ServerFailure(message: 'User not found');
+    }
+
+    return UserModel.fromJson(result.first);
   }
 
   // ─────────────────────────────────────────────

@@ -1,7 +1,14 @@
-// Use case to get details of a specific notification.
-//
-// Steps:
-// 1. Create `GetNotificationDetailUsecase`.
-// 2. Inject `NotificationRepository`.
-// 3. `call` method accepts `String id`.
-// 4. Invoke `repository.getNotificationDetail(id)`.
+import 'package:dartz/dartz.dart';
+import 'package:frontend_otis/core/error/failures.dart';
+import 'package:frontend_otis/domain/entities/notification.dart';
+import 'package:frontend_otis/domain/repositories/notification_repository.dart';
+
+class GetNotificationDetailUsecase {
+  final NotificationRepository repository;
+
+  GetNotificationDetailUsecase(this.repository);
+
+  Future<Either<Failure, AppNotification>> call(String id) {
+    return repository.getNotificationDetail(id);
+  }
+}

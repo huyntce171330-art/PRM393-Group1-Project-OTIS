@@ -26,7 +26,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
         String? bankAccountId;
 
         // If Bank Transfer, fetch active bank account first
-        if (event.method == PaymentMethod.transfer) {
+        if (event.method == PaymentMethod.bank) {
           final accountResult = await getActiveBankAccount();
           accountResult.fold((failure) => throw Exception(failure.message), (
             account,

@@ -9,6 +9,7 @@ import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/admin_product/admin_product_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_create_product_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_edit_product_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_product_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_trash_screen.dart';
@@ -22,6 +23,7 @@ import 'package:frontend_otis/domain/entities/cart_item.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
+import 'package:frontend_otis/domain/entities/notification.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_orders_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_home_screen.dart';
@@ -42,6 +44,9 @@ import 'package:frontend_otis/presentation/screens/auth/register_screen.dart';
 import 'package:frontend_otis/presentation/screens/profile/profile_screen.dart';
 import 'package:frontend_otis/presentation/screens/profile/profile_update_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/notification_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/notification/notification_detail_screen.dart';
+import 'package:frontend_otis/presentation/screens/notification/notification_create_screen.dart';
+import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
 
@@ -53,6 +58,8 @@ import 'package:frontend_otis/presentation/screens/admin/admin_chat_list_screen.
 import 'package:frontend_otis/presentation/screens/admin/admin_chat_detail_screen.dart';
 
 import 'core/enums/category_type.dart';
+import 'core/injections/database_helper.dart';
+import 'presentation/bloc/auth/auth_state.dart';
 
 /// GoRouter configuration for the OTIS app.
 ///
@@ -62,8 +69,16 @@ import 'core/enums/category_type.dart';
 /// - Deep linking
 /// - Route guards
 final GoRouter router = GoRouter(
-  // Thay đổi dòng dưới để test: '/' = customer, '/admin/products' = admin
-  initialLocation: '/admin/home',
+  // SplashScreen handles session restore → redirect to correct role-based home
+  initialLocation: '/',
+  redirect: (context, state) {
+    // If already on splash, login, or register — allow through (no redirect loop)
+    final path = state.uri.path;
+    if (path == '/' || path == '/login' || path == '/register') {
+      return null;
+    }
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/debug',
@@ -189,13 +204,9 @@ final GoRouter router = GoRouter(
           path: '/admin/products/:id/edit',
           name: 'admin-product-edit',
           builder: (context, state) {
-            final productId = state.pathParameters['id']!;
-            return Scaffold(
-              body: Center(
-                child: Text('Edit Product: $productId - To be implemented'),
-              ),
-            );
-          },
+          final productId = state.pathParameters['id']!;
+          return AdminEditProductScreen(productId: productId);
+        },
         ),
       ],
     ),
@@ -306,6 +317,40 @@ final GoRouter router = GoRouter(
         ),
       ],
     ),
+    // Notification ShellRoute - persists admin bottom nav, shares singleton NotificationBloc
+    ShellRoute(
+      builder: (context, state, child) {
+        return BlocProvider<NotificationBloc>.value(
+          value: di.sl<NotificationBloc>(),
+          child: AdminLayout(child: child),
+        );
+      },
+      routes: [
+        GoRoute(
+          path: '/notifications',
+          name: 'notifications',
+          builder: (context, state) => const NotificationListScreen(),
+        ),
+        // Must be before /notifications/:id — otherwise "create" is matched as an id.
+        GoRoute(
+          path: '/notifications/create',
+          name: 'notification-create',
+          builder: (context, state) => const NotificationCreateScreen(),
+        ),
+        GoRoute(
+          path: '/notifications/:id',
+          name: 'notification-detail',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            final notification = state.extra as AppNotification?;
+            return NotificationDetailScreen(
+              notificationId: id,
+              notification: notification,
+            );
+          },
+        ),
+      ],
+    ),
     GoRoute(
       path: '/order/:id',
       name: 'order-detail',
@@ -323,11 +368,6 @@ final GoRouter router = GoRouter(
       path: '/profile/update',
       name: 'profile-update',
       builder: (context, state) => const ProfileUpdateScreen(),
-    ),
-    GoRoute(
-      path: '/notifications',
-      name: 'notifications',
-      builder: (context, state) => const NotificationListScreen(),
     ),
     GoRoute(
       path: '/admin/categories',
@@ -402,6 +442,9 @@ class OtisApp extends StatelessWidget {
           value: di.sl<CartBloc>()..add(LoadCartEvent()),
         ),
         BlocProvider<OrderBloc>(create: (context) => di.sl<OrderBloc>()),
+        BlocProvider<NotificationBloc>.value(
+          value: di.sl<NotificationBloc>(),
+        ),
       ],
       child: MaterialApp.router(
         title: 'OTIS Project',

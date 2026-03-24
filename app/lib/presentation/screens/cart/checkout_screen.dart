@@ -412,14 +412,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                               ),
                               PaymentMethodItem(
-                                type: PaymentMethod.transfer,
+                                type: PaymentMethod.bank,
                                 label: 'Bank Transfer',
                                 sublabel: 'Vietcombank, Techcombank',
                                 icon: '🏦',
-                                selected:
-                                    _paymentMethod == PaymentMethod.transfer,
+                                selected: _paymentMethod == PaymentMethod.bank,
                                 onTap: () => setState(
-                                  () => _paymentMethod = PaymentMethod.transfer,
+                                  () => _paymentMethod = PaymentMethod.bank,
                                 ),
                               ),
                             ],

@@ -65,4 +65,7 @@ abstract class AuthRepository {
     required String phone,
     required String newPassword,
   });
+
+  /// Fetch a user by ID (for session restore).
+  Future<Either<Failure, User>> getUserById(int userId);
 }
