@@ -1,6 +1,7 @@
 import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/data/datasources/notification/notification_remote_datasource.dart';
 import 'package:frontend_otis/data/models/notification_model.dart';
+import 'package:frontend_otis/domain/entities/notification_filter.dart';
 
 class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
   @override
@@ -10,7 +11,7 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
     final limit = filterParams?['limit'] ?? 20;
     final offset = (page - 1) * limit;
 
-    final whereClauses = <String>['1=1'];
+    final whereClauses = <String>['IFNULL(is_deleted, 0) = 0'];
     final whereArgs = <dynamic>[];
 
     if (filterParams != null) {
@@ -66,7 +67,7 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
       '''
       SELECT notification_id, title, body, is_read, user_id, created_at, type, payload
       FROM notifications
-      WHERE notification_id = ?
+      WHERE notification_id = ? AND IFNULL(is_deleted, 0) = 0
       LIMIT 1
       ''',
       [id],
@@ -106,16 +107,43 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
       },
     );
 
-    return NotificationModel(
-      id: id.toString(),
-      title: notification.title,
-      body: notification.body,
-      isRead: notification.isRead,
-      userId: notification.userId,
-      createdAt: DateTime.parse(createdAt),
-      type: notification.type,
-      payload: notification.payload,
+    // Verify insert was successful (id > 0 means success in SQLite)
+    if (id <= 0) {
+      throw Exception('Failed to create notification: Insert returned $id');
+    }
+
+    // Fetch the created notification to ensure all data matches
+    final result = await db.query(
+      'notifications',
+      where: 'notification_id = ?',
+      whereArgs: [id],
+      limit: 1,
     );
+
+    if (result.isEmpty) {
+      throw Exception('Failed to create notification: Could not fetch created notification');
+    }
+
+    final row = result.first;
+    return NotificationModel(
+      id: row['notification_id'].toString(),
+      title: row['title'] as String,
+      body: row['body'] as String,
+      isRead: (row['is_read'] as int) == 1,
+      userId: row['user_id'] as String,
+      createdAt: DateTime.parse(row['created_at'] as String),
+      type: _parseType(row['type'] as String?),
+      payload: row['payload'] as String?,
+    );
+  }
+
+  NotificationType? _parseType(String? value) {
+    if (value == null) return NotificationType.general;
+    final str = value.toLowerCase().trim();
+    for (final type in NotificationType.values) {
+      if (type.toString().split('.').last == str) return type;
+    }
+    return NotificationType.general;
   }
 
   @override
@@ -131,7 +159,7 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
   Future<void> deleteNotification(String id) async {
     final db = await DatabaseHelper.database;
     await db.rawUpdate(
-      'DELETE FROM notifications WHERE notification_id = ?',
+      'UPDATE notifications SET is_deleted = 1 WHERE notification_id = ?',
       [id],
     );
   }

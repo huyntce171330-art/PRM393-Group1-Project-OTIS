@@ -74,6 +74,10 @@ class DatabaseHelper {
 
   static Future<void> _ensureNotificationColumns(Database db) async {
     try {
+      // First check if table exists, if not create it
+      final tableExists = await _ensureNotificationsTable(db);
+      if (!tableExists) return;
+
       final result = await db.rawQuery("PRAGMA table_info(notifications)");
       final columns = result.map((col) => col['name'] as String).toSet();
 
@@ -86,9 +90,7 @@ class DatabaseHelper {
 
       if (!columns.contains('payload')) {
         print("Adding 'payload' column to notifications table...");
-        await db.execute(
-          "ALTER TABLE notifications ADD COLUMN payload TEXT",
-        );
+        await db.execute("ALTER TABLE notifications ADD COLUMN payload TEXT");
       }
 
       // Speed up ORDER BY created_at queries
@@ -102,9 +104,49 @@ class DatabaseHelper {
           "CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC)",
         );
       }
+
+      // Migration: ensure 'is_deleted' column exists for soft delete
+      if (!columns.contains('is_deleted')) {
+        print("Adding 'is_deleted' column to notifications table...");
+        await db.execute(
+          "ALTER TABLE notifications ADD COLUMN is_deleted INTEGER DEFAULT 0",
+        );
+      }
     } catch (e) {
       print("Migration check failed: $e");
     }
+  }
+
+  static Future<bool> _ensureNotificationsTable(Database db) async {
+    // Check if notifications table exists
+    final result = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='notifications'",
+    );
+
+    if (result.isEmpty) {
+      print("Creating 'notifications' table...");
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS notifications (
+            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            body TEXT NOT NULL,
+            is_read INTEGER DEFAULT 0,
+            user_id TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            type TEXT DEFAULT 'general',
+            payload TEXT,
+            is_deleted INTEGER DEFAULT 0
+          )
+        ''');
+        print("'notifications' table created successfully");
+        return true;
+      } catch (e) {
+        print("Failed to create notifications table: $e");
+        return false;
+      }
+    }
+    return true;
   }
 
   // ===== USER PROFILE: UPDATE + READ =====
@@ -119,11 +161,7 @@ class DatabaseHelper {
 
     return db.update(
       'users',
-      {
-        'full_name': fullName,
-        'address': address,
-        'phone': phone,
-      },
+      {'full_name': fullName, 'address': address, 'phone': phone},
       where: 'user_id = ?',
       whereArgs: [userId],
       conflictAlgorithm: ConflictAlgorithm.abort,
@@ -197,17 +235,18 @@ class DatabaseHelper {
 
   // ===== ADMIN CHAT =====
 
-  static Future<int> getAdminUnreadMessageCount({
-    int adminId = 1,
-  }) async {
+  static Future<int> getAdminUnreadMessageCount({int adminId = 1}) async {
     final db = await DatabaseHelper.database;
 
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT COUNT(*) AS cnt
       FROM messages
       WHERE sender_id != ?
         AND IFNULL(is_read, 0) = 0
-    ''', [adminId]);
+    ''',
+      [adminId],
+    );
 
     final v = rows.first['cnt'];
     if (v is int) return v;
@@ -220,7 +259,8 @@ class DatabaseHelper {
   }) async {
     final db = await DatabaseHelper.database;
 
-    return db.rawQuery('''
+    return db.rawQuery(
+      '''
       SELECT
         r.room_id,
         r.user_id,
@@ -247,7 +287,9 @@ class DatabaseHelper {
         LIMIT 1
       )
       ORDER BY COALESCE(last_msg.created_at, r.updated_at) DESC
-    ''', [adminId]);
+    ''',
+      [adminId],
+    );
   }
 
   // ===== CHAT HISTORY =====
@@ -303,20 +345,18 @@ class DatabaseHelper {
       }
     }
 
-    return db.insert(
-      'messages',
-      {
-        'room_id': roomId,
-        'sender_id': senderId,
-        'content': content,
-        'is_read': isRead,
-        'created_at': safeCreatedAt,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    return db.insert('messages', {
+      'room_id': roomId,
+      'sender_id': senderId,
+      'content': content,
+      'is_read': isRead,
+      'created_at': safeCreatedAt,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  static Future<List<Map<String, Object?>>> getMessagesByRoom(int roomId) async {
+  static Future<List<Map<String, Object?>>> getMessagesByRoom(
+    int roomId,
+  ) async {
     final db = await DatabaseHelper.database;
 
     return db.query(
@@ -335,13 +375,16 @@ class DatabaseHelper {
   }) async {
     final db = await DatabaseHelper.database;
 
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT COUNT(*) AS cnt
       FROM messages
       WHERE room_id = ?
         AND sender_id != ?
         AND IFNULL(is_read, 0) = 0
-    ''', [roomId, viewerId]);
+    ''',
+      [roomId, viewerId],
+    );
 
     final v = rows.first['cnt'];
     if (v is int) return v;
@@ -349,17 +392,18 @@ class DatabaseHelper {
     return int.tryParse(v.toString()) ?? 0;
   }
 
-  static Future<int> getTotalUnreadCount({
-    required int viewerId,
-  }) async {
+  static Future<int> getTotalUnreadCount({required int viewerId}) async {
     final db = await DatabaseHelper.database;
 
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT COUNT(*) AS cnt
       FROM messages
       WHERE sender_id != ?
         AND IFNULL(is_read, 0) = 0
-    ''', [viewerId]);
+    ''',
+      [viewerId],
+    );
 
     final v = rows.first['cnt'];
     if (v is int) return v;
@@ -386,7 +430,8 @@ class DatabaseHelper {
   }) async {
     final db = await DatabaseHelper.database;
 
-    return db.rawQuery('''
+    return db.rawQuery(
+      '''
       SELECT
         r.room_id,
         r.user_id,
@@ -412,7 +457,9 @@ class DatabaseHelper {
         LIMIT 1
       )
       ORDER BY COALESCE(last_msg.created_at, r.updated_at) DESC
-    ''', [viewerId]);
+    ''',
+      [viewerId],
+    );
   }
 
   // ===== SESSION PERSISTENCE =====

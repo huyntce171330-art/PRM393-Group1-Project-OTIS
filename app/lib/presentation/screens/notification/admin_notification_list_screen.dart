@@ -7,16 +7,23 @@ import 'package:frontend_otis/domain/entities/notification_filter.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_event.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend_otis/presentation/widgets/header_bar.dart';
 
-class NotificationListScreen extends StatefulWidget {
-  const NotificationListScreen({super.key});
+class AdminNotificationListScreen extends StatefulWidget {
+  final bool isInboxView;
+
+  const AdminNotificationListScreen({
+    super.key,
+    this.isInboxView = false,
+  });
 
   @override
-  State<NotificationListScreen> createState() => _NotificationListScreenState();
+  State<AdminNotificationListScreen> createState() => _AdminNotificationListScreenState();
 }
 
-class _NotificationListScreenState extends State<NotificationListScreen> {
+class _AdminNotificationListScreenState extends State<AdminNotificationListScreen> {
   int _selectedFilterIndex = 0;
   final List<String> _filters = ['All', 'Orders', 'Promotions', 'System'];
 
@@ -37,6 +44,23 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     context.read<NotificationBloc>().add(LoadNotificationsEvent(filter: _buildFilter(index)));
   }
 
+  void _onDelete(BuildContext context, String id) {
+    context.read<NotificationBloc>().add(DeleteNotificationEvent(id));
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Đã xóa thông báo'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'Hoàn tác',
+          onPressed: () {
+            context.read<NotificationBloc>().add(const UndoDeleteNotificationEvent());
+          },
+        ),
+      ),
+    );
+  }
+
   void _onToggleRead(BuildContext context, AppNotification notification) {
     if (notification.isRead) {
       context.read<NotificationBloc>().add(MarkAsUnreadEvent(notification.id));
@@ -54,7 +78,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: HeaderBar(
-        title: 'Thông báo',
+        title: widget.isInboxView ? 'Thông báo' : 'Quản lý thông báo',
         showBack: true,
         actions: [
           TextButton(
@@ -75,6 +99,23 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             ? const Color(0xFF1a0c0c).withOpacity(0.95)
             : Colors.white.withOpacity(0.95),
       ),
+      floatingActionButton: widget.isInboxView
+          ? null
+          : BlocBuilder<AuthBloc, AuthState>(
+              buildWhen: (prev, curr) => prev.runtimeType != curr.runtimeType,
+              builder: (context, authState) {
+                final isAdmin = authState is Authenticated &&
+                    authState.user.role?.isAdmin == true;
+                if (!isAdmin) return const SizedBox.shrink();
+                return FloatingActionButton(
+                  onPressed: () => context.push('/notifications/create'),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  child: const Icon(Icons.add),
+                );
+              },
+            ),
       body: Column(
         children: [
           _buildFilterTabs(context),
@@ -199,15 +240,15 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         children: [
           if (today.isNotEmpty) ...[
             _buildSectionHeader(context, 'Hôm nay'),
-            ...today.map((n) => _buildSwipeItem(context, n, isDarkMode)),
+            ...today.map((n) => _buildDismissibleItem(context, n, isDarkMode)),
           ],
           if (yesterday.isNotEmpty) ...[
             _buildSectionHeader(context, 'Hôm qua'),
-            ...yesterday.map((n) => _buildSwipeItem(context, n, isDarkMode)),
+            ...yesterday.map((n) => _buildDismissibleItem(context, n, isDarkMode)),
           ],
           if (earlier.isNotEmpty) ...[
             _buildSectionHeader(context, 'Trước đó'),
-            ...earlier.map((n) => _buildSwipeItem(context, n, isDarkMode)),
+            ...earlier.map((n) => _buildDismissibleItem(context, n, isDarkMode)),
           ],
           const SizedBox(height: 80),
         ],
@@ -215,34 +256,34 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     );
   }
 
-  Widget _buildSwipeItem(BuildContext context, AppNotification notification, bool isDarkMode) {
+  Widget _buildDismissibleItem(BuildContext context, AppNotification notification, bool isDarkMode) {
+    // Admin: full swipe (left = delete, right = toggle read)
     return Dismissible(
       key: Key(notification.id),
-      direction: DismissDirection.startToEnd,
+      direction: DismissDirection.horizontal,
       confirmDismiss: (direction) async {
-        _onToggleRead(context, notification);
-        return false;
+        if (direction == DismissDirection.startToEnd) {
+          _onToggleRead(context, notification);
+          return false;
+        } else {
+          _onDelete(context, notification.id);
+          return false;
+        }
       },
       background: Container(
         color: Colors.green,
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 24),
-        child: Row(
-          children: [
-            Icon(
-              notification.isRead ? Icons.email_outlined : Icons.mark_email_read,
-              color: Colors.white,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              notification.isRead ? 'Chưa đọc' : 'Đã đọc',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+        child: Icon(
+          notification.isRead ? Icons.email_outlined : Icons.mark_email_read,
+          color: Colors.white,
         ),
+      ),
+      secondaryBackground: Container(
+        color: Colors.red,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
+        child: const Icon(Icons.delete, color: Colors.white),
       ),
       child: GestureDetector(
         onLongPress: () => _showActionSheet(context, notification),
@@ -278,6 +319,14 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 context.read<NotificationBloc>().add(MarkAsUnreadEvent(notification.id));
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text('Xóa', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _onDelete(context, notification.id);
+              },
+            ),
           ],
         ),
       ),
@@ -308,7 +357,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
     return InkWell(
       onTap: () {
-        context.push('/notifications/${notification.id}', extra: notification);
+        context.push('/admin/notifications/${notification.id}', extra: notification);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -527,7 +576,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Bạn sẽ nhận được thông báo tại đây!',
+            widget.isInboxView
+                ? 'Bạn sẽ nhận được thông báo tại đây!'
+                : 'Tạo thông báo mới bằng nút +',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],
