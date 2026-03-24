@@ -59,6 +59,10 @@ import 'package:frontend_otis/domain/usecases/order/get_order_detail_usecase.dar
 import 'package:frontend_otis/domain/usecases/order/get_orders_usecase.dart';
 import 'package:frontend_otis/domain/usecases/order/update_order_status_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
+import 'package:frontend_otis/data/datasources/profile/profile_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/profile/profile_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/datasources/chat/chat_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/chat/chat_remote_datasource_impl.dart';
 
 // AUTH IMPORTS
 import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart';
@@ -102,6 +106,29 @@ import 'package:frontend_otis/domain/usecases/notification/search_notifications_
 import 'package:frontend_otis/domain/usecases/notification/update_notification_status_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import '../../presentation/bloc/category/category_bloc.dart';
+import 'package:frontend_otis/domain/repositories/profile_repository.dart';
+import 'package:frontend_otis/data/repositories/profile_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/chat_repository.dart';
+import 'package:frontend_otis/data/repositories/chat_repository_impl.dart';
+import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
+import 'package:frontend_otis/core/network/socket_service.dart';
+import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_total_unread_count_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_messages_by_room_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/mark_room_messages_as_read_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/save_current_user_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/get_current_user_id_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/clear_current_user_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/update_user_profile_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/get_users_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/get_user_by_id_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/count_customers_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/update_user_status_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_room_by_user_id_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_unread_count_for_room_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/insert_message_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_all_chat_rooms_for_viewer_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_chat_room_list_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -149,6 +176,16 @@ Future<void> init() async {
     () => AuthRemoteDatasourceImpl(sl()),
   );
 
+  // Profile Data Source
+  sl.registerLazySingleton<ProfileRemoteDatasource>(
+    () => ProfileRemoteDatasourceImpl(sl()),
+  );
+
+  // Chat Data Source
+  sl.registerLazySingleton<ChatRemoteDatasource>(
+    () => ChatRemoteDatasourceImpl(sl()),
+  );
+
   // ========== 4. REPOSITORIES ==========
   // Product Repository
   sl.registerLazySingleton<ProductRepository>(
@@ -173,6 +210,16 @@ Future<void> init() async {
 
   // Auth Repository
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
+
+  // Profile Repository
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(profileRemoteDatasource: sl()),
+  );
+
+  // Chat Repository
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(sl()),
+  );
 
   // ========== 5. USE CASES ==========
   // Product Use Cases
@@ -324,6 +371,19 @@ Future<void> init() async {
       otpUseCase: sl(),
       forgotPasswordUseCase: sl(),
       changePasswordUseCase: sl(),
+      saveCurrentUserUseCase: sl(),
+      getCurrentUserIdUseCase: sl(),
+      clearCurrentUserUseCase: sl(),
+    ),
+  );
+
+  // Chat BLoC
+  sl.registerFactory<ChatBloc>(
+    () => ChatBloc(
+      datasource: ChatSocketDatasource(SocketService.instance),
+      getMessagesByRoomUseCase: sl(),
+      insertMessageUseCase: sl(),
+      markRoomMessagesAsReadUseCase: sl(),
     ),
   );
 
@@ -434,6 +494,26 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateNotificationStatusUsecase(sl()));
   sl.registerLazySingleton(() => DeleteNotificationUsecase(sl()));
   sl.registerLazySingleton(() => SearchNotificationsUsecase(sl()));
+  sl.registerLazySingleton(() => SaveCurrentUserUseCase(sl()));
+  sl.registerLazySingleton(() => GetCurrentUserIdUseCase(sl()));
+  sl.registerLazySingleton(() => ClearCurrentUserUseCase(sl()));
+
+  // Profile Use Cases
+  sl.registerLazySingleton(() => UpdateUserProfileUseCase(sl()));
+  sl.registerLazySingleton(() => GetUsersUseCase(sl()));
+  sl.registerLazySingleton(() => GetUserByIdUseCase(sl()));
+  sl.registerLazySingleton(() => CountCustomersUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateUserStatusUseCase(sl()));
+
+  // Chat Use Cases
+  sl.registerLazySingleton(() => GetChatRoomListUseCase(sl()));
+  sl.registerLazySingleton(() => InsertMessageUseCase(sl()));
+  sl.registerLazySingleton(() => GetMessagesByRoomUseCase(sl()));
+  sl.registerLazySingleton(() => MarkRoomMessagesAsReadUseCase(sl()));
+  sl.registerLazySingleton(() => GetRoomByUserIdUseCase(sl()));
+  sl.registerLazySingleton(() => GetUnreadCountForRoomUseCase(sl()));
+  sl.registerLazySingleton(() => GetAllChatRoomsForViewerUseCase(sl()));
+  sl.registerLazySingleton(() => GetTotalUnreadCountUseCase(sl()));
   sl.registerLazySingleton(() => CreateNotificationUsecase(sl()));
   sl.registerLazySingleton(() => MarkAllAsReadUsecase(sl()));
 

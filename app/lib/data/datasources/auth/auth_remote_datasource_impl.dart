@@ -202,6 +202,33 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
   }
 
   // ─────────────────────────────────────────────
+  // 📁 SESSION PERSISTENCE
+  // ─────────────────────────────────────────────
+
+  @override
+  Future<void> saveCurrentUser(int userId) async {
+    await database.delete('app_session');
+    await database.insert('app_session', {
+      'user_id': userId,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  @override
+  Future<int?> getCurrentUserId() async {
+    final rows = await database.query('app_session', limit: 1);
+    if (rows.isEmpty) return null;
+    final val = rows.first['user_id'];
+    if (val is int) return val;
+    return int.tryParse(val.toString());
+  }
+
+  @override
+  Future<void> clearCurrentUser() async {
+    await database.delete('app_session');
+  }
+
+  // ─────────────────────────────────────────────
   // HELPERS
   // ─────────────────────────────────────────────
 

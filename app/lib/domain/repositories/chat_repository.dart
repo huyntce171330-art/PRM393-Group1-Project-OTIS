@@ -1,8 +1,30 @@
-// Interface for Chat Repository.
-//
-// Steps:
-// 1. Define abstract class `ChatRepository`.
-// 2. Define methods:
-//    - `Future<Either<Failure, void>> sendMessage(Message message);`
-//    - `Future<Either<Failure, List<Message>>> getMessages(String receiverId, {int limit, int offset});`
-//    - `Stream<List<Message>> getMessageStream(String receiverId);` (For real-time updates via Socket/Firebase)
+import 'package:dartz/dartz.dart';
+import '../../core/error/failures.dart';
+
+abstract class ChatRepository {
+  Future<Either<Failure, List<Map<String, dynamic>>>> getChatRoomList();
+  
+  Future<Either<Failure, int>> getAdminUnreadMessageCount({int adminId = 1});
+  
+  Future<Either<Failure, List<Map<String, dynamic>>>> getAdminChatRooms({int adminId = 1});
+  
+  Future<Either<Failure, int>> insertMessage({
+    required int roomId,
+    required int senderId,
+    required String content,
+    String? createdAt,
+    int isRead = 0,
+  });
+  
+  Future<Either<Failure, List<Map<String, dynamic>>>> getMessagesByRoom(int roomId);
+  
+  Future<Either<Failure, int>> getUnreadCountForRoom({required int roomId, required int viewerId});
+  
+  Future<Either<Failure, int>> getTotalUnreadCount({required int viewerId});
+  
+  Future<Either<Failure, int>> markRoomMessagesAsRead({required int roomId, required int viewerId});
+  
+  Future<Either<Failure, List<Map<String, dynamic>>>> getAllChatRoomsForViewer({required int viewerId});
+  
+  Future<Either<Failure, int?>> getRoomIdByUserId(int userId);
+}

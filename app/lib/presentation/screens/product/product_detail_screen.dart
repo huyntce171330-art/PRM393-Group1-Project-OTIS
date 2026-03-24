@@ -24,7 +24,7 @@ import 'package:frontend_otis/presentation/widgets/product/product_specs_grid.da
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 /// Screen to display full product details.

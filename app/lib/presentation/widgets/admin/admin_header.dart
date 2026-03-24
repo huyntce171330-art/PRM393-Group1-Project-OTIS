@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_profile_screen.dart';
 
 class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -27,7 +27,8 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
       title: title,
       showBack: showBack,
       onBack: onBack,
-      actions: actions ??
+      actions:
+          actions ??
           [
             BlocProvider.value(
               value: di.sl<NotificationBloc>(),

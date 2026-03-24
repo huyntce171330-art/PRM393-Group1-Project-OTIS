@@ -44,6 +44,11 @@
 
     /// Fetch a user by their ID (for session restore)
     Future<UserModel> getUserById(int userId);
+
+    // Session methods
+    Future<void> saveCurrentUser(int userId);
+    Future<int?> getCurrentUserId();
+    Future<void> clearCurrentUser();
   }
 
 

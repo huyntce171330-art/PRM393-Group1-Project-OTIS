@@ -68,4 +68,9 @@ abstract class AuthRepository {
 
   /// Fetch a user by ID (for session restore).
   Future<Either<Failure, User>> getUserById(int userId);
+  
+  // Session methods
+  Future<Either<Failure, void>> saveCurrentUser(int userId);
+  Future<Either<Failure, int?>> getCurrentUserId();
+  Future<Either<Failure, void>> clearCurrentUser();
 }

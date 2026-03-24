@@ -1,12 +1,17 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_messages_by_room_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/insert_message_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/mark_room_messages_as_read_usecase.dart';
 import 'chat_event.dart';
 import 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatSocketDatasource datasource;
+  final GetMessagesByRoomUseCase getMessagesByRoomUseCase;
+  final InsertMessageUseCase insertMessageUseCase;
+  final MarkRoomMessagesAsReadUseCase markRoomMessagesAsReadUseCase;
 
   StreamSubscription? _msgSub;
   StreamSubscription? _connSub;
@@ -17,7 +22,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   // Chống xử lý trùng cùng 1 message
   final Set<String> _seenMessageKeys = {};
 
-  ChatBloc({required this.datasource}) : super(ChatState.initial()) {
+  ChatBloc({
+    required this.datasource,
+    required this.getMessagesByRoomUseCase,
+    required this.insertMessageUseCase,
+    required this.markRoomMessagesAsReadUseCase,
+  }) : super(ChatState.initial()) {
     on<ChatStarted>(_onStarted);
     on<ChatTextChanged>(_onTextChanged);
     on<ChatSendPressed>(_onSendPressed);
@@ -40,7 +50,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _seenMessageKeys.clear();
 
     // 1. Load lịch sử local trước
-    final history = await DatabaseHelper.getMessagesByRoom(e.roomId);
+    final result = await getMessagesByRoomUseCase(e.roomId);
+    final history = result.getOrElse(() => []);
+    
     final historyMaps = history.map((m) => Map<String, dynamic>.from(m)).toList();
 
     for (final m in historyMaps) {
@@ -49,7 +61,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     emit(state.copyWith(messages: historyMaps));
 
-    await DatabaseHelper.markRoomMessagesAsRead(
+    await markRoomMessagesAsReadUseCase(
       roomId: e.roomId,
       viewerId: e.userId,
     );
@@ -117,8 +129,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
     _seenMessageKeys.add(key);
 
-    // Lưu local để có history
-    await DatabaseHelper.insertMessage(
+    // Lưu local tham chiếu qua UseCase
+    await insertMessageUseCase(
       roomId: roomId,
       senderId: senderId,
       content: content,
@@ -126,7 +138,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       isRead: 1,
     );
 
-    final history = await DatabaseHelper.getMessagesByRoom(roomId);
+    final historyResult = await getMessagesByRoomUseCase(roomId);
+    final history = historyResult.getOrElse(() => []);
 
     emit(state.copyWith(
       messages: history.map((m) => Map<String, dynamic>.from(m)).toList(),

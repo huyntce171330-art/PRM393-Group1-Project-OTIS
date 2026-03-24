@@ -6,7 +6,7 @@ import 'package:frontend_otis/domain/entities/notification.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_event.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
 class NotificationDetailScreen extends StatefulWidget {
   final String? notificationId;
@@ -19,7 +19,8 @@ class NotificationDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<NotificationDetailScreen> createState() => _NotificationDetailScreenState();
+  State<NotificationDetailScreen> createState() =>
+      _NotificationDetailScreenState();
 }
 
 class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
@@ -45,9 +46,9 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
     if (widget.notificationId != null) {
       final blocState = context.read<NotificationBloc>().state;
       if (blocState is NotificationLoaded) {
-        final cached = blocState.notifications.where(
-          (n) => n.id == widget.notificationId,
-        ).toList();
+        final cached = blocState.notifications
+            .where((n) => n.id == widget.notificationId)
+            .toList();
         if (cached.isNotEmpty) {
           setState(() => _localNotification = cached.first);
           _markAsReadIfNeeded(cached.first);
@@ -88,7 +89,9 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Notification'),
-        content: const Text('Are you sure you want to delete this notification?'),
+        content: const Text(
+          'Are you sure you want to delete this notification?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -140,7 +143,8 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
             if (_localNotification != null)
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.red),
-                onPressed: () => _confirmDelete(context, _localNotification!.id),
+                onPressed: () =>
+                    _confirmDelete(context, _localNotification!.id),
               ),
           ],
           backgroundColor: isDarkMode
@@ -170,10 +174,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadFromDb,
-              child: const Text('Retry'),
-            ),
+            ElevatedButton(onPressed: _loadFromDb, child: const Text('Retry')),
           ],
         ),
       );
@@ -186,7 +187,11 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
     return _buildContent(context, _localNotification!, isDarkMode);
   }
 
-  Widget _buildContent(BuildContext context, AppNotification notification, bool isDarkMode) {
+  Widget _buildContent(
+    BuildContext context,
+    AppNotification notification,
+    bool isDarkMode,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -217,11 +222,16 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                   children: [
                     if (notification.isRead)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                          border: Border.all(
+                            color: Colors.green.withOpacity(0.3),
+                          ),
                         ),
                         child: const Text(
                           'Read',
@@ -234,11 +244,16 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                       )
                     else
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.3),
+                          ),
                         ),
                         child: const Text(
                           'Unread',
@@ -298,8 +313,18 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
 
   String _formatDateTime(DateTime dt) {
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
     final ampm = dt.hour >= 12 ? 'PM' : 'AM';

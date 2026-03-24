@@ -13,7 +13,7 @@ import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_event.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_state.dart';

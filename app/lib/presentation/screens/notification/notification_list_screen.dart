@@ -6,7 +6,7 @@ import 'package:frontend_otis/domain/entities/notification_filter.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_event.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
 class NotificationListScreen extends StatefulWidget {
   final bool isAdminMode;
@@ -42,7 +42,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
   void _onFilterChanged(BuildContext context, int index) {
     setState(() => _selectedFilterIndex = index);
-    context.read<NotificationBloc>().add(LoadNotificationsEvent(filter: _buildFilter(index)));
+    context.read<NotificationBloc>().add(
+      LoadNotificationsEvent(filter: _buildFilter(index)),
+    );
   }
 
   void _onDelete(BuildContext context, String id) {
@@ -55,7 +57,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () {
-            context.read<NotificationBloc>().add(const UndoDeleteNotificationEvent());
+            context.read<NotificationBloc>().add(
+              const UndoDeleteNotificationEvent(),
+            );
           },
         ),
       ),
@@ -109,7 +113,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ? FloatingActionButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Chức năng tạo thông báo sẽ sớm có!')),
+                  const SnackBar(
+                    content: Text('Chức năng tạo thông báo sẽ sớm có!'),
+                  ),
                 );
               },
               backgroundColor: AppColors.primary,
@@ -124,7 +130,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               builder: (context, state) {
                 if (state is NotificationInitial) {
                   context.read<NotificationBloc>().add(
-                    LoadNotificationsEvent(filter: _buildFilter(_selectedFilterIndex)),
+                    LoadNotificationsEvent(
+                      filter: _buildFilter(_selectedFilterIndex),
+                    ),
                   );
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -141,7 +149,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   if (state.notifications.isEmpty) {
                     return _buildEmptyState(isDarkMode);
                   }
-                  return _buildNotificationList(context, state.notifications, isDarkMode);
+                  return _buildNotificationList(
+                    context,
+                    state.notifications,
+                    isDarkMode,
+                  );
                 }
 
                 return _buildLoadingSkeleton(isDarkMode);
@@ -244,11 +256,15 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ],
           if (yesterday.isNotEmpty) ...[
             _buildSectionHeader(context, 'Yesterday'),
-            ...yesterday.map((n) => _buildDismissibleItem(context, n, isDarkMode)),
+            ...yesterday.map(
+              (n) => _buildDismissibleItem(context, n, isDarkMode),
+            ),
           ],
           if (earlier.isNotEmpty) ...[
             _buildSectionHeader(context, 'Earlier'),
-            ...earlier.map((n) => _buildDismissibleItem(context, n, isDarkMode)),
+            ...earlier.map(
+              (n) => _buildDismissibleItem(context, n, isDarkMode),
+            ),
           ],
           const SizedBox(height: 80),
         ],
@@ -256,7 +272,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     );
   }
 
-  Widget _buildDismissibleItem(BuildContext context, AppNotification notification, bool isDarkMode) {
+  Widget _buildDismissibleItem(
+    BuildContext context,
+    AppNotification notification,
+    bool isDarkMode,
+  ) {
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.horizontal,
@@ -304,7 +324,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               title: const Text('Mark as Read'),
               onTap: () {
                 Navigator.pop(ctx);
-                context.read<NotificationBloc>().add(MarkAsReadEvent(notification.id));
+                context.read<NotificationBloc>().add(
+                  MarkAsReadEvent(notification.id),
+                );
               },
             ),
             ListTile(
@@ -312,7 +334,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               title: const Text('Mark as Unread'),
               onTap: () {
                 Navigator.pop(ctx);
-                context.read<NotificationBloc>().add(MarkAsUnreadEvent(notification.id));
+                context.read<NotificationBloc>().add(
+                  MarkAsUnreadEvent(notification.id),
+                );
               },
             ),
             ListTile(
@@ -354,9 +378,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     return InkWell(
       onTap: () {
         ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chi tiết thông báo!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Chi tiết thông báo!')));
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -527,7 +551,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     );
   }
 
-  Widget _buildErrorView(BuildContext context, String message, bool isDarkMode) {
+  Widget _buildErrorView(
+    BuildContext context,
+    String message,
+    bool isDarkMode,
+  ) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -543,7 +571,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ElevatedButton.icon(
             onPressed: () {
               context.read<NotificationBloc>().add(
-                LoadNotificationsEvent(filter: _buildFilter(_selectedFilterIndex)),
+                LoadNotificationsEvent(
+                  filter: _buildFilter(_selectedFilterIndex),
+                ),
               );
             },
             icon: const Icon(Icons.refresh),
@@ -559,11 +589,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.notifications_none,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.notifications_none, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'No notifications yet',
@@ -576,10 +602,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           const SizedBox(height: 8),
           Text(
             'You\'re all caught up!',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
       ),

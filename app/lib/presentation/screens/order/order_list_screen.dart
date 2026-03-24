@@ -5,7 +5,7 @@ import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 import 'package:frontend_otis/presentation/widgets/order/order_card.dart';
 import 'package:go_router/go_router.dart';
 

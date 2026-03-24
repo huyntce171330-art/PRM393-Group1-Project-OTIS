@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_event.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 import 'package:go_router/go_router.dart';
 
 class AdminProfileScreen extends StatelessWidget {
@@ -102,7 +102,9 @@ class AdminProfileScreen extends StatelessWidget {
             },
             style: TextButton.styleFrom(
               padding: const EdgeInsets.all(16),
-              backgroundColor: isDarkMode ? const Color(0xFF2a1a1b) : Colors.white,
+              backgroundColor: isDarkMode
+                  ? const Color(0xFF2a1a1b)
+                  : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
@@ -138,7 +140,9 @@ class AdminProfileScreen extends StatelessWidget {
             },
             style: TextButton.styleFrom(
               padding: const EdgeInsets.all(16),
-              backgroundColor: isDarkMode ? const Color(0xFF2a1a1b) : Colors.white,
+              backgroundColor: isDarkMode
+                  ? const Color(0xFF2a1a1b)
+                  : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(

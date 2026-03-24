@@ -181,9 +181,7 @@ final GoRouter router = GoRouter(
             final socketUrl = extra['socketUrl'] as String;
 
             return BlocProvider(
-              create: (_) => ChatBloc(
-                datasource: ChatSocketDatasource(SocketService.instance),
-              ),
+              create: (_) => di.sl<ChatBloc>(),
               child: ChatScreen(
                 roomId: roomId,
                 userId: userId,

@@ -1,15 +1,96 @@
-// This file moves the data from the remote datasource to the domain layer (Repository).
-//
-// Steps to implement:
-// 1. Create a class `ProfileRepositoryImpl` that implements `ProfileRepository` (from domain layer).
-// 2. Inject `ProfileRemoteDatasource` and `NetworkInfo` (if you handle offline mode) via constructor.
-// 3. Implement `getProfile()`:
-//    - Check for network connectivity (optional but recommended).
-//    - Call `remoteDatasource.getProfile()`.
-//    - Wrap the result in `Right(user)`.
-//    - Catch `ServerException` and return `Left(ServerFailure())`.
-// 4. Implement `updateProfile(User user)`:
-//    - Convert the `User` entity to `UserModel` (if necessary, or pass data directly).
-//    - Call `remoteDatasource.updateProfile(userModel)`.
-//    - Wrap the result in `Right(updatedUser)`.
-//    - Catch `ServerException` and return `Left(ServerFailure())`.
+import 'package:dartz/dartz.dart';
+import '../../core/error/failures.dart';
+import '../../core/error/exceptions.dart';
+import '../../domain/entities/user.dart';
+import '../../domain/repositories/profile_repository.dart';
+import '../datasources/profile/profile_remote_datasource.dart';
+
+class ProfileRepositoryImpl implements ProfileRepository {
+  final ProfileRemoteDatasource profileRemoteDatasource;
+
+  ProfileRepositoryImpl({required this.profileRemoteDatasource});
+
+  @override
+  Future<Either<Failure, int>> updateUserProfile({
+    required int userId,
+    required String fullName,
+    required String address,
+    required String phone,
+  }) async {
+    try {
+      final result = await profileRemoteDatasource.updateUserProfile(
+        userId: userId,
+        fullName: fullName,
+        address: address,
+        phone: phone,
+      );
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Server Failure'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, User?>> getUserById(int userId) async {
+    try {
+      final result = await profileRemoteDatasource.getUserById(userId);
+      return Right(result?.toDomain());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Server Failure'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> countCustomers() async {
+    try {
+      final result = await profileRemoteDatasource.countCustomers();
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Server Failure'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> updateUserStatus({
+    required int userId,
+    required String status,
+  }) async {
+    try {
+      final result = await profileRemoteDatasource.updateUserStatus(
+        userId: userId,
+        status: status,
+      );
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Server Failure'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<User>>> getUsers({
+    String? query,
+    String? status,
+    String? sortBy,
+  }) async {
+    try {
+      final results = await profileRemoteDatasource.getUsers(
+        query: query,
+        status: status,
+        sortBy: sortBy,
+      );
+      return Right(results.map((m) => m.toDomain()).toList());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Server Failure'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+}

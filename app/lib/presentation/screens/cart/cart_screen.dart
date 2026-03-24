@@ -6,9 +6,9 @@ import 'package:frontend_otis/core/injections/injection_container.dart' as di;
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
-import 'package:frontend_otis/presentation/widgets/confirmation_dialog.dart';
+import 'package:frontend_otis/presentation/widgets/common/confirmation_dialog.dart';
 import 'package:frontend_otis/presentation/widgets/cart/cart_item_card.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});

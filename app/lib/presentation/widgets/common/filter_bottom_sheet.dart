@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
-import 'package:frontend_otis/presentation/widgets/custom_button.dart';
+import 'package:frontend_otis/presentation/widgets/common/custom_button.dart';
 
 /// Bottom sheet for filtering products.
 ///
@@ -101,7 +101,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   void _updateResetState() {
-    final hasChanges = _minPriceController.text.isNotEmpty ||
+    final hasChanges =
+        _minPriceController.text.isNotEmpty ||
         _maxPriceController.text.isNotEmpty ||
         _selectedCategory != null ||
         _sortBy != 'createdAt';
@@ -234,14 +235,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           // Apply Button
           SizedBox(
             width: double.infinity,
-            child: CustomButton(
-              text: 'Áp dụng',
-              onPressed: _applyFilters,
-            ),
+            child: CustomButton(text: 'Áp dụng', onPressed: _applyFilters),
           ),
-          SizedBox(
-            height: MediaQuery.of(context).viewInsets.bottom,
-          ),
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
         ],
       ),
     );
@@ -265,46 +261,55 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 }
 
 /// Sort option enum matching ProductFilter
-enum SortOption {
-  newest,
-  priceAsc,
-  priceDesc,
-  nameAsc,
-  nameDesc,
-  popular,
-}
+enum SortOption { newest, priceAsc, priceDesc, nameAsc, nameDesc, popular }
 
 extension SortOptionExtension on SortOption {
   String get label {
     switch (this) {
-      case SortOption.newest: return 'Mới nhất';
-      case SortOption.priceAsc: return 'Giá tăng dần';
-      case SortOption.priceDesc: return 'Giá giảm dần';
-      case SortOption.nameAsc: return 'Tên A-Z';
-      case SortOption.nameDesc: return 'Tên Z-A';
-      case SortOption.popular: return 'Phổ biến nhất';
+      case SortOption.newest:
+        return 'Mới nhất';
+      case SortOption.priceAsc:
+        return 'Giá tăng dần';
+      case SortOption.priceDesc:
+        return 'Giá giảm dần';
+      case SortOption.nameAsc:
+        return 'Tên A-Z';
+      case SortOption.nameDesc:
+        return 'Tên Z-A';
+      case SortOption.popular:
+        return 'Phổ biến nhất';
     }
   }
 
   String get sortBy {
     switch (this) {
-      case SortOption.newest: return 'createdAt';
+      case SortOption.newest:
+        return 'createdAt';
       case SortOption.priceAsc:
-      case SortOption.priceDesc: return 'price';
+      case SortOption.priceDesc:
+        return 'price';
       case SortOption.nameAsc:
-      case SortOption.nameDesc: return 'name';
-      case SortOption.popular: return 'stockQuantity';
+      case SortOption.nameDesc:
+        return 'name';
+      case SortOption.popular:
+        return 'stockQuantity';
     }
   }
 
   bool get ascending {
     switch (this) {
-      case SortOption.newest: return false;
-      case SortOption.priceAsc: return true;
-      case SortOption.priceDesc: return false;
-      case SortOption.nameAsc: return true;
-      case SortOption.nameDesc: return false;
-      case SortOption.popular: return false;
+      case SortOption.newest:
+        return false;
+      case SortOption.priceAsc:
+        return true;
+      case SortOption.priceDesc:
+        return false;
+      case SortOption.nameAsc:
+        return true;
+      case SortOption.nameDesc:
+        return false;
+      case SortOption.popular:
+        return false;
     }
   }
 }

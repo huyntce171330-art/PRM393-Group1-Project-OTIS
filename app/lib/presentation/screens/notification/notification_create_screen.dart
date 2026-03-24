@@ -8,13 +8,14 @@ import 'package:frontend_otis/domain/entities/notification_filter.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_event.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
 class NotificationCreateScreen extends StatefulWidget {
   const NotificationCreateScreen({super.key});
 
   @override
-  State<NotificationCreateScreen> createState() => _NotificationCreateScreenState();
+  State<NotificationCreateScreen> createState() =>
+      _NotificationCreateScreenState();
 }
 
 class _NotificationCreateScreenState extends State<NotificationCreateScreen> {
@@ -84,9 +85,7 @@ class _NotificationCreateScreenState extends State<NotificationCreateScreen> {
       createdAt: DateTime.now(),
     );
 
-    context.read<NotificationBloc>().add(
-      CreateNotificationEvent(notification),
-    );
+    context.read<NotificationBloc>().add(CreateNotificationEvent(notification));
   }
 
   @override
@@ -157,18 +156,25 @@ class _NotificationCreateScreenState extends State<NotificationCreateScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color: isDarkMode
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color: isDarkMode
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -195,18 +201,25 @@ class _NotificationCreateScreenState extends State<NotificationCreateScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color: isDarkMode
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color: isDarkMode
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -228,13 +241,17 @@ class _NotificationCreateScreenState extends State<NotificationCreateScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color: isDarkMode
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color: isDarkMode
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
                       ),
                     ),
                   ),

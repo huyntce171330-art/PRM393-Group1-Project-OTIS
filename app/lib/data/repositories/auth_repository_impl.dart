@@ -1,32 +1,15 @@
-// This file connects the Domain and Data layers for Authentication.
-//
-// Steps to implement:
-// 1. Create `AuthRepositoryImpl` implementing `AuthRepository`.
-// 2. Inject `AuthRemoteDatasource` (and `NetworkInfo`).
-// 3. Implement `login`:
-//    - Call `remoteDatasource.login`.
-//    - Return `Right(user)` on success.
-//    - Catch exceptions and return `Left(Failure)`.
-// 4. Implement `register`:
-//    - Call `remoteDatasource.register`.
-//    - Return `Right(user)` on success.
-// 5. Implement `logout`:
-//    - Call `remoteDatasource.logout`.
-//    - Return `Right(null)`.
-
 import 'package:dartz/dartz.dart';
-import 'package:frontend_otis/domain/entities/user.dart';
-import 'package:frontend_otis/domain/repositories/auth_repository.dart';
-import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart';
-import 'package:frontend_otis/core/error/failures.dart';
+import '../../core/error/exceptions.dart';
+import '../../core/error/failures.dart';
+import '../../domain/entities/user.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../datasources/auth/auth_remote_datasource.dart';
 
-/// Repository implementation connecting Domain and Data layers
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource remoteDatasource;
 
   AuthRepositoryImpl(this.remoteDatasource);
 
-  /// Login user
   @override
   Future<Either<Failure, User>> login({
     required String phone,
@@ -35,14 +18,13 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final userModel = await remoteDatasource.login(phone, password);
       return Right(userModel.toDomain());
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (_) {
-      return Left(ServerFailure(message: 'Login failed'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Login failed'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
-  /// Register user
   @override
   Future<Either<Failure, User>> register({
     required String phone,
@@ -56,39 +38,34 @@ class AuthRepositoryImpl implements AuthRepository {
         phone,
       );
       return Right(userModel.toDomain());
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (_) {
-      return Left(ServerFailure(message: 'Register failed'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Register failed'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
-  /// Logout user
   @override
   Future<Either<Failure, void>> logout() async {
     try {
       await remoteDatasource.logout();
       return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (_) {
-      return Left(ServerFailure(message: 'Logout failed'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Logout failed'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
     }
   }
-
-  // ─────────────────────────────────────────────
-  // 🔐 OTP
-  // ─────────────────────────────────────────────
 
   @override
   Future<Either<Failure, void>> requestOtp({required String phone}) async {
     try {
       await remoteDatasource.requestOtp(phone);
       return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (_) {
-      return Left(ServerFailure(message: 'Request OTP failed'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Request OTP failed'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -100,16 +77,12 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await remoteDatasource.verifyOtp(phone, otp);
       return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (_) {
-      return Left(ServerFailure(message: 'Verify OTP failed'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Verify OTP failed'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
     }
   }
-
-  // ─────────────────────────────────────────────
-  // 🔑 Password
-  // ─────────────────────────────────────────────
 
   @override
   Future<Either<Failure, void>> resetPassword({
@@ -119,10 +92,10 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await remoteDatasource.resetPassword(phone, newPassword);
       return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (_) {
-      return Left(ServerFailure(message: 'Reset password failed'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Reset password failed'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -134,10 +107,10 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await remoteDatasource.changePassword(phone, newPassword);
       return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (_) {
-      return Left(ServerFailure(message: 'Change password failed'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Change password failed'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -146,10 +119,46 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final userModel = await remoteDatasource.getUserById(userId);
       return Right(userModel.toDomain());
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (_) {
-      return Left(ServerFailure(message: 'Failed to get user'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Server error'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveCurrentUser(int userId) async {
+    try {
+      await remoteDatasource.saveCurrentUser(userId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'DB Error'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int?>> getCurrentUserId() async {
+    try {
+      final result = await remoteDatasource.getCurrentUserId();
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'DB Error'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> clearCurrentUser() async {
+    try {
+      await remoteDatasource.clearCurrentUser();
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'DB Error'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 }

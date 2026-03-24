@@ -5,7 +5,7 @@ import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 import 'package:frontend_otis/domain/entities/user.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -212,10 +212,7 @@ class ProfileScreen extends StatelessWidget {
               final authState = context.read<AuthBloc>().state;
 
               if (authState is Authenticated) {
-                context.push(
-                  '/otp',
-                  extra: authState.user.phone,
-                );
+                context.push('/otp', extra: authState.user.phone);
               }
             },
           ),
