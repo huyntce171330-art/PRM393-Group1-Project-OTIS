@@ -234,7 +234,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                           ),
                         ),
                         child: const Text(
-                          'Read',
+                          'Đã đọc',
                           style: TextStyle(
                             color: Colors.green,
                             fontSize: 12,
@@ -256,7 +256,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                           ),
                         ),
                         child: const Text(
-                          'Unread',
+                          'Chưa đọc',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 12,
@@ -326,6 +326,9 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
       'November',
       'December',
     ];
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year} at ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year} at $hour:$minute $ampm';
   }
 }

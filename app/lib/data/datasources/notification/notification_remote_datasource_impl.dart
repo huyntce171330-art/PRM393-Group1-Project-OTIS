@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:frontend_otis/data/datasources/notification/notification_remote_datasource.dart';
 import 'package:frontend_otis/data/models/notification_model.dart';
 import 'package:frontend_otis/domain/entities/notification_filter.dart';
+import 'package:frontend_otis/domain/entities/notification_filter.dart';
 
 class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
   final Database database;
@@ -56,7 +57,9 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
   }
 
   @override
-  Future<List<NotificationModel>> fetchNotifications({Map<String, dynamic>? filterParams}) async {
+  Future<List<NotificationModel>> fetchNotifications({
+    Map<String, dynamic>? filterParams,
+  }) async {
     await _ensureMigrated();
     final page = filterParams?['page'] ?? 1;
     final limit = filterParams?['limit'] ?? 20;
@@ -99,16 +102,20 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
       [...whereArgs, limit, offset],
     );
 
-    return result.map((row) => NotificationModel.fromJson({
-      'notification_id': row['notification_id'],
-      'title': row['title'],
-      'body': row['body'],
-      'is_read': row['is_read'],
-      'user_id': row['user_id'],
-      'created_at': row['created_at'],
-      'type': row['type'],
-      'payload': row['payload'],
-    })).toList();
+    return result
+        .map(
+          (row) => NotificationModel.fromJson({
+            'notification_id': row['notification_id'],
+            'title': row['title'],
+            'body': row['body'],
+            'is_read': row['is_read'],
+            'user_id': row['user_id'],
+            'created_at': row['created_at'],
+            'type': row['type'],
+            'payload': row['payload'],
+          }),
+        )
+        .toList();
   }
 
   @override
@@ -141,23 +148,23 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
   }
 
   @override
-  Future<NotificationModel> createNotification(NotificationModel notification) async {
+  Future<NotificationModel> createNotification(
+    NotificationModel notification,
+  ) async {
     await _ensureMigrated();
     final createdAt = DateTime.now().toIso8601String();
-    final id = await database.insert(
-      'notifications',
-      {
-        'title': notification.title,
-        'body': notification.body,
-        'is_read': notification.isRead ? 1 : 0,
-        'user_id': (notification.userId == 'system' || notification.userId.isEmpty)
-            ? null
-            : int.tryParse(notification.userId),
-        'created_at': createdAt,
-        'type': notification.type?.toString().split('.').last ?? 'general',
-        'payload': notification.payload,
-      },
-    );
+    final id = await database.insert('notifications', {
+      'title': notification.title,
+      'body': notification.body,
+      'is_read': notification.isRead ? 1 : 0,
+      'user_id':
+          (notification.userId == 'system' || notification.userId.isEmpty)
+          ? null
+          : int.tryParse(notification.userId),
+      'created_at': createdAt,
+      'type': notification.type?.toString().split('.').last ?? 'general',
+      'payload': notification.payload,
+    });
 
     // Verify insert was successful (id > 0 means success in SQLite)
     if (id <= 0) {
@@ -173,7 +180,9 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
     );
 
     if (result.isEmpty) {
-      throw Exception('Failed to create notification: Could not fetch created notification');
+      throw Exception(
+        'Failed to create notification: Could not fetch created notification',
+      );
     }
 
     final row = result.first;
@@ -183,7 +192,9 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
       body: row['body']?.toString() ?? '',
       isRead: (row['is_read'] as int? ?? 0) == 1,
       userId: row['user_id']?.toString() ?? '',
-      createdAt: DateTime.parse(row['created_at']?.toString() ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        row['created_at']?.toString() ?? DateTime.now().toIso8601String(),
+      ),
       type: _parseType(row['type'] as String?),
       payload: row['payload'] as String?,
     );

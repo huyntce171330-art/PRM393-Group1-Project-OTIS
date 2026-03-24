@@ -376,7 +376,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       child: Column(
         children: [
           Text(
-            'Trang $currentPage / $totalPages ($totalCount sản phẩm)',
+            'Page $currentPage / $totalPages ($totalCount products)',
             style: TextStyle(
               fontSize: 12,
               color: isDarkMode ? Colors.grey[400] : AppColors.textSecondary,

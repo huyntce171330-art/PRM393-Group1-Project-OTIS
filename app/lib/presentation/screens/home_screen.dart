@@ -36,10 +36,7 @@ import 'package:frontend_otis/domain/usecases/chat/get_room_by_user_id_usecase.d
 import 'package:frontend_otis/domain/usecases/chat/insert_message_usecase.dart';
 import 'package:frontend_otis/domain/usecases/chat/mark_room_messages_as_read_usecase.dart';
 import 'package:frontend_otis/domain/usecases/chat/get_unread_count_for_room_usecase.dart';
-import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
-import 'package:frontend_otis/presentation/bloc/map/map_event.dart';
-import 'package:frontend_otis/presentation/bloc/map/map_state.dart';
-import 'package:frontend_otis/domain/entities/shop_location.dart';
+
 
 /// Home screen - Main landing page.
 class HomeScreen extends StatefulWidget {
@@ -85,7 +82,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     SocketService.instance.reset();
     SocketService.instance.connect(url: _socketUrl, userId: userId);
+    SocketService.instance.connect(url: _socketUrl, userId: userId);
 
+    SocketService.instance.joinRoom(roomId, userId: userId);
     SocketService.instance.joinRoom(roomId, userId: userId);
 
     await _chatBadgeSub?.cancel();
@@ -122,13 +121,6 @@ class _HomeScreenState extends State<HomeScreen> {
       'subtitle': '15% off all Michelin Tires',
       'badge': 'PROMO',
     },
-    // {
-    //   'imageUrl':
-    //       'https://lh3.googleusercontent.com/aida-public/AB6AXuCsAl8SBoQTX23DBYA0h8vlyPvXJeoaQNmGIcyjbZnAVEpHii-NZpA7Fw6yOFQhV_9aQCt7RKwkI2pSgT3gcuPzLI7T5U8rP0cjFht7N8ceWpi9U5VFMUQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW_WzqGzGdLBjQlCOpvNJi9zrdgkVMHNA3OMRHfV3r2DYQceWoAbrG8Y8Sd0FSWye0kd1CYzyVZzqZjuOrlX_tMB7075TbByjMzwik2bskLA',
-    //   'title': 'Bridgestone Deals',
-    //   'subtitle': 'Buy 3 Get 1 Free on select models',
-    //   'badge': 'NEW',
-    // },
   ];
 
   // Services categories data
@@ -179,21 +171,25 @@ class _HomeScreenState extends State<HomeScreen> {
       // Navigate to product list with the filter
       context.push('/products', extra: filter).then((_) {
         if (mounted) {
-          _productBloc.add(const RestoreProductListEvent());
+          _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
         }
       });
     }
   }
 
   void _navigateToProductList() {
-    context.push('/products');
+    context.push('/products').then((_) {
+      if (mounted) {
+        _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
+      }
+    });
   }
 
   void _navigateToProductDetail(Product product) {
     // Use push() to maintain back stack, allowing user to navigate back
     context.push('/product/${product.id}').then((_) {
       if (mounted) {
-        _productBloc.add(const RestoreProductListEvent());
+        _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
       }
     });
   }
@@ -297,11 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 isSmallScreen,
                               ),
                               const SizedBox(height: 24),
-                              // Store Locations Section
-                              _buildStoreLocationsSection(
-                                context,
-                                isSmallScreen,
-                              ),
+
                               SizedBox(
                                 height:
                                     kBottomNavigationBarHeight +
@@ -823,6 +815,74 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ),
+        // Shop Locations full-width card below the 4-icon grid
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Material(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => context.push('/shop-locations'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.location_on,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Shop Locations',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'View all OTIS store branches on the map',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -913,153 +973,5 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStoreLocationsSection(BuildContext context, bool isSmallScreen) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocProvider(
-      create: (context) => sl<MapBloc>()..add(const LoadShopLocationsEvent()),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Our Stores',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => context.push('/shop-locations'),
-                  child: Text(
-                    'See Map',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 180,
-            child: BlocBuilder<MapBloc, MapState>(
-              builder: (context, state) {
-                if (state is MapLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  );
-                }
-
-                if (state is ShopLocationsLoaded) {
-                  final stores = state.shopLocations;
-                  if (stores.isEmpty) {
-                    return const Center(child: Text('No stores found'));
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.only(left: 16),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: stores.length,
-                    itemBuilder: (context, index) {
-                      final store = stores[index];
-                      return _buildStoreCard(context, store, isDarkMode);
-                    },
-                  );
-                }
-
-                if (state is MapError) {
-                  return Center(child: Text(state.message));
-                }
-
-                return const SizedBox.shrink();
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStoreCard(
-    BuildContext context,
-    ShopLocation store,
-    bool isDarkMode,
-  ) {
-    return Container(
-      width: 260,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Store Image
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Image.network(
-              store.imageUrl ??
-                  'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=800',
-              height: 100,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  store.name,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 12, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        store.address,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

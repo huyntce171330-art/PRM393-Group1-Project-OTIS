@@ -83,6 +83,7 @@ class _NotificationCreateScreenState extends State<NotificationCreateScreen> {
       isRead: false,
       userId: 'system',
       createdAt: DateTime.now(),
+      type: _selectedType,
     );
 
     context.read<NotificationBloc>().add(CreateNotificationEvent(notification));

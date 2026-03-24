@@ -64,7 +64,9 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
     }
 
     try {
-      final file = File(parsed?.isAbsolute == true ? parsed!.toFilePath() : rawPath);
+      final file = File(
+        parsed?.isAbsolute == true ? parsed!.toFilePath() : rawPath,
+      );
       if (file.existsSync()) {
         return FileImage(file);
       }
@@ -92,9 +94,7 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
         builder: (context, state) {
           if (state is MapLoading) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primary),
             );
           } else if (state is ShopLocationsLoaded) {
             return _buildMapContent(context, state.shopLocations);
@@ -132,9 +132,7 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
           ElevatedButton(
             onPressed: () =>
                 context.read<MapBloc>().add(const LoadShopLocationsEvent()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: const Text('Retry'),
           ),
         ],
@@ -193,8 +191,10 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
                     side: BorderSide(color: Colors.grey[200]!),
                   ),
                   tileColor: Theme.of(context).colorScheme.surface,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   title: Text(
                     shop.name,
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -202,10 +202,7 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SelectableText(
-                        shop.address,
-                        maxLines: 2,
-                      ),
+                      SelectableText(shop.address, maxLines: 2),
                       const SizedBox(height: 4),
                       SelectableText('Phone: ${shop.phone}'),
                     ],
@@ -239,74 +236,93 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
 class _MapMarker extends StatelessWidget {
   const _MapMarker({required this.shop, required this.imageProvider});
 
+  /// Must match [Marker.width] — room for avatar + pin + 2-line label.
+  static const double markerWidth = 108;
+
+  /// Must match [Marker.height] — avoids "bottom overflowed" under tight constraints.
+  static const double markerHeight = 132;
+
+  static const double _avatarSize = 34;
+  static const double _pinSize = 34;
+
   final ShopLocation shop;
   final ImageProvider<Object>? imageProvider;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (imageProvider != null)
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.25),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+    return SizedBox(
+      width: markerWidth,
+      height: markerHeight,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          if (imageProvider != null)
+            Container(
+              width: _avatarSize,
+              height: _avatarSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image(image: imageProvider!, fit: BoxFit.cover),
+              ),
+            )
+          else
+            CircleAvatar(
+              radius: _avatarSize / 2,
+              backgroundColor: Colors.white,
+              child: Icon(Icons.storefront, color: AppColors.primary, size: 15),
+            ),
+          const SizedBox(height: 2),
+          const Icon(
+            Icons.location_pin,
+            color: AppColors.primary,
+            size: _pinSize,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: markerWidth - 8),
+                  child: Text(
+                    shop.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      height: 1.15,
+                    ),
+                  ),
                 ),
-              ],
-            ),
-            child: ClipOval(
-              child: Image(
-                image: imageProvider!,
-                fit: BoxFit.cover,
               ),
             ),
-          )
-        else
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.white,
-            child: Icon(
-              Icons.storefront,
-              color: AppColors.primary,
-              size: 16,
-            ),
           ),
-        const SizedBox(height: 4),
-        const Icon(
-          Icons.location_pin,
-          color: AppColors.primary,
-          size: 38,
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Text(
-            shop.name,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

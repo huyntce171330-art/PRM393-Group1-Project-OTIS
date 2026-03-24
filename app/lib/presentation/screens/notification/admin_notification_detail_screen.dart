@@ -92,7 +92,9 @@ class _AdminNotificationDetailScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Notification'),
-        content: const Text('Are you sure you want to delete this notification?'),
+        content: const Text(
+          'Are you sure you want to delete this notification?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),

@@ -20,7 +20,7 @@ class DatabaseHelper {
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'otis.db');
-
+    // REMOVE redundant delete so data persists across restarts
     await deleteDatabase(path);
 
     return openDatabase(

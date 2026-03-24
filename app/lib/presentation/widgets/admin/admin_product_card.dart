@@ -88,7 +88,7 @@ class AdminProductCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'ĐÃ XÓA',
+                    'DELETED',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,

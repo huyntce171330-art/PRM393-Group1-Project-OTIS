@@ -352,7 +352,13 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
     return InkWell(
       onTap: () {
-        context.push('/notifications/${notification.id}', extra: notification);
+        context.push('/notifications/${notification.id}', extra: notification).then((_) {
+          if (context.mounted) {
+            context.read<NotificationBloc>().add(LoadNotificationsEvent(
+              filter: _buildFilter(_selectedFilterIndex),
+            ));
+          }
+        });
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -564,7 +570,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           Icon(Icons.notifications_none, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'No notifications yet',
+            'Chưa có thông báo nào',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,

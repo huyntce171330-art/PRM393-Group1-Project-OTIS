@@ -48,6 +48,7 @@ import 'package:frontend_otis/presentation/screens/notification/notification_det
 import 'package:frontend_otis/presentation/screens/notification/notification_create_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/admin_notification_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/admin_notification_detail_screen.dart';
+
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
@@ -135,6 +136,15 @@ final GoRouter router = GoRouter(
       path: '/home',
       name: 'home',
       builder: (context, state) => const HomeScreen(),
+    ),
+    // User Shop Locations map — accessible from Home services
+    GoRoute(
+      path: '/shop-locations',
+      name: 'shop-locations',
+      builder: (context, state) => BlocProvider<MapBloc>(
+        create: (_) => di.sl<MapBloc>(),
+        child: const ShopLocationsMapScreen(),
+      ),
     ),
     // Customer Routes
     // Admin Routes - Wrap with BlocProvider to share state between List and Detail
@@ -348,6 +358,32 @@ final GoRouter router = GoRouter(
             );
           },
         ),
+        // Admin Notifications: inbox (bell icon from admin header) = view only
+        GoRoute(
+          path: '/admin/notifications-inbox',
+          name: 'admin-notifications-inbox',
+          builder: (context, state) =>
+              const NotificationListScreen(isAdminMode: true, isInboxView: true),
+        ),
+        // Admin Notifications CRUD (from Settings > Quản lý thông báo)
+        GoRoute(
+          path: '/admin/notifications',
+          name: 'admin-notifications',
+          builder: (context, state) => const AdminNotificationListScreen(),
+        ),
+        // Admin notification detail (full CRUD)
+        GoRoute(
+          path: '/admin/notifications/:id',
+          name: 'admin-notification-detail',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            final notification = state.extra as AppNotification?;
+            return AdminNotificationDetailScreen(
+              notificationId: id,
+              notification: notification,
+            );
+          },
+        ),
       ],
     ),
     // Customer notification routes — no AdminLayout wrap so customer sees clean UI
@@ -404,32 +440,6 @@ final GoRouter router = GoRouter(
         return BlocProvider(create: (_) => bloc, child: const CategoryScreen());
       },
     ),
-    // Admin Notifications: inbox (bell icon from admin header) = view only
-    GoRoute(
-      path: '/admin/notifications-inbox',
-      name: 'admin-notifications-inbox',
-      builder: (context, state) =>
-          const NotificationListScreen(isAdminMode: true, isInboxView: true),
-    ),
-    // Admin Notifications CRUD (from Settings > Quản lý thông báo)
-    GoRoute(
-      path: '/admin/notifications',
-      name: 'admin-notifications',
-      builder: (context, state) => const AdminNotificationListScreen(),
-    ),
-    // Admin notification detail (full CRUD)
-    GoRoute(
-      path: '/admin/notifications/:id',
-      name: 'admin-notification-detail',
-      builder: (context, state) {
-        final id = state.pathParameters['id']!;
-        final notification = state.extra as AppNotification?;
-        return AdminNotificationDetailScreen(
-          notificationId: id,
-          notification: notification,
-        );
-      },
-    ),
     GoRoute(
       path: '/otp',
       name: 'otp',
@@ -438,14 +448,6 @@ final GoRouter router = GoRouter(
 
         return ChangePasswordOtpScreen(phone: phone);
       },
-    ),
-    GoRoute(
-      path: '/shop-locations',
-      name: 'shop-locations',
-      builder: (context, state) => BlocProvider(
-        create: (context) => di.sl<MapBloc>(),
-        child: const ShopLocationsMapScreen(),
-      ),
     ),
   ],
   errorPageBuilder: (context, state) => MaterialPage(
