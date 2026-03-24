@@ -140,15 +140,47 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
           'created_at': DateTime.now().toIso8601String(),
         });
 
-        // Insert Items
+        // Insert Items and Update Stock
         final items = orderData['items'] as List;
         for (var item in items) {
+          final int productId = int.parse(item['product_id'].toString());
+          final int quantity = int.parse(item['quantity'].toString());
+
+          // 1. Check stock availability
+          final List<Map<String, dynamic>> productQueryResult = await txn.query(
+            'products',
+            columns: ['stock_quantity'],
+            where: 'product_id = ?',
+            whereArgs: [productId],
+          );
+
+          if (productQueryResult.isEmpty) {
+            throw ServerException(message: "Product not found: $productId");
+          }
+
+          final int currentStock = productQueryResult.first['stock_quantity'];
+          if (currentStock < quantity) {
+            final String productName = item['product_name'] ?? 'Product';
+            throw ServerException(
+              message: "Insufficient stock for $productName ($currentStock available)",
+            );
+          }
+
+          // 2. Insert Order Item
           await txn.insert('order_items', {
             'order_id': orderId,
-            'product_id': item['product_id'],
-            'quantity': item['quantity'],
+            'product_id': productId,
+            'quantity': quantity,
             'unit_price': item['price'],
           });
+
+          // 3. Decrement Stock
+          await txn.update(
+            'products',
+            {'stock_quantity': currentStock - quantity},
+            where: 'product_id = ?',
+            whereArgs: [productId],
+          );
         }
 
         // Fetch created order to return full model
@@ -193,24 +225,46 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
     try {
       final db = await DatabaseHelper.database;
 
+      // Fetch current order to check previous status and get items
+      final List<Map<String, dynamic>> maps = await db.query(
+        'orders',
+        where: 'order_id = ? OR code = ?',
+        whereArgs: [id, id],
+      );
+
+      if (maps.isEmpty) {
+        throw ServerException(message: 'Order not found for update');
+      }
+
+      final String currentStatus = maps.first['status'];
+      final int orderId = maps.first['order_id'];
+
+      // If transition to canceled, restore stock
+      if (currentStatus != 'canceled' && status == 'canceled') {
+        final List<Map<String, dynamic>> items = await db.query(
+          'order_items',
+          where: 'order_id = ?',
+          whereArgs: [orderId],
+        );
+
+        for (var item in items) {
+          final int productId = item['product_id'];
+          final int quantity = item['quantity'];
+
+          await db.rawUpdate(
+            'UPDATE products SET stock_quantity = stock_quantity + ? WHERE product_id = ?',
+            [quantity, productId],
+          );
+        }
+      }
+
       // Update status
-      // Handle id vs code
       int count = await db.update(
         'orders',
         {'status': status},
         where: 'order_id = ?',
-        whereArgs: [id],
+        whereArgs: [orderId],
       );
-
-      if (count == 0) {
-        // Try code
-        count = await db.update(
-          'orders',
-          {'status': status},
-          where: 'code = ?',
-          whereArgs: [id],
-        );
-      }
 
       if (count == 0) {
         throw ServerException(message: 'Order not found for update');

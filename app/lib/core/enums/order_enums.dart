@@ -144,7 +144,9 @@ extension OrderStatusExtension on OrderStatus {
 
   /// Check if the order can be cancelled
   bool get canBeCancelled =>
-      this == OrderStatus.pendingPayment || this == OrderStatus.paid;
+      this == OrderStatus.pendingPayment ||
+      this == OrderStatus.paid ||
+      this == OrderStatus.processing;
 
   /// Check if the order is completed
   bool get isCompleted => this == OrderStatus.completed;

@@ -91,10 +91,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     int currentStep = 0;
     if (order.status == OrderStatus.pendingPayment ||
-        order.status == OrderStatus.paid) {
+        order.status == OrderStatus.paid ||
+        order.status == OrderStatus.processing) {
       currentStep = 0;
-    } else if (order.status == OrderStatus.processing ||
-        order.status == OrderStatus.shipping) {
+    } else if (order.status == OrderStatus.shipping) {
       currentStep = 1;
     } else if (order.status == OrderStatus.completed) {
       currentStep = 2;
@@ -451,7 +451,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     // Only allow cancellation for pending payment or paid orders
     final bool canCancel =
         order.status == OrderStatus.pendingPayment ||
-        order.status == OrderStatus.paid;
+        order.status == OrderStatus.paid ||
+        order.status == OrderStatus.processing;
 
     if (!canCancel) {
       return const SizedBox.shrink();
