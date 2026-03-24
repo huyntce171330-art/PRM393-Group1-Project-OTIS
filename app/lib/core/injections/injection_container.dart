@@ -340,6 +340,7 @@ Future<void> init() async {
       updateCartUsecase: sl(),
       removeFromCartUsecase: sl(),
       clearCartUsecase: sl(),
+      getProductDetailUsecase: sl(),
     ),
   );
 

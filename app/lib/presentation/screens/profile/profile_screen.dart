@@ -190,21 +190,6 @@ class ProfileScreen extends StatelessWidget {
           ),
           _buildMenuItem(
             context,
-            icon: Icons.directions_car,
-            title: 'My Garage',
-            subtitle: 'Managed vehicles',
-            onTap: () {
-              // Placeholder
-            },
-          ),
-          Divider(
-            height: 1,
-            color: isDarkMode
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey[50],
-          ),
-          _buildMenuItem(
-            context,
             icon: Icons.lock,
             title: 'Change Password',
             subtitle: 'Security settings',

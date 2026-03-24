@@ -26,7 +26,35 @@ class CartItemCard extends StatelessWidget {
     final product = cartItem.product;
 
     if (product == null) {
-      return const SizedBox(); // Or loading/error state for item
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.black26 : Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline, color: AppColors.error),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Product Unavailable',
+                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                context.read<CartBloc>().add(
+                      RemoveFromCartEvent(productId: cartItem.productId),
+                    );
+              },
+              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            ),
+          ],
+        ),
+      );
     }
 
     Widget content = Container(
