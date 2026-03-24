@@ -42,8 +42,10 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
                     clipBehavior: Clip.none,
                     children: [
                       IconButton(
-                        onPressed: () => context.push('/notifications'),
+                        onPressed: () => context.push('/admin/notifications'),
                         icon: const Icon(Icons.notifications_outlined),
+                        color: Colors
+                            .black, // <-- THÊM DÒNG NÀY: Thay Colors.black bằng màu nổi bật trên nền của bạn
                       ),
                       if (unreadCount > 0)
                         Positioned(
@@ -62,7 +64,7 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
                             child: Text(
                               unreadCount > 99 ? '99+' : unreadCount.toString(),
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: Colors.yellow,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),

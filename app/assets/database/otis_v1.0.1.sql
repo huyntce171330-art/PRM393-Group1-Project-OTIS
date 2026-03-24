@@ -133,6 +133,7 @@ CREATE TABLE notifications (
   type TEXT,
   payload TEXT,
   is_read INTEGER DEFAULT 0,
+  is_deleted INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   user_id INTEGER,
   FOREIGN KEY (user_id) REFERENCES users (user_id)

@@ -46,6 +46,8 @@ import 'package:frontend_otis/presentation/screens/profile/profile_update_screen
 import 'package:frontend_otis/presentation/screens/notification/notification_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/notification_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/notification_create_screen.dart';
+import 'package:frontend_otis/presentation/screens/notification/admin_notification_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/notification/admin_notification_detail_screen.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
@@ -311,39 +313,29 @@ final GoRouter router = GoRouter(
         ),
       ],
     ),
-    // Notification ShellRoute - persists admin bottom nav, shares singleton NotificationBloc
-    ShellRoute(
-      builder: (context, state, child) {
-        return BlocProvider<NotificationBloc>.value(
-          value: di.sl<NotificationBloc>(),
-          child: AdminLayout(child: child),
+    // Customer notification routes — no AdminLayout wrap so customer sees clean UI
+    GoRoute(
+      path: '/notifications',
+      name: 'notifications',
+      builder: (context, state) => const NotificationListScreen(),
+    ),
+    // Must be before /notifications/:id — otherwise "create" is matched as an id.
+    GoRoute(
+      path: '/notifications/create',
+      name: 'notification-create',
+      builder: (context, state) => const NotificationCreateScreen(),
+    ),
+    GoRoute(
+      path: '/notifications/:id',
+      name: 'notification-detail',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        final notification = state.extra as AppNotification?;
+        return NotificationDetailScreen(
+          notificationId: id,
+          notification: notification,
         );
       },
-      routes: [
-        GoRoute(
-          path: '/notifications',
-          name: 'notifications',
-          builder: (context, state) => const NotificationListScreen(),
-        ),
-        // Must be before /notifications/:id — otherwise "create" is matched as an id.
-        GoRoute(
-          path: '/notifications/create',
-          name: 'notification-create',
-          builder: (context, state) => const NotificationCreateScreen(),
-        ),
-        GoRoute(
-          path: '/notifications/:id',
-          name: 'notification-detail',
-          builder: (context, state) {
-            final id = state.pathParameters['id']!;
-            final notification = state.extra as AppNotification?;
-            return NotificationDetailScreen(
-              notificationId: id,
-              notification: notification,
-            );
-          },
-        ),
-      ],
     ),
     GoRoute(
       path: '/order/:id',
@@ -375,7 +367,7 @@ final GoRouter router = GoRouter(
         return BlocProvider(create: (_) => bloc, child: const CategoryScreen());
       },
     ),
-    // Admin Notifications: inbox (icon on home) = view only
+    // Admin Notifications: inbox (bell icon from admin header) = view only
     GoRoute(
       path: '/admin/notifications-inbox',
       name: 'admin-notifications-inbox',
@@ -386,8 +378,20 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/admin/notifications',
       name: 'admin-notifications',
-      builder: (context, state) =>
-          const NotificationListScreen(isAdminMode: true),
+      builder: (context, state) => const AdminNotificationListScreen(),
+    ),
+    // Admin notification detail (full CRUD)
+    GoRoute(
+      path: '/admin/notifications/:id',
+      name: 'admin-notification-detail',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        final notification = state.extra as AppNotification?;
+        return AdminNotificationDetailScreen(
+          notificationId: id,
+          notification: notification,
+        );
+      },
     ),
     GoRoute(
       path: '/otp',

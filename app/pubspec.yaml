@@ -2,7 +2,7 @@ name: frontend_otis
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -61,7 +61,6 @@ dependencies:
   latlong2: ^0.9.1
   image_picker: ^1.1.2
 
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -75,7 +74,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  freezed: ^3.2.5
+  freezed: ^3.2.3
   json_serializable: ^6.7.1
   build_runner: ^2.4.7
   mocktail: ^1.0.0
@@ -86,7 +85,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

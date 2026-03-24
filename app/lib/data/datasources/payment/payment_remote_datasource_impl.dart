@@ -1,5 +1,5 @@
+import 'package:sqflite/sqflite.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
-import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/data/models/bank_account_model.dart';
 import 'package:frontend_otis/data/models/payment_model.dart';
 
@@ -10,10 +10,13 @@ abstract class PaymentRemoteDataSource {
 }
 
 class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
+  final Database database;
+
+  PaymentRemoteDataSourceImpl(this.database);
+
   @override
   Future<PaymentModel> createPayment(PaymentModel payment) async {
-    final db = await DatabaseHelper.database;
-    return await db.transaction((txn) async {
+    return await database.transaction((txn) async {
       try {
         // Insert Payment
         // payment_id is auto-increment, but we might have generated a temp ID in Entity.
@@ -64,8 +67,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
   @override
   Future<PaymentModel> processFakePayment(String orderId) async {
     // This is "Confirm Payment" action (I Have Paid)
-    final db = await DatabaseHelper.database;
-    return await db.transaction((txn) async {
+    return await database.transaction((txn) async {
       try {
         // Find existing payment for order
         final List<Map<String, dynamic>> maps = await txn.query(
@@ -144,9 +146,8 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
 
   @override
   Future<BankAccountModel> getActiveBankAccount() async {
-    final db = await DatabaseHelper.database;
     try {
-      final List<Map<String, dynamic>> maps = await db.query(
+      final List<Map<String, dynamic>> maps = await database.query(
         'bank_accounts',
         where: 'is_active = 1',
         limit: 1,

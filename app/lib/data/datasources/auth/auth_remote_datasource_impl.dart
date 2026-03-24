@@ -23,11 +23,32 @@ import '../../models/user_model.dart';
 
 class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
   final Database database;
+  bool _migrationChecked = false;
 
   /// In-memory OTP store
   static final Map<String, _OtpSession> _otpStore = {};
 
   AuthRemoteDatasourceImpl(this.database);
+
+  Future<void> _ensureMigrated() async {
+    if (_migrationChecked) return;
+    _migrationChecked = true;
+    await _ensureAppSessionTable(database);
+  }
+
+  static Future<void> _ensureAppSessionTable(Database db) async {
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS app_session (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+    } catch (e) {
+      print("Failed to create app_session table: $e");
+    }
+  }
 
   // ─────────────────────────────────────────────
   // AUTH
@@ -207,6 +228,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
 
   @override
   Future<void> saveCurrentUser(int userId) async {
+    await _ensureMigrated();
     await database.delete('app_session');
     await database.insert('app_session', {
       'user_id': userId,
@@ -216,6 +238,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
 
   @override
   Future<int?> getCurrentUserId() async {
+    await _ensureMigrated();
     final rows = await database.query('app_session', limit: 1);
     if (rows.isEmpty) return null;
     final val = rows.first['user_id'];
@@ -225,6 +248,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
 
   @override
   Future<void> clearCurrentUser() async {
+    await _ensureMigrated();
     await database.delete('app_session');
   }
 

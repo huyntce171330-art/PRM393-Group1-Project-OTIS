@@ -163,12 +163,12 @@ Future<void> init() async {
 
   // Payment Data Source
   sl.registerLazySingleton<PaymentRemoteDataSource>(
-    () => PaymentRemoteDataSourceImpl(),
+    () => PaymentRemoteDataSourceImpl(sl()),
   );
 
   // Order Data Source
   sl.registerLazySingleton<OrderRemoteDatasource>(
-    () => OrderRemoteDatasourceImpl(),
+    () => OrderRemoteDatasourceImpl(sl()),
   );
 
   // Auth Data Source
@@ -483,7 +483,7 @@ Future<void> init() async {
 
   // ========== NOTIFICATION FEATURE ==========
   sl.registerLazySingleton<NotificationRemoteDatasource>(
-    () => NotificationRemoteDatasourceImpl(),
+    () => NotificationRemoteDatasourceImpl(sl()),
   );
 
   sl.registerLazySingleton<NotificationRepository>(

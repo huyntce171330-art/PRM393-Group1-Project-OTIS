@@ -6,24 +6,27 @@ import 'package:frontend_otis/domain/entities/notification.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_event.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
-class NotificationDetailScreen extends StatefulWidget {
+class AdminNotificationDetailScreen extends StatefulWidget {
   final String? notificationId;
   final AppNotification? notification;
 
-  const NotificationDetailScreen({
+  const AdminNotificationDetailScreen({
     super.key,
     this.notificationId,
     this.notification,
   });
 
   @override
-  State<NotificationDetailScreen> createState() =>
-      _NotificationDetailScreenState();
+  State<AdminNotificationDetailScreen> createState() =>
+      _AdminNotificationDetailScreenState();
 }
 
-class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
+class _AdminNotificationDetailScreenState
+    extends State<AdminNotificationDetailScreen> {
   AppNotification? _localNotification;
   bool _loading = false;
   String? _error;
@@ -84,6 +87,33 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
     }
   }
 
+  void _confirmDelete(BuildContext context, AppNotification notification) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xóa thông báo'),
+        content: const Text('Bạn có chắc muốn xóa thông báo này không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<NotificationBloc>().add(
+                DeleteNotificationEvent(notification.id),
+              );
+              context.pop();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -113,7 +143,8 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
           showBack: true,
           onBack: () => context.pop(true),
           actions: [
-            if (_localNotification != null)
+            if (_localNotification != null) ...[
+              // Mark as read/unread
               IconButton(
                 icon: Icon(
                   _localNotification!.isRead
@@ -143,6 +174,23 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                   });
                 },
               ),
+              // Delete (admin only)
+              BlocBuilder<AuthBloc, AuthState>(
+                buildWhen: (prev, curr) => prev.runtimeType != curr.runtimeType,
+                builder: (context, authState) {
+                  final isAdmin =
+                      authState is Authenticated &&
+                      authState.user.role?.isAdmin == true;
+                  if (!isAdmin) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    tooltip: 'Xóa thông báo',
+                    onPressed: () =>
+                        _confirmDelete(context, _localNotification!),
+                  );
+                },
+              ),
+            ],
           ],
           backgroundColor: isDarkMode
               ? const Color(0xFF1a0c0c).withOpacity(0.95)
