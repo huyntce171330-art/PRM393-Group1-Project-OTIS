@@ -111,6 +111,12 @@ import 'package:frontend_otis/domain/usecases/notification/search_notifications_
 import 'package:frontend_otis/domain/usecases/notification/update_notification_status_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import '../../presentation/bloc/category/category_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/dashboard/dashboard_bloc.dart';
+import 'package:frontend_otis/domain/usecases/dashboard/get_dashboard_statistics_usecase.dart';
+import 'package:frontend_otis/domain/repositories/dashboard_repository.dart';
+import 'package:frontend_otis/data/repositories/dashboard_repository_impl.dart';
+import 'package:frontend_otis/data/datasources/dashboard/dashboard_local_datasource.dart';
+import 'package:frontend_otis/data/datasources/dashboard/dashboard_local_datasource_impl.dart';
 import 'package:frontend_otis/domain/repositories/profile_repository.dart';
 import 'package:frontend_otis/data/repositories/profile_repository_impl.dart';
 import 'package:frontend_otis/domain/repositories/chat_repository.dart';
@@ -417,8 +423,6 @@ Future<void> init() async {
     ),
   );
 
-
-
   // ========== BRAND DATASOURCE ==========
   sl.registerLazySingleton<TireBrandDataSource>(
     () => TireBrandDataSourceImpl(sl()),
@@ -544,6 +548,22 @@ Future<void> init() async {
       createNotification: sl(),
       markAllAsRead: sl(),
     ),
+  );
+  // ========== DASHBOARD FEATURE ==========
+  sl.registerLazySingleton<DashboardLocalDataSource>(
+    () => DashboardLocalDataSourceImpl(database: sl()),
+  );
+
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton<GetDashboardStatisticsUseCase>(
+    () => GetDashboardStatisticsUseCase(sl()),
+  );
+
+  sl.registerLazySingleton<DashboardBloc>(
+    () => DashboardBloc(getDashboardUseCase: sl()),
   );
 
   print("All dependencies registered successfully");
