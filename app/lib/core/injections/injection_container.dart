@@ -102,6 +102,11 @@ import 'package:frontend_otis/domain/usecases/notification/search_notifications_
 import 'package:frontend_otis/domain/usecases/notification/update_notification_status_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import '../../presentation/bloc/category/category_bloc.dart';
+import 'package:frontend_otis/data/datasources/map/map_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/map/map_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/repositories/map_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/map_repository.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -340,38 +345,45 @@ Future<void> init() async {
     ),
   );
 
-
+  // Map / admin shop locations (SQLite)
+  sl.registerLazySingleton<MapRemoteDatasource>(
+    () => MapRemoteDatasourceImpl(database: sl()),
+  );
+  sl.registerLazySingleton<MapRepository>(
+    () => MapRepositoryImpl(remoteDatasource: sl()),
+  );
+  sl.registerFactory<MapBloc>(() => MapBloc(repository: sl()));
 
   // ========== BRAND DATASOURCE ==========
   sl.registerLazySingleton<TireBrandDataSource>(
-        () => TireBrandDataSourceImpl(sl()),
+    () => TireBrandDataSourceImpl(sl()),
   );
 
-// ========== BRAND REPOSITORY ==========
+  // ========== BRAND REPOSITORY ==========
   sl.registerLazySingleton<TireBrandRepository>(
-        () => TireBrandRepositoryImpl(sl()),
+    () => TireBrandRepositoryImpl(sl()),
   );
   // ========== TIRE SPEC DATASOURCE ==========
   sl.registerLazySingleton<TireSpecDataSource>(
-        () => TireSpecDataSourceImpl(sl()),
+    () => TireSpecDataSourceImpl(sl()),
   );
 
-// ========== TIRE SPEC REPOSITORY ==========
+  // ========== TIRE SPEC REPOSITORY ==========
   sl.registerLazySingleton<TireSpecRepository>(
-        () => TireSpecRepositoryImpl(sl()),
+    () => TireSpecRepositoryImpl(sl()),
   );
   // ========== VEHICLE MAKE DATASOURCE ==========
   sl.registerLazySingleton<VehicleMakeDataSource>(
-        () => VehicleMakeDataSourceImpl(sl()),
+    () => VehicleMakeDataSourceImpl(sl()),
   );
 
-// ========== VEHICLE MAKE REPOSITORY ==========
+  // ========== VEHICLE MAKE REPOSITORY ==========
   sl.registerLazySingleton<VehicleMakeRepository>(
-        () => VehicleMakeRepositoryImpl(sl()),
+    () => VehicleMakeRepositoryImpl(sl()),
   );
 
   sl.registerFactory<CategoryBloc>(
-        () => CategoryBloc(
+    () => CategoryBloc(
       getCategoriesUseCase: sl(),
       getCategoryDetailUseCase: sl(),
       createCategoryUseCase: sl(),
@@ -381,7 +393,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<CreateCategoryUseCase>(
-        () => CreateCategoryUseCase(
+    () => CreateCategoryUseCase(
       tireBrandRepository: sl<TireBrandRepository>(),
       vehicleMakeRepository: sl<VehicleMakeRepository>(),
       tireSpecRepository: sl<TireSpecRepository>(),
@@ -389,7 +401,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<GetCategoriesUseCase>(
-        () => GetCategoriesUseCase(
+    () => GetCategoriesUseCase(
       tireBrandRepository: sl<TireBrandRepository>(),
       vehicleMakeRepository: sl<VehicleMakeRepository>(),
       tireSpecRepository: sl<TireSpecRepository>(),
@@ -397,7 +409,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<UpdateCategoryUseCase>(
-        () => UpdateCategoryUseCase(
+    () => UpdateCategoryUseCase(
       tireBrandRepository: sl<TireBrandRepository>(),
       vehicleMakeRepository: sl<VehicleMakeRepository>(),
       tireSpecRepository: sl<TireSpecRepository>(),
@@ -405,7 +417,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<DeleteCategoryUseCase>(
-        () => DeleteCategoryUseCase(
+    () => DeleteCategoryUseCase(
       tireBrandRepository: sl<TireBrandRepository>(),
       vehicleMakeRepository: sl<VehicleMakeRepository>(),
       tireSpecRepository: sl<TireSpecRepository>(),
@@ -413,7 +425,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<GetCategoryDetailUseCase>(
-        () => GetCategoryDetailUseCase(
+    () => GetCategoryDetailUseCase(
       tireBrandRepository: sl<TireBrandRepository>(),
       vehicleMakeRepository: sl<VehicleMakeRepository>(),
       tireSpecRepository: sl<TireSpecRepository>(),
@@ -448,7 +460,6 @@ Future<void> init() async {
       markAllAsRead: sl(),
     ),
   );
-
 
   print("All dependencies registered successfully");
 }

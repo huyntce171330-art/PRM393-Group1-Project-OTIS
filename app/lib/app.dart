@@ -58,6 +58,10 @@ import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
 import 'package:frontend_otis/presentation/screens/chat/chat_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_chat_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_chat_detail_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_shop_location_list_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_shop_location_form_screen.dart';
+import 'package:frontend_otis/presentation/screens/map/shop_locations_map_screen.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
 
 import 'core/enums/category_type.dart';
 
@@ -133,6 +137,12 @@ final GoRouter router = GoRouter(
       name: 'home',
       builder: (context, state) => const HomeScreen(),
     ),
+    // User Shop Locations map — accessible from Home services
+    GoRoute(
+      path: '/shop-locations',
+      name: 'shop-locations',
+      builder: (context, state) => const ShopLocationsMapScreen(),
+    ),
     // Customer Routes
     // Admin Routes - Wrap with BlocProvider to share state between List and Detail
     // Use BlocProvider.value with singleton from GetIt to preserve state across navigation
@@ -204,9 +214,9 @@ final GoRouter router = GoRouter(
           path: '/admin/products/:id/edit',
           name: 'admin-product-edit',
           builder: (context, state) {
-          final productId = state.pathParameters['id']!;
-          return AdminEditProductScreen(productId: productId);
-        },
+            final productId = state.pathParameters['id']!;
+            return AdminEditProductScreen(productId: productId);
+          },
         ),
       ],
     ),
@@ -371,11 +381,37 @@ final GoRouter router = GoRouter(
         return BlocProvider(create: (_) => bloc, child: const CategoryScreen());
       },
     ),
+    // Admin shop locations (profile → Shop Locations; list/create/edit)
+    GoRoute(
+      path: '/admin/shop-locations/create',
+      builder: (context, state) => BlocProvider<MapBloc>(
+        create: (_) => di.sl<MapBloc>(),
+        child: const AdminShopLocationFormScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/admin/shop-locations/:shopId/edit',
+      builder: (context, state) {
+        final shopId = state.pathParameters['shopId']!;
+        return BlocProvider<MapBloc>(
+          create: (_) => di.sl<MapBloc>(),
+          child: AdminShopLocationFormScreen(shopId: shopId),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/admin/shop-locations',
+      builder: (context, state) => BlocProvider<MapBloc>(
+        create: (_) => di.sl<MapBloc>(),
+        child: const AdminShopLocationListScreen(),
+      ),
+    ),
     // Admin Notifications: inbox (bell icon from admin header) = view only
     GoRoute(
       path: '/admin/notifications-inbox',
       name: 'admin-notifications-inbox',
-      builder: (context, state) => const AdminNotificationListScreen(isInboxView: true),
+      builder: (context, state) =>
+          const AdminNotificationListScreen(isInboxView: true),
     ),
     // Admin Notifications CRUD (from Settings > Quản lý thông báo)
     GoRoute(
@@ -442,9 +478,7 @@ class OtisApp extends StatelessWidget {
           value: di.sl<CartBloc>()..add(LoadCartEvent()),
         ),
         BlocProvider<OrderBloc>(create: (context) => di.sl<OrderBloc>()),
-        BlocProvider<NotificationBloc>.value(
-          value: di.sl<NotificationBloc>(),
-        ),
+        BlocProvider<NotificationBloc>.value(value: di.sl<NotificationBloc>()),
       ],
       child: MaterialApp.router(
         title: 'OTIS Project',

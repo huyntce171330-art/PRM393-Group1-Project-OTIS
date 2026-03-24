@@ -72,7 +72,9 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
     Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã sao chép thông tin cửa hàng bao gồm tọa độ')),
+      const SnackBar(
+        content: Text('Đã sao chép thông tin cửa hàng bao gồm tọa độ'),
+      ),
     );
   }
 
@@ -88,7 +90,9 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
     }
 
     try {
-      final file = File(parsed?.isAbsolute == true ? parsed!.toFilePath() : rawPath);
+      final file = File(
+        parsed?.isAbsolute == true ? parsed!.toFilePath() : rawPath,
+      );
       if (file.existsSync()) {
         return FileImage(file);
       }
@@ -114,13 +118,11 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primary),
             )
           : _errorMessage != null
-              ? _buildErrorContent(context)
-              : _buildMapContent(context),
+          ? _buildErrorContent(context)
+          : _buildMapContent(context),
     );
   }
 
@@ -148,9 +150,7 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
           const SizedBox(height: 12),
           ElevatedButton(
             onPressed: _loadShops,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: const Text('Thử lại'),
           ),
         ],
@@ -165,88 +165,87 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
       child: Column(
         children: [
           SizedBox(
-          height: 320,
-          child: FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: center,
-              initialZoom: 13,
-              minZoom: 3,
-              maxZoom: 18,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.otis_app',
+            height: 320,
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: center,
+                initialZoom: 13,
+                minZoom: 3,
+                maxZoom: 18,
               ),
-              MarkerLayer(
-                markers: shops
-                    .map(
-                      (shop) => Marker(
-                        point: LatLng(shop.latitude, shop.longitude),
-                        width: 56,
-                        height: 110,
-                        child: _MapMarker(
-                          shop: shop,
-                          imageProvider: _shopImageProvider(shop),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.example.otis_app',
+                ),
+                MarkerLayer(
+                  markers: shops
+                      .map(
+                        (shop) => Marker(
+                          point: LatLng(shop.latitude, shop.longitude),
+                          width: _MapMarker.markerWidth,
+                          height: _MapMarker.markerHeight,
+                          child: _MapMarker(
+                            shop: shop,
+                            imageProvider: _shopImageProvider(shop),
+                          ),
                         ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: shops.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final shop = shops[index];
+                return ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.grey[200]!),
+                  ),
+                  tileColor: Theme.of(context).colorScheme.surface,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  title: Text(
+                    shop.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SelectableText(shop.address, maxLines: 2),
+                      const SizedBox(height: 4),
+                      SelectableText('Điện thoại: ${shop.phone}'),
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => _moveToShop(shop),
+                        icon: const Icon(Icons.my_location),
+                        color: AppColors.primary,
                       ),
-                    )
-                    .toList(),
-              ),
-            ],
+                      IconButton(
+                        onPressed: () => _copyToClipboard(shop),
+                        icon: const Icon(Icons.copy),
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                  onTap: () => _moveToShop(shop),
+                );
+              },
+            ),
           ),
-        ),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: shops.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final shop = shops[index];
-              return ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey[200]!),
-                ),
-                tileColor: Theme.of(context).colorScheme.surface,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                title: Text(
-                  shop.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SelectableText(
-                      shop.address,
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: 4),
-                    SelectableText('Điện thoại: ${shop.phone}'),
-                  ],
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () => _moveToShop(shop),
-                      icon: const Icon(Icons.my_location),
-                      color: AppColors.primary,
-                    ),
-                    IconButton(
-                      onPressed: () => _copyToClipboard(shop),
-                      icon: const Icon(Icons.copy),
-                      color: AppColors.primary,
-                    ),
-                  ],
-                ),
-                onTap: () => _moveToShop(shop),
-              );
-            },
-          ),
-        ),
         ],
       ),
     );
@@ -256,74 +255,93 @@ class _ShopLocationsMapScreenState extends State<ShopLocationsMapScreen> {
 class _MapMarker extends StatelessWidget {
   const _MapMarker({required this.shop, required this.imageProvider});
 
+  /// Must match [Marker.width] — room for avatar + pin + 2-line label.
+  static const double markerWidth = 108;
+
+  /// Must match [Marker.height] — avoids "bottom overflowed" under tight constraints.
+  static const double markerHeight = 132;
+
+  static const double _avatarSize = 34;
+  static const double _pinSize = 34;
+
   final ShopLocation shop;
   final ImageProvider<Object>? imageProvider;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (imageProvider != null)
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+    return SizedBox(
+      width: markerWidth,
+      height: markerHeight,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          if (imageProvider != null)
+            Container(
+              width: _avatarSize,
+              height: _avatarSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image(image: imageProvider!, fit: BoxFit.cover),
+              ),
+            )
+          else
+            CircleAvatar(
+              radius: _avatarSize / 2,
+              backgroundColor: Colors.white,
+              child: Icon(Icons.storefront, color: AppColors.primary, size: 15),
+            ),
+          const SizedBox(height: 2),
+          const Icon(
+            Icons.location_pin,
+            color: AppColors.primary,
+            size: _pinSize,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: markerWidth - 8),
+                  child: Text(
+                    shop.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      height: 1.15,
+                    ),
+                  ),
                 ),
-              ],
-            ),
-            child: ClipOval(
-              child: Image(
-                image: imageProvider!,
-                fit: BoxFit.cover,
               ),
             ),
-          )
-        else
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.white,
-            child: Icon(
-              Icons.storefront,
-              color: AppColors.primary,
-              size: 16,
-            ),
           ),
-        const SizedBox(height: 4),
-        const Icon(
-          Icons.location_pin,
-          color: AppColors.primary,
-          size: 38,
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Text(
-            shop.name,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -64,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return null;
   }
 
-
   Future<int?> _getCurrentRoomId() async {
     final userId = _currentUserId;
     if (userId == null) return null;
@@ -79,15 +78,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (roomId == null) return;
 
     SocketService.instance.reset();
-    SocketService.instance.connect(
-      url: _socketUrl,
-      userId: userId,
-    );
+    SocketService.instance.connect(url: _socketUrl, userId: userId);
 
-    SocketService.instance.joinRoom(
-      roomId,
-      userId: userId,
-    );
+    SocketService.instance.joinRoom(roomId, userId: userId);
 
     await _chatBadgeSub?.cancel();
     _chatBadgeSub = SocketService.instance.messageStream.listen((msg) async {
@@ -119,14 +112,14 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Map<String, String>> _banners = [
     {
       'imageUrl':
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCyc2sGVAca2Hw2aS4Y_yRr3Gs5HWz9pU4Vo4gA3DyIiH6CxKUQZM9KBnWsDrm6vUHjvalu5KFk2bqELSmtQTX6FHAyC8ugZyVJSkIwB4gJacnqvzewp6a068UQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW-gpOnMXrouIAk-CfEQDty2j_IyRoVWxLGxgTpoZPkOiBdsrKMr11t_toXU241N8Ja6dUF9OLHqJr0gtsGJGDLSAPPRVeX6Ish-URE',
+          'https://lh3.googleusercontent.com/aida-public/AB6AXuCyc2sGVAca2Hw2aS4Y_yRr3Gs5HWz9pU4Vo4gA3DyIiH6CxKUQZM9KBnWsDrm6vUHjvalu5KFk2bqELSmtQTX6FHAyC8ugZyVJSkIwB4gJacnqvzewp6a068UQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW-gpOnMXrouIAk-CfEQDty2j_IyRoVWxLGxgTpoZPkOiBdsrKMr11t_toXU241N8Ja6dUF9OLHqJr0gtsGJGDLSAPPRVeX6Ish-URE',
       'title': 'Summer Sale',
       'subtitle': '15% off all Michelin Tires',
       'badge': 'PROMO',
     },
     {
       'imageUrl':
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCsAl8SBoQTX23DBYA0h8vlyPvXJeoaQNmGIcyjbZnAVEpHii-NZpA7Fw6yOFQhV_9aQCt7RKwkI2pSgT3gcuPzLI7T5U8rP0cjFht7N8ceWpi9U5VFMUQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW_WzqGzGdLBjQlCOpvNJi9zrdgkVMHNA3OMRHfV3r2DYQceWoAbrG8Y8Sd0FSWye0kd1CYzyVZzqZjuOrlX_tMB7075TbByjMzwik2bskLA',
+          'https://lh3.googleusercontent.com/aida-public/AB6AXuCsAl8SBoQTX23DBYA0h8vlyPvXJeoaQNmGIcyjbZnAVEpHii-NZpA7Fw6yOFQhV_9aQCt7RKwkI2pSgT3gcuPzLI7T5U8rP0cjFht7N8ceWpi9U5VFMUQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW_WzqGzGdLBjQlCOpvNJi9zrdgkVMHNA3OMRHfV3r2DYQceWoAbrG8Y8Sd0FSWye0kd1CYzyVZzqZjuOrlX_tMB7075TbByjMzwik2bskLA',
       'title': 'Bridgestone Deals',
       'subtitle': 'Buy 3 Get 1 Free on select models',
       'badge': 'NEW',
@@ -139,6 +132,11 @@ class _HomeScreenState extends State<HomeScreen> {
     {'icon': Icons.local_shipping, 'label': 'Truck'},
     {'icon': Icons.oil_barrel, 'label': 'Oil'},
     {'icon': Icons.battery_charging_full, 'label': 'Battery'},
+    {
+      'icon': Icons.store,
+      'label': 'Shop\nLocations',
+      'route': '/shop-locations',
+    },
   ];
 
   @override
@@ -211,6 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _onRefresh() async {
     _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
   }
+
   Future<void> _openChatBottomSheet() async {
     final userId = _currentUserId;
     if (userId == null) return;
@@ -303,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               SizedBox(
                                 height:
-                                kBottomNavigationBarHeight +
+                                    kBottomNavigationBarHeight +
                                     (isSmallScreen ? 8 : 16),
                               ),
                             ],
@@ -327,10 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return FloatingActionButton(
                 onPressed: _openChatBottomSheet,
                 backgroundColor: AppColors.primary,
-                child: const Icon(
-                  Icons.chat_bubble,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.chat_bubble, color: Colors.white),
               );
             }
 
@@ -349,10 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     FloatingActionButton(
                       onPressed: _openChatBottomSheet,
                       backgroundColor: AppColors.primary,
-                      child: const Icon(
-                        Icons.chat_bubble,
-                        color: Colors.white,
-                      ),
+                      child: const Icon(Icons.chat_bubble, color: Colors.white),
                     ),
                     if (unread > 0)
                       Positioned(
@@ -666,7 +659,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             _banners.length,
-                (index) => Container(
+            (index) => Container(
               width: 6,
               height: 6,
               margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -684,10 +677,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildServicesSection(
-      BuildContext context,
-      double iconSize,
-      bool isSmallScreen,
-      ) {
+    BuildContext context,
+    double iconSize,
+    bool isSmallScreen,
+  ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final spacing = isSmallScreen ? 8.0 : 12.0;
     final crossAxisSpacing = isSmallScreen ? 8.0 : 12.0;
@@ -777,7 +770,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: IconButton(
                       onPressed: () {
-                        // TODO: Navigate to service
+                        final route = service['route'] as String?;
+                        if (route != null) {
+                          context.push(route);
+                        }
                       },
                       icon: Icon(
                         service['icon'] as IconData,
@@ -808,16 +804,84 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ),
+        // Shop Locations full-width card below the 4-icon grid
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Material(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => context.push('/shop-locations'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.location_on,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Shop Locations',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'View all OTIS store branches on the map',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildAllProductsSection(
-      BuildContext context,
-      ProductState state,
-      double cardWidth,
-      bool isSmallScreen,
-      ) {
+    BuildContext context,
+    ProductState state,
+    double cardWidth,
+    bool isSmallScreen,
+  ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     List<Product> allProducts = state.products ?? [];
 
@@ -896,7 +960,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       bool isInCart = false;
                       if (cartState is CartLoaded) {
                         isInCart = cartState.cartItems.any(
-                              (item) => item.productId == product.id,
+                          (item) => item.productId == product.id,
                         );
                       }
                       return ProductCard(
@@ -913,46 +977,46 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
         else if (state is ProductError)
-            Container(
-              constraints: const BoxConstraints(minHeight: 150),
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? AppColors.surfaceDark
-                    : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      state.message,
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                        fontSize: 13,
-                      ),
-                      textAlign: TextAlign.center,
+          Container(
+            constraints: const BoxConstraints(minHeight: 150),
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDarkMode
+                  ? AppColors.surfaceDark
+                  : AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    state.message,
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                      fontSize: 13,
                     ),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: _onRefresh,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: _onRefresh,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
                       ),
-                      child: const Text('Thử lại'),
                     ),
-                  ],
-                ),
+                    child: const Text('Thử lại'),
+                  ),
+                ],
               ),
-            )
-          else
-            const SizedBox.shrink(),
+            ),
+          )
+        else
+          const SizedBox.shrink(),
       ],
     );
   }
