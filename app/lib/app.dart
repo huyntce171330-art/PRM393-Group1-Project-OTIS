@@ -50,8 +50,6 @@ import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.d
 import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
 
-import 'package:frontend_otis/core/network/socket_service.dart';
-import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
 import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
 import 'package:frontend_otis/presentation/screens/chat/chat_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_chat_list_screen.dart';
