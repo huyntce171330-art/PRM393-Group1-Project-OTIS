@@ -1,9 +1,16 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/core/network/socket_service.dart';
+import 'package:frontend_otis/domain/entities/dashboard_entity.dart';
+import 'package:frontend_otis/presentation/bloc/dashboard/dashboard_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/dashboard/dashboard_event.dart';
+import 'package:frontend_otis/presentation/bloc/dashboard/dashboard_state.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_header.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -83,58 +90,171 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       backgroundColor: backgroundColor,
       appBar: const AdminHeader(),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildRevenueCard(
-                      context,
-                      surfaceColor,
-                      textColor,
-                      textSecondaryColor,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStatsGrid(
-                      context,
-                      surfaceColor,
-                      textColor,
-                      textSecondaryColor,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildWeeklySales(
-                      context,
-                      surfaceColor,
-                      textColor,
-                      textSecondaryColor,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildRecentActivities(
-                      context,
-                      surfaceColor,
-                      textColor,
-                      textSecondaryColor,
-                    ),
-                    const SizedBox(height: 80),
-                  ],
-                ),
-              ),
-            ),
-          ],
+        child: BlocBuilder<DashboardBloc, DashboardState>(
+            builder: (context, state) {
+              if (state is DashboardLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primary,
+                  ),
+                );
+              }
+
+              if (state is DashboardError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red[300],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load dashboard',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        state.message,
+                        style: TextStyle(color: textSecondaryColor),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<DashboardBloc>().add(
+                                const LoadDashboardEvent(),
+                              );
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (state is DashboardLoaded) {
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    context.read<DashboardBloc>().add(
+                          const RefreshDashboardEvent(),
+                        );
+                  },
+                  child: _buildDashboardContent(
+                    context,
+                    state.dashboard,
+                    surfaceColor,
+                    textColor,
+                    textSecondaryColor,
+                  ),
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
+          ),
         ),
-      ),
+      );
+  }
+
+  Widget _buildDashboardContent(
+    BuildContext context,
+    DashboardEntity dashboard,
+    Color surfaceColor,
+    Color textColor,
+    Color? textSecondaryColor,
+  ) {
+    final currencyFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Today's Revenue Card
+                _buildRevenueCard(
+                  currencyFormat.format(dashboard.todayRevenue),
+                  _formatLastUpdated(dashboard.lastUpdated),
+                  surfaceColor,
+                  textColor,
+                  textSecondaryColor,
+                ),
+                const SizedBox(height: 24),
+
+                // Stats Grid
+                _buildStatsGrid(
+                  context,
+                  dashboard,
+                  currencyFormat,
+                  surfaceColor,
+                  textColor,
+                  textSecondaryColor,
+                ),
+                const SizedBox(height: 24),
+
+                // Weekly Sales Chart
+                _buildWeeklySales(
+                  context,
+                  dashboard.weeklyRevenue,
+                  dashboard.todayRevenue,
+                  surfaceColor,
+                  textColor,
+                  textSecondaryColor,
+                ),
+                const SizedBox(height: 24),
+
+                // Recent Orders
+                _buildRecentActivities(
+                  context,
+                  dashboard.recentOrders,
+                  surfaceColor,
+                  textColor,
+                  textSecondaryColor,
+                ),
+                const SizedBox(height: 80),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
+  String _formatLastUpdated(DateTime lastUpdated) {
+    final now = DateTime.now();
+    final diff = now.difference(lastUpdated);
+
+    if (diff.inMinutes < 1) {
+      return 'Live Updates • Just now';
+    } else if (diff.inMinutes < 60) {
+      return 'Live Updates • ${diff.inMinutes} min ago';
+    } else {
+      return 'Live Updates • ${diff.inHours}h ago';
+    }
+  }
+
   Widget _buildRevenueCard(
-      BuildContext context,
-      Color surfaceColor,
-      Color textColor,
-      Color? textSecondaryColor,
-      ) {
+    String todayRevenue,
+    String lastUpdatedText,
+    Color surfaceColor,
+    Color textColor,
+    Color? textSecondaryColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -158,16 +278,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 width: 10,
                 height: 10,
                 margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.primary,
-                ),
-                child: Container(
-                  margin: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary,
-                  ),
                 ),
               ),
               Text(
@@ -182,26 +295,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '₫',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                TextSpan(
-                  text: '8,450,000',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 36,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
+          Text(
+            todayRevenue,
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 12),
@@ -218,7 +317,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 Icon(Icons.update, size: 14, color: textSecondaryColor),
                 const SizedBox(width: 4),
                 Text(
-                  'Live Updates • 1 min ago',
+                  lastUpdatedText,
                   style: TextStyle(
                     color: textSecondaryColor,
                     fontSize: 11,
@@ -234,11 +333,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
   Widget _buildStatsGrid(
-      BuildContext context,
-      Color surfaceColor,
-      Color textColor,
-      Color? textSecondaryColor,
-      ) {
+    BuildContext context,
+    DashboardEntity dashboard,
+    NumberFormat currencyFormat,
+    Color surfaceColor,
+    Color textColor,
+    Color? textSecondaryColor,
+  ) {
     return GridView.count(
       crossAxisCount: 2,
       crossAxisSpacing: 16,
@@ -247,18 +348,18 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 1.1,
       children: [
+        // Total Revenue
         _buildStatCard(
           surfaceColor,
           textColor,
           textSecondaryColor,
           icon: Icons.payments,
           iconColor: AppColors.primary,
-          iconBg: Colors.red.withValues(alpha: 0.1),
+          iconBg: AppColors.primary.withValues(alpha: 0.1),
           title: 'Total Revenue',
-          value: '฿45,200',
-          trend: '+12.5%',
-          trendUp: true,
+          value: currencyFormat.format(dashboard.totalRevenue),
         ),
+        // Chats
         FutureBuilder<int>(
           future: DatabaseHelper.getTotalUnreadCount(viewerId: _adminId),
           builder: (context, snap) {
@@ -288,6 +389,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             );
           },
         ),
+        // New Orders Today
         _buildStatCard(
           surfaceColor,
           textColor,
@@ -296,10 +398,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           iconColor: Colors.orange,
           iconBg: Colors.orange.withValues(alpha: 0.1),
           title: 'New Orders',
-          value: '12',
-          subtext: 'Pending processing',
-          badge: '3 New',
+          value: dashboard.todayNewOrders.toString(),
+          subtext: 'Today',
+          badge: dashboard.todayNewOrders > 0
+              ? '${dashboard.todayNewOrders} New'
+              : null,
         ),
+        // Inventory
         _buildStatCard(
           surfaceColor,
           textColor,
@@ -308,52 +413,58 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           iconColor: Colors.blue,
           iconBg: Colors.blue.withValues(alpha: 0.1),
           title: 'Inventory',
-          value: '340',
-          subtext: 'Tires in stock',
+          value: dashboard.totalProducts.toString(),
+          subtext: dashboard.lowStockCount > 0
+              ? '${dashboard.lowStockCount} low stock'
+              : 'Tires in stock',
+          badge: dashboard.lowStockCount > 0
+              ? '${dashboard.lowStockCount} Alert'
+              : null,
         ),
-        FutureBuilder<int>(
-          future: DatabaseHelper.countCustomers(),
-          builder: (context, snap) {
-            final count = snap.data ?? 0;
-
-            return InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => context.push('/admin/users'),
-              child: _buildStatCard(
-                surfaceColor,
-                textColor,
-                textSecondaryColor,
-                icon: Icons.group,
-                iconColor: Colors.purple,
-                iconBg: Colors.purple.withValues(alpha: 0.1),
-                title: 'Customers',
-                value: snap.connectionState == ConnectionState.waiting
-                    ? '...'
-                    : count.toString(),
-                subtext: 'Tap to view list',
-              ),
-            );
-          },
+        // Customers
+        _buildStatCard(
+          surfaceColor,
+          textColor,
+          textSecondaryColor,
+          icon: Icons.group,
+          iconColor: Colors.purple,
+          iconBg: Colors.purple.withValues(alpha: 0.1),
+          title: 'Customers',
+          value: dashboard.totalCustomers.toString(),
+          subtext: 'Registered users',
+          onTap: () => context.push('/admin/users'),
+        ),
+        // Monthly Revenue
+        _buildStatCard(
+          surfaceColor,
+          textColor,
+          textSecondaryColor,
+          icon: Icons.trending_up,
+          iconColor: Colors.green,
+          iconBg: Colors.green.withValues(alpha: 0.1),
+          title: 'Monthly Revenue',
+          value: currencyFormat.format(dashboard.monthRevenue),
         ),
       ],
     );
   }
 
   Widget _buildStatCard(
-      Color surfaceColor,
-      Color textColor,
-      Color? textSecondaryColor, {
-        required IconData icon,
-        required Color iconColor,
-        required Color iconBg,
-        required String title,
-        required String value,
-        String? trend,
-        bool trendUp = true,
-        String? subtext,
-        String? badge,
-      }) {
-    return Container(
+    Color surfaceColor,
+    Color textColor,
+    Color? textSecondaryColor, {
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    required String value,
+    String? trend,
+    bool trendUp = true,
+    String? subtext,
+    String? badge,
+    VoidCallback? onTap,
+  }) {
+    final card = Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: surfaceColor,
@@ -420,9 +531,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 value,
                 style: TextStyle(
                   color: textColor,
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               if (trend != null)
                 Row(
@@ -457,23 +570,40 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: card,
+      );
+    }
+
+    return card;
   }
 
   Widget _buildWeeklySales(
-      BuildContext context,
-      Color surfaceColor,
-      Color textColor,
-      Color? textSecondaryColor,
-      ) {
-    final data = [
-      {'day': 'Mon', 'val': 0.45, 'label': '22k'},
-      {'day': 'Tue', 'val': 0.30, 'label': '15k'},
-      {'day': 'Wed', 'val': 0.60, 'label': '35k'},
-      {'day': 'Thu', 'val': 0.45, 'label': '24k'},
-      {'day': 'Fri', 'val': 0.85, 'label': '45k', 'active': true},
-      {'day': 'Sat', 'val': 0.70, 'label': '38k'},
-      {'day': 'Sun', 'val': 0.25, 'label': '10k'},
-    ];
+    BuildContext context,
+    List<DailyRevenue> weeklyRevenue,
+    double todayRevenue,
+    Color surfaceColor,
+    Color textColor,
+    Color? textSecondaryColor,
+  ) {
+    // Find max revenue for scaling
+    double maxRevenue = weeklyRevenue.isEmpty
+        ? 1.0
+        : weeklyRevenue
+            .map((e) => e.revenue)
+            .reduce((a, b) => a > b ? a : b);
+    if (maxRevenue == 0) maxRevenue = 1.0;
+
+    final dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final currencyFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '',
+      decimalDigits: 0,
+    );
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -506,7 +636,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     ),
                   ),
                   Text(
-                    'Last 7 days revenue',
+                    'Last 7 days completed revenue',
                     style: TextStyle(
                       color: textSecondaryColor,
                       fontSize: 12,
@@ -524,46 +654,71 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: data.map((d) {
-                final heightFactor = d['val'] as double;
-                final active = d['active'] == true;
+              children: weeklyRevenue.asMap().entries.map((entry) {
+                final index = entry.key;
+                final daily = entry.value;
+                final heightFactor = daily.revenue / maxRevenue;
+                final isToday = index == weeklyRevenue.length - 1;
+
                 return Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        height: 150 * heightFactor,
-                        width: 24,
-                        decoration: BoxDecoration(
-                          color: active ? AppColors.primary : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(6),
-                          boxShadow: active
-                              ? [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(
-                                alpha: 0.3,
-                              ),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                              : null,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          daily.revenue > 0
+                              ? currencyFormat.format(daily.revenue)
+                              : '',
+                          style: TextStyle(
+                            color: isToday
+                                ? AppColors.primary
+                                : textSecondaryColor,
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        d['day'] as String,
-                        style: TextStyle(
-                          color: active
-                              ? AppColors.primary
-                              : textSecondaryColor,
-                          fontSize: 11,
-                          fontWeight: active
-                              ? FontWeight.bold
-                              : FontWeight.w600,
+                        const SizedBox(height: 2),
+                        Container(
+                          height: max(140 * heightFactor.clamp(0.01, 1.0), 2),
+                          width: 20,
+                          decoration: BoxDecoration(
+                            color: isToday
+                                ? AppColors.primary
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: isToday
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ]
+                                : null,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          index < dayLabels.length ? dayLabels[index] : '',
+                          style: TextStyle(
+                            color: isToday
+                                ? AppColors.primary
+                                : textSecondaryColor,
+                            fontSize: 10,
+                            fontWeight: isToday
+                                ? FontWeight.bold
+                                : FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               }).toList(),
@@ -575,30 +730,39 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
   Widget _buildRecentActivities(
-      BuildContext context,
-      Color surfaceColor,
-      Color textColor,
-      Color? textSecondaryColor,
-      ) {
+    BuildContext context,
+    List<RecentOrder> recentOrders,
+    Color surfaceColor,
+    Color textColor,
+    Color? textSecondaryColor,
+  ) {
+    final currencyFormat = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recent Activities',
+              'Recent Orders',
               style: TextStyle(
                 color: textColor,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            TextButton(onPressed: () {}, child: const Text('View All')),
+            TextButton(
+              onPressed: () => context.go('/admin/orders'),
+              child: const Text('View All'),
+            ),
           ],
         ),
         const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             color: surfaceColor,
             borderRadius: BorderRadius.circular(16),
@@ -611,110 +775,207 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ],
             border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
           ),
-          child: Column(
-            children: [
-              _buildActivityItem(
-                title: 'New order from Tuan',
-                time: '5m ago',
-                desc: 'Order #2201 - 4x Michelin Primacy 4',
-                icon: Icons.shopping_bag,
-                iconColor: Colors.green,
-                iconBg: Colors.green.withValues(alpha: 0.1),
-                isLast: false,
-              ),
-              _buildActivityItem(
-                title: 'Product Stock Updated',
-                time: '2h ago',
-                desc: 'Michelin Pilot Sport 5 added (+50 units)',
-                icon: Icons.inventory,
-                iconColor: Colors.blue,
-                iconBg: Colors.blue.withValues(alpha: 0.1),
-                isLast: false,
-              ),
-              _buildActivityItem(
-                title: 'New Customer Registered',
-                time: '4h ago',
-                desc: 'User ID: #8832 via Mobile App',
-                icon: Icons.person_add,
-                iconColor: Colors.purple,
-                iconBg: Colors.purple.withValues(alpha: 0.1),
-                isLast: true,
-              ),
-            ],
-          ),
+          child: recentOrders.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.inbox_outlined,
+                          size: 48,
+                          color: textSecondaryColor,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No orders yet',
+                          style: TextStyle(
+                            color: textSecondaryColor,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Column(
+                  children: recentOrders.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final order = entry.value;
+                    final isLast = index == recentOrders.length - 1;
+
+                    return InkWell(
+                      onTap: () {
+                        context.push('/admin/orders/${order.orderId}');
+                      },
+                      child: _buildOrderActivityItem(
+                        orderId: order.orderId,
+                        customerName: order.customerName,
+                        status: order.status,
+                        totalAmount: currencyFormat.format(order.totalAmount),
+                        createdAt: _formatOrderTime(order.createdAt),
+                        iconColor: _getStatusColor(order.status),
+                        iconBg: _getStatusColor(order.status).withValues(alpha: 0.1),
+                        isLast: isLast,
+                        textColor: textColor,
+                        textSecondaryColor: textSecondaryColor,
+                      ),
+                    );
+                  }).toList(),
+                ),
         ),
       ],
     );
   }
 
-  Widget _buildActivityItem({
-    required String title,
-    required String time,
-    required String desc,
-    required IconData icon,
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'processing':
+        return Colors.blue;
+      case 'completed':
+        return Colors.green;
+      case 'canceled':
+        return Colors.red;
+      case 'shipped':
+        return Colors.purple;
+      case 'confirmed':
+        return Colors.teal;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _formatOrderTime(DateTime createdAt) {
+    final now = DateTime.now();
+    final diff = now.difference(createdAt);
+
+    if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}m ago';
+    } else if (diff.inHours < 24) {
+      return '${diff.inHours}h ago';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays}d ago';
+    } else {
+      return DateFormat('MMM d').format(createdAt);
+    }
+  }
+
+  Widget _buildOrderActivityItem({
+    required int orderId,
+    required String customerName,
+    required String status,
+    required String totalAmount,
+    required String createdAt,
     required Color iconColor,
     required Color iconBg,
     required bool isLast,
+    required Color textColor,
+    required Color? textSecondaryColor,
   }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: iconBg,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 4),
-              ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-            if (!isLast)
-              Container(
-                width: 2,
-                height: 32,
-                color: Colors.grey[100],
-                margin: const EdgeInsets.symmetric(vertical: 4),
-              ),
-          ],
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text(
-                    time,
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4),
+                ),
+                child: Icon(Icons.shopping_bag, color: iconColor, size: 20),
               ),
-              const SizedBox(height: 2),
-              Text(
-                desc,
-                style: TextStyle(color: Colors.grey[500], fontSize: 13),
-              ),
-              const SizedBox(height: 20),
+              if (!isLast)
+                Container(
+                  width: 2,
+                  height: 32,
+                  color: Colors.grey[100],
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Order #$orderId',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: textColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      totalAmount,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  customerName,
+                  style: TextStyle(
+                    color: textSecondaryColor,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: iconBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        status.toUpperCase(),
+                        style: TextStyle(
+                          color: iconColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      createdAt,
+                      style: TextStyle(
+                        color: textSecondaryColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                if (!isLast) const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

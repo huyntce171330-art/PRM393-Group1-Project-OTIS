@@ -51,6 +51,8 @@ import 'package:frontend_otis/presentation/screens/notification/admin_notificati
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
+import 'package:frontend_otis/presentation/bloc/dashboard/dashboard_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/dashboard/dashboard_event.dart';
 
 import 'package:frontend_otis/core/network/socket_service.dart';
 import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
@@ -283,11 +285,17 @@ final GoRouter router = GoRouter(
         return BookingSuccessScreen(order: order);
       },
     ),
-    // Admin Routes - ShellRoute with both AdminLayout (bottom nav) and BlocProvider
+    // Admin Routes - ShellRoute with both AdminLayout (bottom nav) and BlocProviders
+    // DashboardBloc is provided at shell level so it persists across all admin tab navigation.
     ShellRoute(
       builder: (context, state, child) {
-        return BlocProvider<AdminProductBloc>.value(
-          value: di.sl<AdminProductBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider<AdminProductBloc>.value(value: di.sl<AdminProductBloc>()),
+            BlocProvider<DashboardBloc>.value(
+              value: di.sl<DashboardBloc>()..add(const LoadDashboardEvent()),
+            ),
+          ],
           child: AdminLayout(child: child),
         );
       },

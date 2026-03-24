@@ -102,6 +102,12 @@ import 'package:frontend_otis/domain/usecases/notification/search_notifications_
 import 'package:frontend_otis/domain/usecases/notification/update_notification_status_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import '../../presentation/bloc/category/category_bloc.dart';
+import '../../presentation/bloc/dashboard/dashboard_bloc.dart';
+import '../../domain/usecases/dashboard/get_dashboard_statistics_usecase.dart';
+import '../../domain/repositories/dashboard_repository.dart';
+import '../../data/repositories/dashboard_repository_impl.dart';
+import '../../data/datasources/dashboard/dashboard_local_datasource.dart';
+import '../../data/datasources/dashboard/dashboard_local_datasource_impl.dart';
 
 final sl = GetIt.instance;
 
@@ -449,6 +455,22 @@ Future<void> init() async {
     ),
   );
 
+  // ========== DASHBOARD FEATURE ==========
+  sl.registerLazySingleton<DashboardLocalDataSource>(
+    () => DashboardLocalDataSourceImpl(database: sl()),
+  );
+
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton<GetDashboardStatisticsUseCase>(
+    () => GetDashboardStatisticsUseCase(sl()),
+  );
+
+  sl.registerLazySingleton<DashboardBloc>(
+    () => DashboardBloc(getDashboardUseCase: sl()),
+  );
 
   print("All dependencies registered successfully");
 }
