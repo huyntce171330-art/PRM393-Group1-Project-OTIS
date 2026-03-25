@@ -5,6 +5,7 @@ import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
+import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_header.dart';
 import 'package:go_router/go_router.dart';
 
@@ -73,13 +74,11 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = const Color(0xFFEC1313);
-    final bgColor = isDarkMode
-        ? const Color(0xFF221010)
-        : const Color(0xFFF8F6F6);
-    final surfaceColor = isDarkMode ? const Color(0xFF361B1B) : Colors.white;
-    final textMain = isDarkMode ? Colors.white : const Color(0xFF181111);
-    final textSub = isDarkMode ? Colors.grey[400]! : const Color(0xFF896161);
+    final primaryColor = AppColors.primary;
+    final bgColor = AppColors.background(context);
+    final surfaceColor = AppColors.surface(context);
+    final textMain = AppColors.text(context);
+    final textSub = isDarkMode ? Colors.grey[400]! : AppColors.textSecondary;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -234,7 +233,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                 } else if (state is OrderLoading ||
                     state is OrderDetailLoaded) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFEC1313)),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   );
                 } else if (state is OrderError) {
                   return Center(

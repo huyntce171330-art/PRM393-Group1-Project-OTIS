@@ -203,43 +203,40 @@ class _CartScreenState extends State<CartScreen> {
               // Remove Selected Button
               if (_selectedItemIds.isNotEmpty)
                 TextButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => ConfirmationDialog(
-                        title: 'Remove Items',
-                        message:
-                            'Are you sure you want to remove selected items from your cart?',
-                        confirmLabel: 'Remove',
-                        cancelLabel: 'Cancel',
-                        isDestructive: true,
-                        icon: Icons.delete_outline,
-                        onConfirm: () {
-                          for (var id in _selectedItemIds) {
-                            context.read<CartBloc>().add(
-                              RemoveFromCartEvent(productId: id),
-                            );
-                          }
-                          setState(() {
-                            _selectedItemIds.clear();
-                          });
-                          Navigator.of(context).pop(); // Close the dialog
-                        },
-                      ),
-                    );
-                  },
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    size: 20,
-                    color: AppColors.error,
-                  ),
-                  label: const Text(
-                    'Remove All',
-                    style: TextStyle(
+                  label: Text(
+                    'Delete Selected (${_selectedItemIds.length})',
+                    style: const TextStyle(
                       color: AppColors.error,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (childContext) => ConfirmationDialog(
+                        title: 'Delete Items',
+                        message:
+                            'Remove ${_selectedItemIds.length} selected items from cart?',
+                        confirmLabel: 'Delete',
+                        cancelLabel: 'Cancel',
+                        isDestructive: true,
+                        icon: Icons.delete_outline,
+                        onConfirm: () {
+                          // Clear selection immediately to prevent UI flicker
+                          final idsToRemove = _selectedItemIds.toList();
+                          setState(() {
+                            _selectedItemIds.clear();
+                          });
+                          
+                          context.read<CartBloc>().add(
+                                RemoveSelectedFromCartEvent(
+                                  productIds: idsToRemove,
+                                ),
+                              );
+                        },
+                      ),
+                    );
+                  },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),

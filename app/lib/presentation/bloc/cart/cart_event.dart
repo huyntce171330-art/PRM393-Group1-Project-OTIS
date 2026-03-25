@@ -39,4 +39,14 @@ class RemoveFromCartEvent extends CartEvent {
   List<Object?> get props => [productId];
 }
 
+class RemoveSelectedFromCartEvent extends CartEvent {
+  final List<String> productIds;
+
+  const RemoveSelectedFromCartEvent({required this.productIds});
+
+  @override
+  List<Object?> get props => [productIds];
+}
+
 class ClearCartEvent extends CartEvent {}
+

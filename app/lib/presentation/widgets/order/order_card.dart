@@ -4,6 +4,7 @@ import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/domain/entities/order_item.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
 import 'package:frontend_otis/domain/repositories/product_repository.dart';
+import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/order/status_badge.dart';
 
 class OrderCard extends StatelessWidget {
@@ -15,8 +16,8 @@ class OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDarkMode ? const Color(0xFF1A2230) : Colors.white;
-    final primaryColor = const Color(0xFF135BEC);
+    final surfaceColor = AppColors.surface(context);
+    final primaryColor = AppColors.primary;
 
     return GestureDetector(
       onTap: onTap,

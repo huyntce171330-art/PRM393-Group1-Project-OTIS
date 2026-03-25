@@ -13,6 +13,7 @@ import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -33,11 +34,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode
-        ? const Color(0xFF101622)
-        : const Color(0xFFF6F6F8);
-    final surfaceColor = isDarkMode ? const Color(0xFF1A2230) : Colors.white;
+    final backgroundColor = AppColors.background(context);
+    final surfaceColor = AppColors.surface(context);
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -45,7 +43,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       body: BlocBuilder<OrderBloc, OrderState>(
         builder: (context, state) {
           if (state is OrderLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           } else if (state is OrderDetailLoaded) {
             final order = state.order;
             return _buildContent(context, order, surfaceColor);
@@ -87,7 +85,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildStatusSection(Order order, Color surfaceColor) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final statusColor = Colors.red;
+    final statusColor = AppColors.primary;
 
     int currentStep = 0;
     if (order.status == OrderStatus.pendingPayment ||
@@ -260,7 +258,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildDeliveryInfo(Order order, Color surfaceColor) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Colors.red;
+    final primaryColor = AppColors.primary;
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
@@ -345,7 +343,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     bool isDarkMode, {
     IconData? icon,
   }) {
-    final primaryColor = Colors.red;
+    final primaryColor = AppColors.primary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -387,7 +385,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildCostSummary(Order order, Color surfaceColor) {
-    final primaryColor = Colors.red;
+    final primaryColor = AppColors.primary;
     return Container(
       color: surfaceColor,
       padding: const EdgeInsets.all(16),
@@ -477,7 +475,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(

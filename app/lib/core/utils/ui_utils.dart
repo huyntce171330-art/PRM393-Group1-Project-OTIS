@@ -10,8 +10,8 @@ class UiUtils {
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.3), // Light dim
       builder: (BuildContext context) {
-        // Auto close after 2 seconds
-        Future.delayed(const Duration(seconds: 2), () {
+        // Auto close after 800 milliseconds
+        Future.delayed(const Duration(milliseconds: 800), () {
           if (context.mounted) {
             Navigator.of(context).pop();
           }
