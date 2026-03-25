@@ -19,7 +19,6 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   String _activeTab = 'All';
   final List<String> _tabs = [
     'All',
-    'Pending',
     'Processing',
     'Completed',
     'Cancelled',
@@ -48,11 +47,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     return orders.where((order) {
       // Filter by tab
       bool matchesTab = true;
-      if (_activeTab == 'Pending') {
-        matchesTab = order.status == OrderStatus.pendingPayment;
-      } else if (_activeTab == 'Processing') {
-        matchesTab =
-            (order.status == OrderStatus.processing ||
+      if (_activeTab == 'Processing') {
+        matchesTab = (order.status == OrderStatus.processing ||
             order.status == OrderStatus.paid);
       } else if (_activeTab == 'Completed') {
         matchesTab = order.status == OrderStatus.completed;
@@ -63,9 +59,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       // Filter by search query
       bool matchesSearch = true;
       if (_searchQuery.isNotEmpty) {
-        matchesSearch =
-            order.code.toLowerCase().contains(_searchQuery) ||
-            order.shippingAddress.toLowerCase().contains(_searchQuery);
+        matchesSearch = order.code.toLowerCase().contains(_searchQuery) ||
+            order.shippingAddress.toLowerCase().contains(_searchQuery) ||
+            order.id.toLowerCase().contains(_searchQuery);
       }
 
       return matchesTab && matchesSearch;
