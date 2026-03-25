@@ -129,13 +129,15 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         }).toList();
         emit(OrderLoaded(updatedList));
       } else if (currentState is OrderDetailLoaded) {
+        // Update the order in the cached list as well
+        final List<Order> updatedCachedList = (currentState.cachedList ?? []).map((order) {
+          return order.id == updatedOrder.id ? updatedOrder : order;
+        }).toList();
+        
         emit(
-          OrderDetailLoaded(updatedOrder, cachedList: currentState.cachedList),
+          OrderDetailLoaded(updatedOrder, cachedList: updatedCachedList),
         );
       } else {
-        // If we were in some other state (e.g. initial), just emit details?
-        // Or create a new list with just this order?
-        // Safer to emit DetailLoaded as a fallback.
         emit(OrderDetailLoaded(updatedOrder));
       }
     });

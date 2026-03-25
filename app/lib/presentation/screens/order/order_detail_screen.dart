@@ -16,6 +16,7 @@ import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 import 'package:frontend_otis/core/utils/ui_utils.dart';
+import 'package:go_router/go_router.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final String orderId;
@@ -471,13 +472,42 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                context.read<OrderBloc>().add(
-                  UpdateOrderStatusEvent(order.id, 'canceled'),
-                );
-                UiUtils.showCancelPopup(
-                  context,
-                  "Your order has been successfully canceled.",
-                  title: "Order Canceled",
+                showDialog(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('Cancel Order?'),
+                    content: const Text('Are you sure you want to cancel this order? This action cannot be undone.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        child: const Text('No, Keep It'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          context.read<OrderBloc>().add(
+                                UpdateOrderStatusEvent(order.id, 'canceled'),
+                              );
+                          UiUtils.showCancelPopup(
+                            context,
+                            "Your order has been successfully canceled.",
+                            title: "Order Canceled",
+                          );
+                          // Auto-back to list after popup
+                          Future.delayed(const Duration(milliseconds: 1500), () {
+                            if (context.mounted && context.canPop()) {
+                              context.pop();
+                            }
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Yes, Cancel'),
+                      ),
+                    ],
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(

@@ -308,7 +308,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
             )
             .then((_) {
               if (context.mounted) {
-                context.read<OrderBloc>().add(const GetOrdersEvent());
+                context.read<OrderBloc>().add(const GetAdminOrdersEvent());
               }
             }),
         child: Column(

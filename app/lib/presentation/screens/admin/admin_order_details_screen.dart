@@ -267,32 +267,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _buildButton(
-                  icon: Icons.call,
-                  label: 'Call Customer',
-                  onPressed: () {},
-                  bgColor: primaryColor.withValues(alpha: 0.1),
-                  textColor: primaryColor,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildButton(
-                  icon: Icons.map,
-                  label: 'View Map',
-                  onPressed: () {},
-                  bgColor: isDarkMode
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.grey[100]!,
-                  textColor: textMain,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -306,10 +280,17 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
     Color primaryColor,
     bool isDarkMode,
   ) {
-    bool isPaid =
-        order.status == OrderStatus.paid ||
-        order.status == OrderStatus.processing ||
-        order.status == OrderStatus.completed;
+    final bool isCod = order.paymentMethod?.toLowerCase() == 'cod';
+    bool isPaid = false;
+    
+    if (isCod) {
+      // For COD, only paid when the order is completed
+      isPaid = order.status == OrderStatus.completed;
+    } else {
+      // For Bank Transfer, it's paid if status is not pendingPayment and not canceled
+      isPaid = order.status != OrderStatus.pendingPayment && 
+               order.status != OrderStatus.canceled;
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -728,41 +709,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-    required Color bgColor,
-    required Color textColor,
-  }) {
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: textColor),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ],
         ),
       ),
     );

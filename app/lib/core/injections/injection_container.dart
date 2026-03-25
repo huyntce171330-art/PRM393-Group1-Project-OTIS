@@ -170,7 +170,7 @@ Future<void> init() async {
 
   // Cart Data Source
   sl.registerLazySingleton<CartRemoteDatasource>(
-    () => CartRemoteDatasourceImpl(apiClient: sl()),
+    () => CartRemoteDatasourceImpl(database: sl()),
   );
 
   // Payment Data Source
