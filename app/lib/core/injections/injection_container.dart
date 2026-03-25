@@ -58,6 +58,7 @@ import 'package:frontend_otis/domain/usecases/order/create_order_usecase.dart';
 import 'package:frontend_otis/domain/usecases/order/get_order_detail_usecase.dart';
 import 'package:frontend_otis/domain/usecases/order/get_orders_usecase.dart';
 import 'package:frontend_otis/domain/usecases/order/update_order_status_usecase.dart';
+import 'package:frontend_otis/domain/usecases/order/get_all_orders_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/data/datasources/profile/profile_remote_datasource.dart';
 import 'package:frontend_otis/data/datasources/profile/profile_remote_datasource_impl.dart';
@@ -332,6 +333,9 @@ Future<void> init() async {
   sl.registerLazySingleton<UpdateOrderStatusUseCase>(
     () => UpdateOrderStatusUseCase(sl()),
   );
+  sl.registerLazySingleton<GetAllOrdersUseCase>(
+    () => GetAllOrdersUseCase(sl()),
+  );
 
   // Auth Use Cases
   sl.registerLazySingleton<LoginUsecase>(() => LoginUsecase(sl()));
@@ -382,6 +386,7 @@ Future<void> init() async {
       getOrderDetailUseCase: sl(),
       createOrderUseCase: sl(),
       updateOrderStatusUseCase: sl(),
+      getAllOrdersUseCase: sl(),
     ),
   );
 

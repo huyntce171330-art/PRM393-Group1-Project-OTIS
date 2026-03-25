@@ -529,6 +529,12 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
           _buildSummaryRow('Tax (8.5%)', '0 đ', textSub),
           const SizedBox(height: 8),
           _buildSummaryRow('Shipping', 'Free', const Color(0xFF047857)),
+          const SizedBox(height: 8),
+          _buildSummaryRow(
+            'Payment Method',
+            order.paymentMethod?.toUpperCase() ?? 'COD',
+            primaryColor,
+          ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Divider(height: 1, thickness: 1, color: Colors.transparent),
@@ -801,6 +807,9 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
   }
 
   String _getCustomerName(Order order) {
+    if (order.customerName != null && order.customerName!.isNotEmpty) {
+      return order.customerName!;
+    }
     if (order.shippingAddress.contains(',')) {
       return order.shippingAddress.split(',').first;
     }

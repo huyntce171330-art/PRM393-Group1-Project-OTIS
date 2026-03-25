@@ -12,11 +12,58 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
   Future<List<OrderModel>> fetchOrders() async {
     try {
       // Fetch orders for user_id = 2 (Simulating logged in user)
-      final List<Map<String, dynamic>> orderMaps = await database.query(
-        'orders',
-        where: 'user_id = ?',
-        whereArgs: [2],
-        orderBy: 'created_at DESC',
+      // Joined with users for customer_name and payments for payment_method
+      final List<Map<String, dynamic>> orderMaps = await database.rawQuery(
+        '''
+        SELECT o.*, u.full_name as customer_name, p.method as payment_method
+        FROM orders o
+        JOIN users u ON o.user_id = u.user_id
+        LEFT JOIN payments p ON o.order_id = p.order_id
+        WHERE o.user_id = ?
+        ORDER BY o.created_at DESC
+      ''',
+        [2],
+      );
+
+      final List<OrderModel> orders = [];
+
+      for (var orderMap in orderMaps) {
+        final orderId = orderMap['order_id'];
+
+        final List<Map<String, dynamic>> itemMaps = await database.rawQuery(
+          '''
+          SELECT oi.*, p.name as product_name 
+          FROM order_items oi
+          JOIN products p ON oi.product_id = p.product_id
+          WHERE oi.order_id = ?
+        ''',
+          [orderId],
+        );
+
+        final fullOrderMap = Map<String, dynamic>.from(orderMap);
+        fullOrderMap['order_items'] = itemMaps;
+
+        orders.add(OrderModel.fromJson(fullOrderMap));
+      }
+
+      return orders;
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<List<OrderModel>> fetchAllOrders() async {
+    try {
+      // Fetch ALL orders for admin view
+      final List<Map<String, dynamic>> orderMaps = await database.rawQuery(
+        '''
+        SELECT o.*, u.full_name as customer_name, p.method as payment_method
+        FROM orders o
+        JOIN users u ON o.user_id = u.user_id
+        LEFT JOIN payments p ON o.order_id = p.order_id
+        ORDER BY o.created_at DESC
+      ''',
       );
 
       final List<OrderModel> orders = [];
@@ -49,33 +96,18 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
   @override
   Future<OrderModel> fetchOrderDetail(String id) async {
     try {
-
-      // Handle ID being passed as String but DB using Integer
-      // If ID starts with "ORD-", query by code, else by ID
+      // Handle ID passed as String but DB uses Integer
       List<Map<String, dynamic>> orderMaps;
 
-      if (int.tryParse(id) != null) {
-        orderMaps = await database.query(
-          'orders',
-          where: 'order_id = ?',
-          whereArgs: [id],
-        );
-      } else {
-        // Maybe it's a code? Or just invalid.
-        // Let's assume the app passes the ID (int) as string.
-        // But wait, createOrder generates ID as timestamp (String) in recent edits?
-        // The SQLite schema uses AUTOINCREMENT INTEGER for order_id.
-        // And "code" as TEXT.
-        // If createOrder passes a String ID (timestamp) to "createOrder", it might fail insertion if mapped to order_id.
-        // I need to fix createOrder to let DB handle ID, or map "id" to "code".
+      final query = '''
+        SELECT o.*, u.full_name as customer_name, p.method as payment_method
+        FROM orders o
+        JOIN users u ON o.user_id = u.user_id
+        LEFT JOIN payments p ON o.order_id = p.order_id
+        WHERE o.order_id = ? OR o.code = ?
+      ''';
 
-        // Let's query by ID or Code just to be safe
-        orderMaps = await database.query(
-          'orders',
-          where: 'order_id = ? OR code = ?',
-          whereArgs: [id, id],
-        );
-      }
+      orderMaps = await database.rawQuery(query, [id, id]);
 
       if (orderMaps.isEmpty) {
         throw ServerException(message: 'Order not found');
@@ -84,7 +116,6 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
       final orderMap = orderMaps.first;
       final orderId = orderMap['order_id'];
 
-      // Thực hiện JOIN để lấy name từ bảng products
       final List<Map<String, dynamic>> itemMaps = await database.rawQuery(
         '''
         SELECT oi.*, p.name as product_name 
@@ -139,7 +170,18 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
           'created_at': DateTime.now().toIso8601String(),
         });
 
-        // Insert Items and Update Stock
+        // 2. Insert Payment Record
+        final paymentMethod = orderData['payment_method'] ?? 'cod';
+        await txn.insert('payments', {
+          'order_id': orderId,
+          'payment_code': 'PAY-${DateTime.now().millisecondsSinceEpoch}',
+          'amount': totalAmount,
+          'method': paymentMethod,
+          'status': 'pending',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+
+        // 3. Insert Items and Update Stock
         final items = orderData['items'] as List;
         for (var item in items) {
           final int productId = int.parse(item['product_id'].toString());
@@ -183,15 +225,7 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
         }
 
         // Fetch created order to return full model
-        // We can't reuse fetchOrderDetail easily inside transaction without passing txn.
-        // So just construct it efficiently.
-
-        // Need to refetch items with details if needed, but we have input.
-        // But OrderModel needs OrderItemModels.
-
-        // Just return what we created but with the new DB ID.
-        // We need to fetch items again to match format or just map input.
-
+        // (Simplified return matching current implementation but including new fields)
         final createdOrderMap = {
           'order_id': orderId,
           'code': code,
@@ -200,6 +234,8 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
           'shipping_address': shippingAddress,
           'created_at': DateTime.now().toIso8601String(),
           'user_id': userId,
+          'customer_name': orderData['customer_name'],
+          'payment_method': paymentMethod,
           'order_items': items
               .map(
                 (i) => {

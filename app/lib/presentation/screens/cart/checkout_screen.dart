@@ -243,11 +243,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     // Get currentUser to use address
     final authState = context.read<AuthBloc>().state;
-    String userAddress = '';
-
-    if (authState is Authenticated) {
-      userAddress = authState.user.address;
-    }
+    final User? currentUser = authState is Authenticated ? authState.user : null;
+    String userAddress = currentUser?.address ?? '';
 
     // Address validation
     final shippingAddress = _deliveryType == DeliveryType.HOME
@@ -284,6 +281,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           : OrderStatus.pendingPayment,
       createdAt: DateTime.now(),
       shippingAddress: shippingAddress,
+      customerName: currentUser?.fullName,
+      paymentMethod: _paymentMethod == PaymentMethod.cash ? 'cod' : 'bank',
       source: widget.checkoutSource == 'buyNow' ? 'buy_now' : 'cart',
     );
 

@@ -269,9 +269,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           user = state.user;
         }
 
-        final customerName = user?.fullName.isNotEmpty == true
-            ? user!.fullName
-            : "Guest";
+        final customerName = order.customerName ??
+            (user?.fullName.isNotEmpty == true ? user!.fullName : "Guest");
         final customerPhone = user?.phone.isNotEmpty == true
             ? user!.phone
             : "N/A";
@@ -408,6 +407,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           _buildSummaryRow('Subtotal', order.formattedTotalAmount),
           _buildSummaryRow('Shipping', 'Free'),
           _buildSummaryRow('Estimated Tax', '0 đ'),
+          _buildSummaryRow(
+            'Payment Method',
+            order.paymentMethod?.toUpperCase() ?? 'COD',
+          ),
           const Divider(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

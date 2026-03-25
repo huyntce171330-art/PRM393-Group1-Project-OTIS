@@ -21,6 +21,12 @@ class Order extends Equatable {
   /// Shipping address for the order
   final String shippingAddress;
 
+  /// Customer name for the order
+  final String? customerName;
+
+  /// Payment method for the order
+  final String? paymentMethod;
+
   /// When the order was created
   final DateTime createdAt;
 
@@ -36,6 +42,8 @@ class Order extends Equatable {
     required this.totalAmount,
     required this.status,
     required this.shippingAddress,
+    this.customerName,
+    this.paymentMethod,
     required this.createdAt,
     required this.items,
     this.source = 'cart',
@@ -48,6 +56,8 @@ class Order extends Equatable {
     totalAmount,
     status,
     shippingAddress,
+    customerName,
+    paymentMethod,
     createdAt,
     items,
     source,
@@ -60,6 +70,8 @@ class Order extends Equatable {
     double? totalAmount,
     OrderStatus? status,
     String? shippingAddress,
+    String? customerName,
+    String? paymentMethod,
     DateTime? createdAt,
     List<OrderItem>? items,
     String? source,
@@ -70,6 +82,8 @@ class Order extends Equatable {
       totalAmount: totalAmount ?? this.totalAmount,
       status: status ?? this.status,
       shippingAddress: shippingAddress ?? this.shippingAddress,
+      customerName: customerName ?? this.customerName,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
       createdAt: createdAt ?? this.createdAt,
       items: items ?? this.items,
       source: source ?? this.source,

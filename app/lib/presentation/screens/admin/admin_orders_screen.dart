@@ -29,7 +29,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<OrderBloc>().add(const GetOrdersEvent());
+    context.read<OrderBloc>().add(const GetAdminOrdersEvent());
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -61,7 +61,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       if (_searchQuery.isNotEmpty) {
         matchesSearch = order.code.toLowerCase().contains(_searchQuery) ||
             order.shippingAddress.toLowerCase().contains(_searchQuery) ||
-            order.id.toLowerCase().contains(_searchQuery);
+            order.id.toLowerCase().contains(_searchQuery) ||
+            (order.customerName?.toLowerCase().contains(_searchQuery) ?? false) ||
+            (order.paymentMethod?.toLowerCase().contains(_searchQuery) ?? false);
       }
 
       return matchesTab && matchesSearch;
@@ -416,7 +418,10 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   }
 
   String _getCustomerName(Order order) {
-    // Since we don't have customer name, we use first part of address or id
+    if (order.customerName != null && order.customerName!.isNotEmpty) {
+      return order.customerName!;
+    }
+    // Fallback if joined name is missing
     if (order.shippingAddress.contains(',')) {
       return order.shippingAddress.split(',').first;
     }
