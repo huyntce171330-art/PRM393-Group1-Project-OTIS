@@ -15,6 +15,7 @@ import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final String orderId;
@@ -472,6 +473,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               onPressed: () {
                 context.read<OrderBloc>().add(
                   UpdateOrderStatusEvent(order.id, 'canceled'),
+                );
+                UiUtils.showCancelPopup(
+                  context,
+                  "Your order has been successfully canceled.",
+                  title: "Order Canceled",
                 );
               },
               style: ElevatedButton.styleFrom(

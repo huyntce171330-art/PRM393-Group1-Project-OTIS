@@ -9,6 +9,7 @@ import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/presentation/widgets/common/confirmation_dialog.dart';
 import 'package:frontend_otis/presentation/widgets/cart/cart_item_card.dart';
 import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -38,7 +39,8 @@ class _CartScreenState extends State<CartScreen> {
   void _initializeSelection(CartLoaded state) {
     if (!_hasInitializedSelection) {
       _selectedItemIds.clear();
-      _selectedItemIds.addAll(state.cartItems.map((e) => e.productId));
+      // Don't select anything by default to prevent accidental deletion of entire cart
+      // _selectedItemIds.addAll(state.cartItems.map((e) => e.productId));
       _hasInitializedSelection = true;
     } else {
       final currentIds = state.cartItems.map((e) => e.productId).toSet();
@@ -233,6 +235,14 @@ class _CartScreenState extends State<CartScreen> {
                                   productIds: idsToRemove,
                                 ),
                               );
+                          
+                          // Show success popup
+                          if (context.mounted) {
+                            UiUtils.showSuccessPopup(
+                              context,
+                              '${idsToRemove.length} item(s) removed from cart',
+                            );
+                          }
                         },
                       ),
                     );

@@ -12,6 +12,7 @@ import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 class AdminOrderDetailsScreen extends StatefulWidget {
   final String orderId;
@@ -684,6 +685,22 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
 
   void _updateStatus(String orderId, String newStatus) {
     context.read<OrderBloc>().add(UpdateOrderStatusEvent(orderId, newStatus));
+
+    // Show feedback popup
+    if (newStatus == 'canceled') {
+      UiUtils.showCancelPopup(
+        context,
+        "The order has been successfully canceled.",
+        title: "Order Canceled",
+      );
+    } else {
+      String msg = "Order status updated to $newStatus";
+      if (newStatus == 'processing') msg = "Order is now being processed";
+      if (newStatus == 'shipping') msg = "Order is now out for delivery";
+      if (newStatus == 'completed') msg = "Order marked as completed";
+
+      UiUtils.showSuccessPopup(context, msg);
+    }
   }
 
   Widget _buildActionButton({

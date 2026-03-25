@@ -15,6 +15,7 @@ import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend_otis/domain/entities/bank_account.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 class PaymentScreen extends StatefulWidget {
   final Order order;
@@ -58,9 +59,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
       listener: (context, paymentState) {
         if (paymentState is PaymentInitiated) {
           if (paymentState.payment.method == PaymentMethod.cash) {
+            UiUtils.showSuccessPopup(context, "Order placed successfully (COD)");
             _showSuccess(context, "Order placed successfully (COD)");
           }
         } else if (paymentState is PaymentSuccess) {
+          UiUtils.showSuccessPopup(context, "Payment Confirmed! Your order is being processed.");
           _showSuccess(context, "Payment Confirmed");
         } else if (paymentState is PaymentFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -179,8 +182,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _showSuccess(BuildContext context, String message) {
-    // Navigate to Booking Success Screen with order details
-    context.go('/booking-success', extra: widget.order);
+    // Give enough time for the SuccessDialog to be seen before navigating
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (context.mounted) {
+        // Navigate to Booking Success Screen with order details
+        context.go('/booking-success', extra: widget.order);
+      }
+    });
   }
 
   Widget _buildSelectionView(BuildContext context, bool isLoading, User? user) {
@@ -218,7 +226,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: isLoading ? null : () {
                       context.read<PaymentBloc>().add(
                         SelectPaymentMethodEvent(
                           orderId: widget.order.id,
@@ -729,17 +737,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               );
 
-              // 2. Clear dialog
-              Navigator.pop(context);
+              // 2. Show cancellation confirmation
+              UiUtils.showCancelPopup(
+                context,
+                "Your payment process has been canceled.",
+                title: "Payment Canceled",
+              );
 
-              // 3. Return to previous screen (Checkout)
-              // Since we used push() in CheckoutScreen, we can just pop()
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
-              } else {
-                // Fallback if somehow stack is lost
-                context.go('/products');
-              }
+              // 3. Re-direct back after popup
+              Future.delayed(const Duration(milliseconds: 1000), () {
+                if (context.mounted) {
+                  // If we can pop back to checkout/cart, do it, else go to home/products
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    context.go('/products');
+                  }
+                }
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,

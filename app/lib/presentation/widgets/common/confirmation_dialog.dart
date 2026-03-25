@@ -116,8 +116,8 @@ class ConfirmationDialog extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      onConfirm();
                       Navigator.of(context).pop(); // Close on confirm
+                      onConfirm();
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),

@@ -23,18 +23,21 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
         // Let DB Generate ID.
         // We use order_id as foreign key.
 
-        final paymentId = await txn.insert('payments', {
-          'order_id': payment
-              .orderId, // Ensure this is int if DB expects int, but model parses it. DB schema uses INTEGER order_id.
-          'payment_code': payment.paymentCode,
-          'amount': payment.amount,
-          'method': const PaymentMethodConverter().toJson(payment.method),
-          'status': const PaymentStatusConverter().toJson(payment.status),
-          'created_at': DateTime.now().toIso8601String(),
-          'bank_account_id': payment.bankAccountId != null
-              ? int.tryParse(payment.bankAccountId!)
-              : null,
-        });
+        final paymentId = await txn.insert(
+          'payments',
+          {
+            'order_id': payment.orderId,
+            'payment_code': payment.paymentCode,
+            'amount': payment.amount,
+            'method': const PaymentMethodConverter().toJson(payment.method),
+            'status': const PaymentStatusConverter().toJson(payment.status),
+            'created_at': DateTime.now().toIso8601String(),
+            'bank_account_id': payment.bankAccountId != null
+                ? int.tryParse(payment.bankAccountId!)
+                : null,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
 
         // COD Logic: Update Order Status immediately
         if (payment.method == PaymentMethod.cash) {
