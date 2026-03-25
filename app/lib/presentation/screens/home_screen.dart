@@ -24,6 +24,7 @@ import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_card.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
+import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
 import 'package:frontend_otis/core/utils/ui_utils.dart';
@@ -957,10 +958,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Container(
                       width: cardWidth,
                       margin: const EdgeInsets.only(right: 12),
-                      child: ProductCard(
-                        product: product,
-                        onTap: () => _navigateToProductDetail(product),
-                        onAddToCart: () => _onAddToCart(product),
+                      child: BlocBuilder<CartBloc, CartState>(
+                        builder: (context, cartState) {
+                          bool isInCart = false;
+                          if (cartState is CartLoaded) {
+                            isInCart = cartState.cartItems.any(
+                              (item) => item.productId == product.id,
+                            );
+                          }
+
+                          return ProductCard(
+                            product: product,
+                            onTap: () => _navigateToProductDetail(product),
+                            isInCart: isInCart,
+                            onViewCart: () => context.push('/cart'),
+                            onAddToCart: () => _onAddToCart(product),
+                          );
+                        },
                       ),
                     );
                   },
