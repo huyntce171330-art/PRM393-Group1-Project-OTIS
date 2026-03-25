@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
@@ -19,6 +20,7 @@ class _OtpScreenState extends State<OtpScreen> {
   final otpController = TextEditingController();
 
   bool otpPhase = false;
+  String? _serverError;
 
   static const int _resendCooldown = 60;
   int _secondsLeft = _resendCooldown;
@@ -51,6 +53,33 @@ class _OtpScreenState extends State<OtpScreen> {
     return '$minutes:$seconds';
   }
 
+  void _onRequestOtp() {
+    setState(() => _serverError = null);
+    if (phoneController.text.trim().length < 10) {
+      setState(() => _serverError = 'Invalid phone number');
+      return;
+    }
+    context.read<AuthBloc>().add(
+      RequestOtpEvent(
+        phone: phoneController.text.trim(),
+      ),
+    );
+  }
+
+  void _onVerifyOtp() {
+    setState(() => _serverError = null);
+    if (otpController.text.length < 6) {
+      setState(() => _serverError = 'Please enter 6-digit OTP');
+      return;
+    }
+    context.read<AuthBloc>().add(
+      VerifyOtpEvent(
+        phone: phoneController.text.trim(),
+        otp: otpController.text.trim(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,33 +90,37 @@ class _OtpScreenState extends State<OtpScreen> {
           child: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
               if (state is AuthError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.message)),
-                );
+                setState(() => _serverError = state.message);
               }
 
               if (state is OtpSent) {
+                UiUtils.showSuccessPopup(context, "OTP has been sent to your phone");
                 setState(() => otpPhase = true);
                 _startResendTimer();
               }
 
               if (state is OtpVerified) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BlocProvider.value(
-                      value: context.read<AuthBloc>(),
-                      child: ResetPasswordScreen(
-                        phone: phoneController.text.trim(),
+                UiUtils.showSuccessPopup(context, "Verification successful!");
+                Future.delayed(const Duration(milliseconds: 1000), () {
+                  if (context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<AuthBloc>(),
+                          child: ResetPasswordScreen(
+                            phone: phoneController.text.trim(),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
+                    );
+                  }
+                });
               }
             },
             builder: (context, state) {
               return Container(
-                margin: const EdgeInsets.symmetric(vertical: 32),
+                margin: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -104,11 +137,24 @@ class _OtpScreenState extends State<OtpScreen> {
                     Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 400),
-                          child: otpPhase
-                              ? _buildOtpSection(state)
-                              : _buildPhoneSection(state),
+                        child: Column(
+                          children: [
+                            if (_serverError != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Text(
+                                  _serverError!,
+                                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 400),
+                              child: otpPhase
+                                  ? _buildOtpSection(state)
+                                  : _buildPhoneSection(state),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -121,8 +167,6 @@ class _OtpScreenState extends State<OtpScreen> {
       ),
     );
   }
-
-  // ───────────────── UI PARTS ─────────────────
 
   Widget _buildAppBar(BuildContext context) {
     return Padding(
@@ -155,7 +199,7 @@ class _OtpScreenState extends State<OtpScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          "Don't worry! It happens.",
+          "Don't worry! It happens to the best of us.",
           style: TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 8),
@@ -166,7 +210,7 @@ class _OtpScreenState extends State<OtpScreen> {
         const SizedBox(height: 24),
 
         const Text(
-          'Mobile Number',
+          'Phone Number',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
@@ -178,15 +222,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
         const SizedBox(height: 32),
         _primaryButton(
-          text: 'Send Code',
+          text: 'Send OTP',
           loading: state is AuthLoading,
-          onTap: () {
-            context.read<AuthBloc>().add(
-              RequestOtpEvent(
-                phone: phoneController.text.trim(),
-              ),
-            );
-          },
+          onTap: _onRequestOtp,
         ),
       ],
     );
@@ -232,28 +270,13 @@ class _OtpScreenState extends State<OtpScreen> {
         _primaryButton(
           text: 'Verify OTP',
           loading: state is AuthLoading,
-          onTap: () {
-            context.read<AuthBloc>().add(
-              VerifyOtpEvent(
-                phone: phoneController.text.trim(),
-                otp: otpController.text.trim(),
-              ),
-            );
-          },
+          onTap: _onVerifyOtp,
         ),
 
         const SizedBox(height: 16),
 
         TextButton(
-          onPressed: _secondsLeft == 0
-              ? () {
-            context.read<AuthBloc>().add(
-              RequestOtpEvent(
-                phone: phoneController.text.trim(),
-              ),
-            );
-          }
-              : null,
+          onPressed: _secondsLeft == 0 ? _onRequestOtp : null,
           child: Text(
             _secondsLeft == 0
                 ? 'Resend OTP'
@@ -266,8 +289,6 @@ class _OtpScreenState extends State<OtpScreen> {
       ],
     );
   }
-
-  // ───────────────── STYLES ─────────────────
 
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
@@ -297,7 +318,7 @@ class _OtpScreenState extends State<OtpScreen> {
         ),
         onPressed: loading ? null : onTap,
         child: loading
-            ? const CircularProgressIndicator(color: Colors.white)
+            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
             : Text(
           text,
           style: const TextStyle(

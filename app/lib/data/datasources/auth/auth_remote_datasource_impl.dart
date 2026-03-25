@@ -14,10 +14,8 @@
 //    - Clear local tokens (SharedPreferences/SecureStorage).
 
 import 'dart:math';
-
 import 'package:sqflite/sqflite.dart';
-
-import '../../../core/error/failures.dart';
+import '../../../core/error/exceptions.dart';
 import 'auth_remote_datasource.dart';
 import '../../models/user_model.dart';
 
@@ -64,7 +62,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (result.isEmpty) {
-      throw ServerFailure(message: 'Invalid phone or password');
+      throw const ServerException(message: 'Invalid phone or password');
     }
 
     return UserModel.fromJson(result.first);
@@ -84,7 +82,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (exists.isNotEmpty) {
-      throw ServerFailure(message: 'Phone number already exists');
+      throw const ServerException(message: 'Phone number already exists');
     }
 
     await database.insert('users', {
@@ -104,7 +102,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (result.isEmpty) {
-      throw ServerFailure(message: 'Failed to create user');
+      throw const ServerException(message: 'Failed to create account, please try again');
     }
 
     return UserModel.fromJson(result.first);
@@ -129,7 +127,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (user.isEmpty) {
-      throw ServerFailure(message: 'Phone number not found');
+      throw const ServerException(message: 'Phone number not found');
     }
 
     final otp = _generateOtp();
@@ -149,16 +147,16 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     final session = _otpStore[phone];
 
     if (session == null) {
-      throw ServerFailure(message: 'OTP not requested');
+      throw const ServerException(message: 'Please request an OTP first');
     }
 
     if (DateTime.now().isAfter(session.expiresAt)) {
       _otpStore.remove(phone);
-      throw ServerFailure(message: 'OTP expired');
+      throw const ServerException(message: 'OTP has expired');
     }
 
     if (session.otp != otp) {
-      throw ServerFailure(message: 'Invalid OTP');
+      throw const ServerException(message: 'Invalid OTP code');
     }
 
     // Mark as verified (OTP itself is now useless)
@@ -174,7 +172,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     final session = _otpStore[phone];
 
     if (session == null || session.verified != true) {
-      throw ServerFailure(message: 'OTP verification required');
+      throw const ServerException(message: 'Please verify OTP before resetting password');
     }
 
     final count = await database.update(
@@ -185,7 +183,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (count == 0) {
-      throw ServerFailure(message: 'Failed to reset password');
+      throw const ServerException(message: 'Failed to reset password');
     }
 
     // OTP is single-use → destroy session
@@ -202,7 +200,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (count == 0) {
-      throw ServerFailure(message: 'Failed to change password');
+      throw const ServerException(message: 'Failed to change password');
     }
   }
 
@@ -216,7 +214,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     );
 
     if (result.isEmpty) {
-      throw ServerFailure(message: 'User not found');
+      throw const ServerException(message: 'User not found');
     }
 
     return UserModel.fromJson(result.first);
