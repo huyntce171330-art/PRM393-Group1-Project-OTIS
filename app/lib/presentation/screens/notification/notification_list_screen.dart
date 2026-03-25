@@ -8,6 +8,8 @@ import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.d
 import 'package:frontend_otis/presentation/bloc/notification/notification_event.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
 import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
+import '../../bloc/auth/auth_bloc.dart';
+import '../../bloc/auth/auth_state.dart';
 
 class NotificationListScreen extends StatefulWidget {
   final bool isAdminMode;
@@ -27,6 +29,20 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   int _selectedFilterIndex = 0;
   final List<String> _filters = ['All', 'Orders', 'Promotions', 'System'];
 
+  @override
+  void initState() {
+    super.initState();
+    // Always refresh notifications when entering the screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<NotificationBloc>().add(
+              LoadNotificationsEvent(
+                filter: _buildFilter(_selectedFilterIndex),
+              ),
+            );
+      }
+    });
+  }
   NotificationFilter _buildFilter(int index) {
     NotificationType? type;
     if (index == 1) {
@@ -36,14 +52,22 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     } else if (index == 3) {
       type = NotificationType.system;
     }
-    return NotificationFilter(type: type);
+
+    // Get current user ID to filter notifications
+    final authState = context.read<AuthBloc>().state;
+    String? userId;
+    if (authState is Authenticated) {
+      userId = authState.user.id;
+    }
+
+    return NotificationFilter(type: type, userId: userId);
   }
 
   void _onFilterChanged(BuildContext context, int index) {
     setState(() => _selectedFilterIndex = index);
     context.read<NotificationBloc>().add(
-      LoadNotificationsEvent(filter: _buildFilter(index)),
-    );
+          LoadNotificationsEvent(filter: _buildFilter(index)),
+        );
   }
 
   void _onDelete(BuildContext context, String id) {
@@ -570,7 +594,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           Icon(Icons.notifications_none, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'Chưa có thông báo nào',
+            'No notifications yet',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
@@ -22,6 +23,7 @@ class ChangePasswordOtpScreen extends StatefulWidget {
 
 class _ChangePasswordOtpScreenState extends State<ChangePasswordOtpScreen> {
   final otpController = TextEditingController();
+  String? _serverError;
 
   static const int _resendCooldown = 60;
   int _secondsLeft = _resendCooldown;
@@ -66,6 +68,11 @@ class _ChangePasswordOtpScreenState extends State<ChangePasswordOtpScreen> {
   }
 
   void _verifyOtp() {
+    setState(() => _serverError = null);
+    if (otpController.text.length < 6) {
+      setState(() => _serverError = 'Please enter 6-digit OTP');
+      return;
+    }
     context.read<AuthBloc>().add(
       VerifyOtpEvent(
         phone: widget.phone,
@@ -84,28 +91,36 @@ class _ChangePasswordOtpScreenState extends State<ChangePasswordOtpScreen> {
           child: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
               if (state is AuthError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.message)),
-                );
+                setState(() => _serverError = state.message);
+              }
+
+              if (state is OtpSent) {
+                UiUtils.showSuccessPopup(context, "OTP has been sent!");
+                _startResendTimer();
               }
 
               if (state is OtpVerified) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BlocProvider.value(
-                      value: context.read<AuthBloc>(),
-                      child: ResetPasswordScreen(
-                        phone: widget.phone,
+                UiUtils.showSuccessPopup(context, "Verification successful!");
+                Future.delayed(const Duration(milliseconds: 1000), () {
+                  if (context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<AuthBloc>(),
+                          child: ResetPasswordScreen(
+                            phone: widget.phone,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
+                    );
+                  }
+                });
               }
             },
             builder: (context, state) {
               return Container(
-                margin: const EdgeInsets.symmetric(vertical: 32),
+                margin: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -122,7 +137,20 @@ class _ChangePasswordOtpScreenState extends State<ChangePasswordOtpScreen> {
                     Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24),
-                        child: _buildOtpSection(state),
+                        child: Column(
+                          children: [
+                            if (_serverError != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Text(
+                                  _serverError!,
+                                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            _buildOtpSection(state),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -166,7 +194,7 @@ class _ChangePasswordOtpScreenState extends State<ChangePasswordOtpScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Enter the 6-digit code sent to your phone',
+          'Enter the 6-digit code sent to your device',
           style: TextStyle(color: Colors.grey),
         ),
         const SizedBox(height: 24),
@@ -212,9 +240,7 @@ class _ChangePasswordOtpScreenState extends State<ChangePasswordOtpScreen> {
           }
               : null,
           child: Text(
-            _secondsLeft == 0
-                ? 'Resend OTP'
-                : 'Resend in $_timerText',
+            _secondsLeft == 0 ? 'Resend OTP' : 'Resend in $_timerText',
             style: TextStyle(
               color: _secondsLeft == 0 ? Colors.red : Colors.grey,
             ),
@@ -241,7 +267,7 @@ class _ChangePasswordOtpScreenState extends State<ChangePasswordOtpScreen> {
         ),
         onPressed: loading ? null : onTap,
         child: loading
-            ? const CircularProgressIndicator(color: Colors.white)
+            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
             : Text(
           text,
           style: const TextStyle(

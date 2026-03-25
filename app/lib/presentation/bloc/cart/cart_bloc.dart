@@ -31,6 +31,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     on<AddProductToCartEvent>(_onAddProductToCart);
     on<UpdateCartItemEvent>(_onUpdateCartItem);
     on<RemoveFromCartEvent>(_onRemoveFromCart);
+    on<RemoveSelectedFromCartEvent>(_onRemoveSelectedFromCart);
     on<ClearCartEvent>(_onClearCart);
   }
 
@@ -144,6 +145,22 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         emit(CartLoaded.fromItems(populatedItems));
       },
     );
+  }
+
+  Future<void> _onRemoveSelectedFromCart(
+    RemoveSelectedFromCartEvent event,
+    Emitter<CartState> emit,
+  ) async {
+    List<CartItem> lastItems = [];
+    for (var id in event.productIds) {
+      final result = await removeFromCartUsecase(id);
+      result.fold(
+        (_) => null,
+        (items) => lastItems = items,
+      );
+    }
+    final populatedItems = await _populateProducts(lastItems);
+    emit(CartLoaded.fromItems(populatedItems));
   }
 
   Future<void> _onClearCart(

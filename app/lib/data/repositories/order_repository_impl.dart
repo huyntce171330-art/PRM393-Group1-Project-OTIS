@@ -25,6 +25,19 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
+  Future<Either<Failure, List<Order>>> getAllOrders() async {
+    try {
+      final orderModels = await remoteDatasource.fetchAllOrders();
+      final orders = orderModels.map((model) => model.toDomain()).toList();
+      return Right(orders);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message ?? 'Unknown server error'));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, Order>> getOrderDetail(String id) async {
     try {
       final orderModel = await remoteDatasource.fetchOrderDetail(id);
@@ -57,6 +70,9 @@ class OrderRepositoryImpl implements OrderRepository {
         'code': order.code,
         'status': const OrderStatusConverter().toJson(order.status),
         'source': order.source,
+        'customer_name': order.customerName,
+        'payment_method': order.paymentMethod,
+        'user_id': order.userId,
       };
 
       final orderModel = await remoteDatasource.createOrder(orderData);

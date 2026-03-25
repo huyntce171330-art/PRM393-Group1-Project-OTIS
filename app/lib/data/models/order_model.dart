@@ -30,15 +30,27 @@ class OrderModel {
   /// Source of the order
   final String source;
 
+  /// Customer name (from join)
+  final String? customerName;
+
+  /// Payment method (from join)
+  final String? paymentMethod;
+
+  /// User ID this order belongs to
+  final String userId;
+
   const OrderModel({
     required this.id,
     required this.code,
     required this.totalAmount,
     required this.status,
     required this.shippingAddress,
+    required this.userId,
     required this.createdAt,
     required this.items,
     this.source = 'cart',
+    this.customerName,
+    this.paymentMethod,
   });
 
   /// Convert OrderModel to JSON for API requests.
@@ -49,9 +61,12 @@ class OrderModel {
       'total_amount': totalAmount,
       'status': const OrderStatusConverter().toJson(status),
       'shipping_address': shippingAddress,
+      'user_id': userId,
       'created_at': createdAt.toIso8601String(),
       'order_items': items.map((item) => item.toJson()).toList(),
       'source': source,
+      'customer_name': customerName,
+      'payment_method': paymentMethod,
     };
   }
 
@@ -64,9 +79,12 @@ class OrderModel {
       totalAmount: _parseDouble(json['total_amount'], defaultValue: 0.0),
       status: _parseOrderStatus(json['status']),
       shippingAddress: _parseString(json['shipping_address'], defaultValue: ''),
+      userId: _parseString(json['user_id'], defaultValue: '0'),
       createdAt: _parseDateTime(json['created_at']),
       items: _parseOrderItems(json['order_items'] ?? json['items'] ?? []),
       source: _parseString(json['source'], defaultValue: 'cart'),
+      customerName: _parseString(json['customer_name']),
+      paymentMethod: _parseString(json['payment_method']),
     );
   }
 
@@ -78,9 +96,12 @@ class OrderModel {
       totalAmount: totalAmount,
       status: status,
       shippingAddress: shippingAddress,
+      userId: userId,
       createdAt: createdAt,
       items: items.map((item) => item.toDomain()).toList(),
       source: source,
+      customerName: customerName,
+      paymentMethod: paymentMethod,
     );
   }
 
@@ -92,11 +113,14 @@ class OrderModel {
       totalAmount: order.totalAmount,
       status: order.status,
       shippingAddress: order.shippingAddress,
+      userId: order.userId,
       createdAt: order.createdAt,
       items: order.items
           .map((item) => OrderItemModel.fromDomain(item))
           .toList(),
       source: order.source,
+      customerName: order.customerName,
+      paymentMethod: order.paymentMethod,
     );
   }
 

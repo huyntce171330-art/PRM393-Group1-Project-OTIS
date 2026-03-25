@@ -19,6 +19,7 @@ import 'package:frontend_otis/presentation/bloc/payment/payment_event.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_state.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 // --- Types ---
 enum DeliveryType { HOME, SHOP }
@@ -243,11 +244,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     // Get currentUser to use address
     final authState = context.read<AuthBloc>().state;
-    String userAddress = '';
-
-    if (authState is Authenticated) {
-      userAddress = authState.user.address;
-    }
+    final User? currentUser = authState is Authenticated ? authState.user : null;
+    String userAddress = currentUser?.address ?? '';
 
     // Address validation
     final shippingAddress = _deliveryType == DeliveryType.HOME
@@ -269,6 +267,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       code:
           'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+      userId: currentUser?.id ?? '0',
       items: _effectiveItems
           .map(
             (cartItem) => OrderItem(
@@ -284,6 +283,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           : OrderStatus.pendingPayment,
       createdAt: DateTime.now(),
       shippingAddress: shippingAddress,
+      customerName: currentUser?.fullName,
+      paymentMethod: _paymentMethod == PaymentMethod.cash ? 'cod' : 'bank',
       source: widget.checkoutSource == 'buyNow' ? 'buy_now' : 'cart',
     );
 
@@ -333,14 +334,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   if (_paymentMethod == PaymentMethod.cash) {
                     // COD: Create payment record in background for bookkeeping
                     context.read<PaymentBloc>().add(
-                      SelectPaymentMethodEvent(
-                        orderId: order.id,
-                        method: PaymentMethod.cash,
-                        amount: order.totalAmount,
-                      ),
+                          SelectPaymentMethodEvent(
+                            orderId: order.id,
+                            method: PaymentMethod.cash,
+                            amount: order.totalAmount,
+                          ),
+                        );
+
+                    // Show success popup
+                    UiUtils.showSuccessPopup(
+                      context,
+                      'Your order has been placed successfully!',
+                      title: 'Order Confirmed',
                     );
-                    // Go directly to success
-                    context.go('/booking-success', extra: order);
+
+                    // Go directly to success after a brief moment to let popup show
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (context.mounted) {
+                        context.go('/booking-success', extra: order);
+                      }
+                    });
                   } else {
                     // Bank Transfer: Go to payment screen to show QR
                     context.push(
@@ -539,59 +552,74 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     border: Border(top: BorderSide(color: Colors.grey[100]!)),
                   ),
                   child: SafeArea(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                'Total Payment',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                ),
+                    child: BlocBuilder<OrderBloc, OrderState>(
+                      builder: (context, orderState) {
+                        final isLoading = orderState is OrderLoading;
+                        
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Total Payment',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatPrice(_grandTotal),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                _formatPrice(_grandTotal),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: _onConfirmBooking,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 14,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 4,
-                            shadowColor: AppColors.primary.withOpacity(0.4),
-                          ),
-                          child: const Row(
-                            children: [
-                              Text(
-                                'Place Order',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                            ElevatedButton(
+                              onPressed: isLoading ? null : _onConfirmBooking,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: isLoading ? 0 : 4,
+                                shadowColor: AppColors.primary.withOpacity(0.4),
                               ),
-                              SizedBox(width: 8),
-                              Icon(Icons.check, size: 18),
-                            ],
-                          ),
-                        ),
-                      ],
+                              child: isLoading 
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Row(
+                                    children: [
+                                      Text(
+                                        'Place Order',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Icon(Icons.check, size: 18),
+                                    ],
+                                  ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),

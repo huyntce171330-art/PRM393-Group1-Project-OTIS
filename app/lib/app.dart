@@ -17,6 +17,7 @@ import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
 
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/cart_item.dart';
@@ -497,7 +498,17 @@ class OtisApp extends StatelessWidget {
         BlocProvider<OrderBloc>(create: (context) => di.sl<OrderBloc>()),
         BlocProvider<NotificationBloc>.value(value: di.sl<NotificationBloc>()),
       ],
-      child: MaterialApp.router(
+      child: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is Authenticated) {
+            // Re-load cart once we have the user context
+            context.read<CartBloc>().add(LoadCartEvent());
+          } else if (state is Unauthenticated) {
+            // Reset for guest or new login
+            context.read<CartBloc>().add(LoadCartEvent());
+          }
+        },
+        child: MaterialApp.router(
         title: 'OTIS Project',
         routerConfig: router,
         // Using Thai Phung design system colors
@@ -531,6 +542,7 @@ class OtisApp extends StatelessWidget {
         ),
         debugShowCheckedModeBanner: false,
       ),
-    );
+    ),
+   );
   }
 }

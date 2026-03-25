@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/enums/order_enums.dart';
 import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
@@ -46,10 +47,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode
-        ? const Color(0xFF101622)
-        : const Color(0xFFF6F6F8);
-    final primaryColor = const Color(0xFF135BEC);
+    final backgroundColor = AppColors.background(context);
+    final primaryColor = AppColors.primary;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -68,9 +67,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
             Container(
               height: 54,
               width: double.infinity,
-              color: isDarkMode
-                  ? const Color(0xFF101622).withValues(alpha: 0.9)
-                  : Colors.white.withValues(alpha: 0.9),
+              color: AppColors.surface(context).withValues(alpha: 0.9),
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
@@ -96,8 +93,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
                           color: isSelected
                               ? primaryColor
                               : (isDarkMode
-                                    ? const Color(0xFF1E293B)
-                                    : Colors.white),
+                                    ? AppColors.surfaceDark
+                                    : AppColors.surfaceLight),
                           borderRadius: BorderRadius.circular(99),
                           border: isSelected
                               ? null
@@ -174,7 +171,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
             );
           } else if (state is OrderLoading || state is OrderDetailLoaded) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF135BEC)),
+              child: CircularProgressIndicator(color: AppColors.primary),
             );
           } else if (state is OrderError) {
             return Center(

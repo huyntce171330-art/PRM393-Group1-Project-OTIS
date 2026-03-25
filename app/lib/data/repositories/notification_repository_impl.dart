@@ -21,6 +21,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
         params['limit'] = filter.limit;
         if (filter.type != null) params['type'] = filter.type.toString().split('.').last;
         if (filter.isRead != null) params['isRead'] = filter.isRead;
+        if (filter.userId != null) params['userId'] = filter.userId;
         if (filter.searchQuery != null && filter.searchQuery!.isNotEmpty) {
           params['searchQuery'] = filter.searchQuery;
         }

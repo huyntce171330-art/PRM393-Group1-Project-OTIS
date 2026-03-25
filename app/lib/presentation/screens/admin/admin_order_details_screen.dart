@@ -10,7 +10,9 @@ import 'package:frontend_otis/domain/repositories/product_repository.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
+import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 class AdminOrderDetailsScreen extends StatefulWidget {
   final String orderId;
@@ -32,13 +34,11 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = const Color(0xFFEC1313);
-    final bgColor = isDarkMode
-        ? const Color(0xFF221010)
-        : const Color(0xFFF8F6F6);
-    final surfaceColor = isDarkMode ? const Color(0xFF361B1B) : Colors.white;
-    final textMain = isDarkMode ? Colors.white : const Color(0xFF181111);
-    final textSub = isDarkMode ? Colors.grey[400]! : const Color(0xFF896161);
+    final primaryColor = AppColors.primary;
+    final bgColor = AppColors.background(context);
+    final surfaceColor = AppColors.surface(context);
+    final textMain = AppColors.text(context);
+    final textSub = isDarkMode ? Colors.grey[400]! : AppColors.textSecondary;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -75,39 +75,75 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
           ),
         ),
       ),
-      body: BlocBuilder<OrderBloc, OrderState>(
-        builder: (context, state) {
-          if (state is OrderLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFEC1313)),
-            );
-          } else if (state is OrderDetailLoaded) {
-            return Column(
-              children: [
-                Expanded(
-                  child: _buildContent(
-                    context,
+      body: BlocListener<OrderBloc, OrderState>(
+        listener: (context, state) {
+          if (state is OrderOperationSuccess) {
+            String title = "Success";
+            String body = state.message;
+            if (state.message.contains('canceled')) {
+              title = "Order Canceled";
+              body = "The order has been successfully canceled.";
+              UiUtils.showCancelPopup(context, body, title: title);
+            } else {
+              UiUtils.showSuccessPopup(context, body, title: title);
+            }
+          }
+        },
+        child: BlocBuilder<OrderBloc, OrderState>(
+          builder: (context, state) {
+            if (state is OrderLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
+            } else if (state is OrderOperationSuccess && state.order != null) {
+              return Column(
+                children: [
+                  Expanded(
+                    child: _buildContent(
+                      context,
+                      state.order!,
+                      surfaceColor,
+                      textMain,
+                      textSub,
+                      primaryColor,
+                      isDarkMode,
+                    ),
+                  ),
+                  _buildStickyBottomBar(state.order!, surfaceColor, primaryColor),
+                ],
+              );
+            } else if (state is OrderDetailLoaded) {
+              return Column(
+                children: [
+                  Expanded(
+                    child: _buildContent(
+                      context,
+                      state.order,
+                      surfaceColor,
+                      textMain,
+                      textSub,
+                      primaryColor,
+                      isDarkMode,
+                    ),
+                  ),
+                  _buildStickyBottomBar(
                     state.order,
                     surfaceColor,
-                    textMain,
-                    textSub,
                     primaryColor,
-                    isDarkMode,
                   ),
+                ],
+              );
+            } else if (state is OrderError) {
+              return Center(
+                child: Text(
+                  state.message,
+                  style: const TextStyle(color: Colors.red),
                 ),
-                _buildStickyBottomBar(state.order, surfaceColor, primaryColor),
-              ],
-            );
-          } else if (state is OrderError) {
-            return Center(
-              child: Text(
-                state.message,
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
@@ -267,32 +303,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _buildButton(
-                  icon: Icons.call,
-                  label: 'Call Customer',
-                  onPressed: () {},
-                  bgColor: primaryColor.withValues(alpha: 0.1),
-                  textColor: primaryColor,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildButton(
-                  icon: Icons.map,
-                  label: 'View Map',
-                  onPressed: () {},
-                  bgColor: isDarkMode
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.grey[100]!,
-                  textColor: textMain,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -306,10 +316,17 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
     Color primaryColor,
     bool isDarkMode,
   ) {
-    bool isPaid =
-        order.status == OrderStatus.paid ||
-        order.status == OrderStatus.processing ||
-        order.status == OrderStatus.completed;
+    final bool isCod = order.paymentMethod?.toLowerCase() == 'cod';
+    bool isPaid = false;
+    
+    if (isCod) {
+      // For COD, only paid when the order is completed
+      isPaid = order.status == OrderStatus.completed;
+    } else {
+      // For Bank Transfer, it's paid if status is not pendingPayment and not canceled
+      isPaid = order.status != OrderStatus.pendingPayment && 
+               order.status != OrderStatus.canceled;
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -529,6 +546,12 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
           _buildSummaryRow('Tax (8.5%)', '0 đ', textSub),
           const SizedBox(height: 8),
           _buildSummaryRow('Shipping', 'Free', const Color(0xFF047857)),
+          const SizedBox(height: 8),
+          _buildSummaryRow(
+            'Payment Method',
+            order.paymentMethod?.toUpperCase() ?? 'COD',
+            primaryColor,
+          ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Divider(height: 1, thickness: 1, color: Colors.transparent),
@@ -711,41 +734,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
     );
   }
 
-  Widget _buildButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-    required Color bgColor,
-    required Color textColor,
-  }) {
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: textColor),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildQrCodeSection(
     Order order,
     Color surfaceColor,
@@ -801,6 +789,9 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
   }
 
   String _getCustomerName(Order order) {
+    if (order.customerName != null && order.customerName!.isNotEmpty) {
+      return order.customerName!;
+    }
     if (order.shippingAddress.contains(',')) {
       return order.shippingAddress.split(',').first;
     }

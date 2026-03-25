@@ -16,6 +16,10 @@ class GetOrdersEvent extends OrderEvent {
   List<Object?> get props => [filter];
 }
 
+class GetAdminOrdersEvent extends OrderEvent {
+  const GetAdminOrdersEvent();
+}
+
 class GetOrderDetailEvent extends OrderEvent {
   final String orderId;
   const GetOrderDetailEvent(this.orderId);

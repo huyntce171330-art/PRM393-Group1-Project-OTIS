@@ -5,6 +5,7 @@ import 'package:frontend_otis/domain/entities/order.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
+import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/admin/admin_header.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,7 +20,6 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   String _activeTab = 'All';
   final List<String> _tabs = [
     'All',
-    'Pending',
     'Processing',
     'Completed',
     'Cancelled',
@@ -30,7 +30,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<OrderBloc>().add(const GetOrdersEvent());
+    context.read<OrderBloc>().add(const GetAdminOrdersEvent());
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -48,11 +48,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     return orders.where((order) {
       // Filter by tab
       bool matchesTab = true;
-      if (_activeTab == 'Pending') {
-        matchesTab = order.status == OrderStatus.pendingPayment;
-      } else if (_activeTab == 'Processing') {
-        matchesTab =
-            (order.status == OrderStatus.processing ||
+      if (_activeTab == 'Processing') {
+        matchesTab = (order.status == OrderStatus.processing ||
             order.status == OrderStatus.paid);
       } else if (_activeTab == 'Completed') {
         matchesTab = order.status == OrderStatus.completed;
@@ -63,9 +60,11 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       // Filter by search query
       bool matchesSearch = true;
       if (_searchQuery.isNotEmpty) {
-        matchesSearch =
-            order.code.toLowerCase().contains(_searchQuery) ||
-            order.shippingAddress.toLowerCase().contains(_searchQuery);
+        matchesSearch = order.code.toLowerCase().contains(_searchQuery) ||
+            order.shippingAddress.toLowerCase().contains(_searchQuery) ||
+            order.id.toLowerCase().contains(_searchQuery) ||
+            (order.customerName?.toLowerCase().contains(_searchQuery) ?? false) ||
+            (order.paymentMethod?.toLowerCase().contains(_searchQuery) ?? false);
       }
 
       return matchesTab && matchesSearch;
@@ -75,13 +74,11 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = const Color(0xFFEC1313);
-    final bgColor = isDarkMode
-        ? const Color(0xFF221010)
-        : const Color(0xFFF8F6F6);
-    final surfaceColor = isDarkMode ? const Color(0xFF361B1B) : Colors.white;
-    final textMain = isDarkMode ? Colors.white : const Color(0xFF181111);
-    final textSub = isDarkMode ? Colors.grey[400]! : const Color(0xFF896161);
+    final primaryColor = AppColors.primary;
+    final bgColor = AppColors.background(context);
+    final surfaceColor = AppColors.surface(context);
+    final textMain = AppColors.text(context);
+    final textSub = isDarkMode ? Colors.grey[400]! : AppColors.textSecondary;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -236,7 +233,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                 } else if (state is OrderLoading ||
                     state is OrderDetailLoaded) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFEC1313)),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   );
                 } else if (state is OrderError) {
                   return Center(
@@ -311,7 +308,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
             )
             .then((_) {
               if (context.mounted) {
-                context.read<OrderBloc>().add(const GetOrdersEvent());
+                context.read<OrderBloc>().add(const GetAdminOrdersEvent());
               }
             }),
         child: Column(
@@ -420,7 +417,10 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   }
 
   String _getCustomerName(Order order) {
-    // Since we don't have customer name, we use first part of address or id
+    if (order.customerName != null && order.customerName!.isNotEmpty) {
+      return order.customerName!;
+    }
+    // Fallback if joined name is missing
     if (order.shippingAddress.contains(',')) {
       return order.shippingAddress.split(',').first;
     }

@@ -1,70 +1,105 @@
+import 'package:sqflite/sqflite.dart';
 import 'package:frontend_otis/data/datasources/cart/cart_remote_datasource.dart';
 import 'package:frontend_otis/data/models/cart_item_model.dart';
-import 'package:frontend_otis/core/network/api_client.dart';
 
 class CartRemoteDatasourceImpl implements CartRemoteDatasource {
-  final ApiClient apiClient;
+  final Database database;
 
-  CartRemoteDatasourceImpl({required this.apiClient});
+  CartRemoteDatasourceImpl({required this.database});
 
-  // Mock data to simulate backend response
-  List<CartItemModel> _mockCart = [];
+  Future<int?> _getCurrentUserId() async {
+    final rows = await database.query('app_session', limit: 1);
+    if (rows.isEmpty) return null;
+    final val = rows.first['user_id'];
+    return val as int?;
+  }
 
   @override
   Future<List<CartItemModel>> getCart() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _mockCart;
+    final userId = await _getCurrentUserId();
+    if (userId == null) return [];
+
+    final result = await database.query(
+      'cart_items',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+
+    return result.map((e) => CartItemModel.fromJson(e)).toList();
   }
 
   @override
   Future<List<CartItemModel>> addToCart(String productId, int quantity) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    final userId = await _getCurrentUserId();
+    if (userId == null) return [];
 
-    final index = _mockCart.indexWhere((item) => item.productId == productId);
-    if (index >= 0) {
-      final existing = _mockCart[index];
-      _mockCart[index] = CartItemModel(
-        productId: productId,
-        quantity: existing.quantity + quantity,
+    final existing = await database.query(
+      'cart_items',
+      where: 'user_id = ? AND product_id = ?',
+      whereArgs: [userId, productId],
+    );
+
+    if (existing.isNotEmpty) {
+      final currentQty = existing.first['quantity'] as int;
+      await database.update(
+        'cart_items',
+        {'quantity': currentQty + quantity},
+        where: 'user_id = ? AND product_id = ?',
+        whereArgs: [userId, productId],
       );
     } else {
-      _mockCart.add(CartItemModel(productId: productId, quantity: quantity));
+      await database.insert('cart_items', {
+        'user_id': userId,
+        'product_id': productId,
+        'quantity': quantity,
+      });
     }
-    return _mockCart;
+
+    return getCart();
   }
 
   @override
-  Future<List<CartItemModel>> updateCartItem(
-    String productId,
-    int quantity,
-  ) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+  Future<List<CartItemModel>> updateCartItem(String productId, int quantity) async {
+    final userId = await _getCurrentUserId();
+    if (userId == null) return [];
 
-    final index = _mockCart.indexWhere((item) => item.productId == productId);
-    if (index >= 0) {
-      if (quantity <= 0) {
-        _mockCart.removeAt(index);
-      } else {
-        _mockCart[index] = CartItemModel(
-          productId: productId,
-          quantity: quantity,
-        );
-      }
+    if (quantity <= 0) {
+      await removeFromCart(productId);
+    } else {
+      await database.update(
+        'cart_items',
+        {'quantity': quantity},
+        where: 'user_id = ? AND product_id = ?',
+        whereArgs: [userId, productId],
+      );
     }
-    return _mockCart;
+
+    return getCart();
   }
 
   @override
   Future<List<CartItemModel>> removeFromCart(String productId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _mockCart.removeWhere((item) => item.productId == productId);
-    return _mockCart;
+    final userId = await _getCurrentUserId();
+    if (userId == null) return [];
+
+    await database.delete(
+      'cart_items',
+      where: 'user_id = ? AND product_id = ?',
+      whereArgs: [userId, productId],
+    );
+
+    return getCart();
   }
 
   @override
   Future<void> clearCart() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _mockCart.clear();
+    final userId = await _getCurrentUserId();
+    if (userId == null) return;
+
+    await database.delete(
+      'cart_items',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
   }
 }

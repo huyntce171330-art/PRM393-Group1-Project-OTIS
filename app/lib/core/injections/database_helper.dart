@@ -19,9 +19,9 @@ class DatabaseHelper {
 
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'otis.db');
+    final path = join(dbPath, 'otis_v1.1.0.db');
     // REMOVE redundant delete so data persists across restarts
-    await deleteDatabase(path);
+    // await deleteDatabase(path);
 
     return openDatabase(
       path,
@@ -32,7 +32,7 @@ class DatabaseHelper {
       onCreate: (db, version) async {
         try {
           final script = await rootBundle.loadString(
-            "assets/database/otis_v1.0.1.sql",
+            "assets/database/otis_v1.1.0.sql",
           );
           final statements = script.split(';');
           for (var statement in statements) {

@@ -13,7 +13,10 @@ import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
+import 'package:go_router/go_router.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final String orderId;
@@ -33,27 +36,43 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode
-        ? const Color(0xFF101622)
-        : const Color(0xFFF6F6F8);
-    final surfaceColor = isDarkMode ? const Color(0xFF1A2230) : Colors.white;
+    final backgroundColor = AppColors.background(context);
+    final surfaceColor = AppColors.surface(context);
 
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: const HeaderBar(title: 'Order Details', showBack: true),
-      body: BlocBuilder<OrderBloc, OrderState>(
-        builder: (context, state) {
-          if (state is OrderLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is OrderDetailLoaded) {
-            final order = state.order;
-            return _buildContent(context, order, surfaceColor);
-          } else if (state is OrderError) {
-            return Center(child: Text(state.message));
+      body: BlocListener<OrderBloc, OrderState>(
+        listener: (context, state) {
+          if (state is OrderOperationSuccess) {
+            String title = "Success";
+            String body = state.message;
+            if (state.message.contains('canceled')) {
+              title = "Order Canceled";
+              body = "The order has been successfully canceled.";
+              UiUtils.showCancelPopup(context, body, title: title);
+            } else {
+              UiUtils.showSuccessPopup(context, body, title: title);
+            }
           }
-          return const SizedBox.shrink();
         },
+        child: BlocBuilder<OrderBloc, OrderState>(
+          builder: (context, state) {
+            if (state is OrderLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
+            } else if (state is OrderOperationSuccess && state.order != null) {
+              return _buildContent(context, state.order!, surfaceColor);
+            } else if (state is OrderDetailLoaded) {
+              final order = state.order;
+              return _buildContent(context, order, surfaceColor);
+            } else if (state is OrderError) {
+              return Center(child: Text(state.message));
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
@@ -87,7 +106,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildStatusSection(Order order, Color surfaceColor) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final statusColor = Colors.red;
+    final statusColor = AppColors.primary;
 
     int currentStep = 0;
     if (order.status == OrderStatus.pendingPayment ||
@@ -119,61 +138,61 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                height: 4,
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-              ),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  double progressWidth = 0;
-                  if (currentStep == 1) {
-                    progressWidth = (constraints.maxWidth - 32) / 2;
-                  } else if (currentStep == 2) {
-                    progressWidth = constraints.maxWidth - 32;
-                  }
+          LayoutBuilder(
+            builder: (context, constraints) {
+              double progressWidth = 0;
+              if (currentStep == 1) {
+                progressWidth = (constraints.maxWidth - 32) / 2;
+              } else if (currentStep == 2) {
+                progressWidth = constraints.maxWidth - 32;
+              }
 
-                  return Positioned(
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    height: 4,
+                    width: double.infinity,
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  ),
+                  Positioned(
                     left: 16,
                     child: Container(
                       height: 4,
                       width: progressWidth,
                       color: statusColor,
                     ),
-                  );
-                },
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildStepCircle(
-                    Icons.check,
-                    currentStep >= 0,
-                    'Ordered',
-                    statusColor,
-                    true,
                   ),
-                  _buildStepCircle(
-                    Icons.local_shipping,
-                    currentStep >= 1,
-                    'Shipping',
-                    statusColor,
-                    currentStep >= 1,
-                  ),
-                  _buildStepCircle(
-                    Icons.home,
-                    currentStep >= 2,
-                    'Delivered',
-                    statusColor,
-                    currentStep >= 2,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStepCircle(
+                        Icons.check,
+                        currentStep >= 0,
+                        'Ordered',
+                        statusColor,
+                        true,
+                      ),
+                      _buildStepCircle(
+                        Icons.local_shipping,
+                        currentStep >= 1,
+                        'Shipping',
+                        statusColor,
+                        currentStep >= 1,
+                      ),
+                      _buildStepCircle(
+                        Icons.home,
+                        currentStep >= 2,
+                        'Delivered',
+                        statusColor,
+                        currentStep >= 2,
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 24),
         ],
@@ -260,7 +279,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildDeliveryInfo(Order order, Color surfaceColor) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Colors.red;
+    final primaryColor = AppColors.primary;
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
@@ -269,9 +288,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           user = state.user;
         }
 
-        final customerName = user?.fullName.isNotEmpty == true
-            ? user!.fullName
-            : "Guest";
+        final customerName = order.customerName ??
+            (user?.fullName.isNotEmpty == true ? user!.fullName : "Guest");
         final customerPhone = user?.phone.isNotEmpty == true
             ? user!.phone
             : "N/A";
@@ -346,7 +364,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     bool isDarkMode, {
     IconData? icon,
   }) {
-    final primaryColor = Colors.red;
+    final primaryColor = AppColors.primary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -388,7 +406,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildCostSummary(Order order, Color surfaceColor) {
-    final primaryColor = Colors.red;
+    final primaryColor = AppColors.primary;
     return Container(
       color: surfaceColor,
       padding: const EdgeInsets.all(16),
@@ -408,6 +426,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           _buildSummaryRow('Subtotal', order.formattedTotalAmount),
           _buildSummaryRow('Shipping', 'Free'),
           _buildSummaryRow('Estimated Tax', '0 đ'),
+          _buildSummaryRow(
+            'Payment Method',
+            order.paymentMethod?.toUpperCase() ?? 'COD',
+          ),
           const Divider(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -469,12 +491,46 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                context.read<OrderBloc>().add(
-                  UpdateOrderStatusEvent(order.id, 'canceled'),
+                showDialog(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('Cancel Order?'),
+                    content: const Text('Are you sure you want to cancel this order? This action cannot be undone.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        child: const Text('No, Keep It'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          context.read<OrderBloc>().add(
+                                UpdateOrderStatusEvent(order.id, 'canceled'),
+                              );
+                          UiUtils.showCancelPopup(
+                            context,
+                            "Your order has been successfully canceled.",
+                            title: "Order Canceled",
+                          );
+                          // Auto-back to list after popup
+                          Future.delayed(const Duration(milliseconds: 1500), () {
+                            if (context.mounted && context.canPop()) {
+                              context.pop();
+                            }
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Yes, Cancel'),
+                      ),
+                    ],
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
