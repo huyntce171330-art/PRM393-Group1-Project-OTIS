@@ -152,15 +152,7 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             primaryColor,
             isDarkMode,
           ),
-          const SizedBox(height: 16),
-          _buildShippingInfoSection(
-            order,
-            surfaceColor,
-            textMain,
-            textSub,
-            primaryColor,
-            isDarkMode,
-          ),
+// Removed shipping info section as requested
           const SizedBox(height: 16),
           _buildOrderItemsSection(
             order,
@@ -458,126 +450,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
     );
   }
 
-  Widget _buildShippingInfoSection(
-    Order order,
-    Color surfaceColor,
-    Color textMain,
-    Color textSub,
-    Color primaryColor,
-    bool isDarkMode,
-  ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDarkMode ? const Color(0xFF4A2A2A) : Colors.grey[100]!,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Shipping Info',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? const Color(0xFF221010).withValues(alpha: 0.5)
-                  : const Color(0xFFF8F6F6),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: NetworkImage(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuDeXAyjejsxRU7WFe0Sq0-F8Apnv0-MySSdiQko92tAHHUZPVtNzj8Rwz5iRf7Nd0DTXKIrcryQyRus28FagPsTe8M99yRHl2G0XS_rodztoBlUP1lUdXkowX8NOHU_sXmsU7nNYJJyxyQTwkkadtyCvqnWbu4L8dB5qDIHyyqpcvZrZ72Gr0U9J4-K0TRBwaW2eluEVq62_BEeouWzQUJGJvaLy0_R3zQOReRpG0UosVS5vgvZHOQ7i35EcmPkDzcSH2J1NpB5fc8',
-                      ),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Mike Ross',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        'Assigned Driver',
-                        style: TextStyle(color: textSub, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.chat_bubble_outline,
-                    color: primaryColor,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'TRACKING NUMBER',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: textSub,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    Icons.local_shipping_outlined,
-                    color: Colors.grey[400],
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      '#TRK-998877',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                  Icon(Icons.edit_outlined, color: primaryColor, size: 18),
-                ],
-              ),
-              const Divider(height: 16),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildOrderItemsSection(
     Order order,

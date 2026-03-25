@@ -20,7 +20,7 @@ CREATE TABLE users (
   shop_name TEXT,
   avatar_url TEXT,
   role_id INTEGER,
-  status TEXT,
+  status TEXT CHECK (status IN ('active', 'inactive', 'banned')) DEFAULT 'active',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (role_id) REFERENCES user_roles (role_id)
 );
@@ -65,8 +65,8 @@ CREATE TABLE products (
   brand_id INTEGER,
   make_id INTEGER,
   tire_spec_id INTEGER,
-  price DECIMAL,
-  stock_quantity INTEGER,
+  price DECIMAL NOT NULL CHECK (price >= 0),
+  stock_quantity INTEGER NOT NULL CHECK (stock_quantity >= 0),
   is_active INTEGER DEFAULT 1,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (brand_id) REFERENCES brands (brand_id),
@@ -80,7 +80,7 @@ DROP TABLE IF EXISTS cart_items;
 CREATE TABLE cart_items (
   user_id INTEGER,
   product_id INTEGER,
-  quantity INTEGER,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
   PRIMARY KEY (user_id, product_id),
   FOREIGN KEY (user_id) REFERENCES users (user_id),
   FOREIGN KEY (product_id) REFERENCES products (product_id)
@@ -92,11 +92,21 @@ DROP TABLE IF EXISTS orders;
 CREATE TABLE orders (
   order_id INTEGER PRIMARY KEY AUTOINCREMENT,
   code TEXT UNIQUE,
-  total_amount DECIMAL,
-  status TEXT,
+  total_amount DECIMAL NOT NULL CHECK (total_amount >= 0),
+  status TEXT NOT NULL CHECK (
+    status IN (
+      'pending_payment',
+      'paid',
+      'processing',
+      'shipping',
+      'completed',
+      'canceled'
+    )
+  ),
   shipping_address TEXT,
+  source TEXT CHECK (source IN ('buy_now', 'cart')) NOT NULL DEFAULT 'cart',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  user_id INTEGER,
+  user_id INTEGER NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
 
@@ -104,10 +114,10 @@ CREATE TABLE orders (
 DROP TABLE IF EXISTS order_items;
 
 CREATE TABLE order_items (
-  order_id INTEGER,
-  product_id INTEGER,
-  quantity INTEGER,
-  unit_price DECIMAL,
+  order_id INTEGER NOT NULL,
+  product_id INTEGER NOT NULL,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  unit_price DECIMAL NOT NULL CHECK (unit_price >= 0),
   PRIMARY KEY (order_id, product_id),
   FOREIGN KEY (order_id) REFERENCES orders (order_id),
   FOREIGN KEY (product_id) REFERENCES products (product_id)
@@ -120,7 +130,10 @@ CREATE TABLE notifications (
   notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT,
   body TEXT,
+  type TEXT,
+  payload TEXT,
   is_read INTEGER DEFAULT 0,
+  is_deleted INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   user_id INTEGER,
   FOREIGN KEY (user_id) REFERENCES users (user_id)
@@ -153,6 +166,64 @@ CREATE TABLE messages (
   FOREIGN KEY (sender_id) REFERENCES users (user_id)
 );
 
+-- ========== 13. BANK ACCOUNTS ==========
+DROP TABLE IF EXISTS bank_accounts;
+
+CREATE TABLE bank_accounts (
+  bank_account_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bank_name TEXT NOT NULL,
+  account_number TEXT NOT NULL,
+  account_holder TEXT NOT NULL,
+  branch TEXT,
+  qr_image_url TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  user_id INTEGER NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users (user_id)
+);
+
+-- ========== 14. PAYMENTS ==========
+DROP TABLE IF EXISTS payments;
+
+CREATE TABLE payments (
+  payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  order_id INTEGER NOT NULL UNIQUE,
+  payment_code TEXT UNIQUE,
+  amount DECIMAL NOT NULL CHECK (amount >= 0),
+  method TEXT CHECK (method IN ('cod', 'bank')) NOT NULL,
+  status TEXT CHECK (status IN ('pending', 'success', 'failed')) NOT NULL DEFAULT 'pending',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  paid_at TEXT,
+  bank_account_id INTEGER,
+  FOREIGN KEY (bank_account_id) REFERENCES bank_accounts (bank_account_id),
+  FOREIGN KEY (order_id) REFERENCES orders (order_id)
+);
+
+-- ========== 15. APP_SESSION ==========
+DROP TABLE IF EXISTS app_session;
+CREATE TABLE app_session (
+  user_id INTEGER PRIMARY KEY,
+  updated_at TEXT,
+  FOREIGN KEY (user_id) REFERENCES users (user_id)
+);
+
+-- ========== 16. SHOP_LOCATIONS ==========
+DROP TABLE IF EXISTS shop_locations;
+
+CREATE TABLE shop_locations (
+  shop_id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  address TEXT NOT NULL,
+  latitude REAL NOT NULL,
+  longitude REAL NOT NULL,
+  image_url TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+
 -- =====================================================
 -- ========== INSERT SAMPLE DATA ==========
 -- =====================================================
@@ -182,7 +253,7 @@ VALUES
     'Admin System',
     'HCM',
     'Admin Shop',
-    'https://example.com/avatar-admin.png',
+    '',
     1,
     'active'
   ),
@@ -192,7 +263,7 @@ VALUES
     'Nguyen Van A',
     'HCM',
     'Shop A',
-    'https://example.com/avatar-user1.png',
+    '',
     2,
     'active'
   ),
@@ -202,7 +273,7 @@ VALUES
     'Tran Thi B',
     'Ha Noi',
     'Shop B',
-    'https://example.com/avatar-user2.png',
+    '',
     2,
     'active'
   ),
@@ -212,7 +283,7 @@ VALUES
     'Le Van C',
     'Da Nang',
     'Shop C',
-    'https://example.com/avatar-user3.png',
+    '',
     2,
     'active'
   );
@@ -846,65 +917,6 @@ VALUES
     1
   );
 
--- 7. CART ITEMS
-INSERT INTO
-  cart_items (user_id, product_id, quantity)
-VALUES
-  (2, 1, 2),
-  (2, 5, 1),
-  (3, 6, 3),
-  (3, 9, 1),
-  (4, 3, 2);
-
--- 8. ORDERS (total_amount = sum of order_items)
--- Order 1: product 1 (qty=2, price=1510000) + product 5 (qty=1, price=1550000) = 2*1510000 + 1550000 = 4570000
--- Order 2: product 6 (qty=2, price=1560000) + product 9 (qty=1, price=1590000) = 2*1560000 + 1590000 = 4710000
--- Order 3: product 3 (qty=1, price=1530000) + product 4 (qty=1, price=1540000) = 3070000
-INSERT INTO
-  orders (
-    code,
-    total_amount,
-    status,
-    shipping_address,
-    user_id
-  )
-VALUES
-  ('ORD-001', 4570000, 'pending', 'HCM', 2),
-  ('ORD-002', 4710000, 'completed', 'Ha Noi', 3),
-  ('ORD-003', 3070000, 'shipping', 'Da Nang', 4);
-
--- 9. ORDER ITEMS
-INSERT INTO
-  order_items (order_id, product_id, quantity, unit_price)
-VALUES
-  (1, 1, 2, 1510000),
-  (1, 5, 1, 1550000),
-  (2, 6, 2, 1560000),
-  (2, 9, 1, 1590000),
-  (3, 3, 1, 1530000),
-  (3, 4, 1, 1540000);
-
--- 10. NOTIFICATIONS
-INSERT INTO
-  notifications (title, body, user_id)
-VALUES
-  (
-    'Don hang moi',
-    'Don hang #1 dang cho xac nhan',
-    2
-  ),
-  (
-    'Thanh toan thanh cong',
-    'Don hang #2 da hoan tat',
-    3
-  ),
-  (
-    'Dang giao hang',
-    'Don hang #3 dang van chuyen',
-    4
-  ),
-  ('Khuyen mai', 'Giam 10% cho lop Michelin', 2);
-
 -- 11. CHAT ROOMS
 INSERT INTO
   chat_rooms (user_id, status)
@@ -923,3 +935,23 @@ VALUES
   (2, 1, 'Dang rat on va tiet kiem nhien lieu'),
   (3, 4, 'Bao lau thi giao hang?'),
   (3, 1, 'Dang tu 1-2 ngay a');
+
+-- 14. BANK ACCOUNTS
+INSERT INTO
+  bank_accounts (
+    bank_name,
+    account_number,
+    account_holder,
+    branch,
+    qr_image_url,
+    user_id
+  )
+VALUES
+  (
+    'Vietcombank',
+    '0123456789',
+    'NGUYEN TAN HUY',
+    'Ho Chi Minh Branch',
+    'https://png.pngtree.com/png-clipart/20220824/original/pngtree-scan-me-qr-code-png-image_8488220.png',
+    1
+  );

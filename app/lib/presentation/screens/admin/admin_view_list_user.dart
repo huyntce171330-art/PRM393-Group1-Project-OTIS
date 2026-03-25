@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:frontend_otis/core/constants/app_colors.dart';
-import 'package:frontend_otis/core/injections/database_helper.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
+import 'package:frontend_otis/core/injections/injection_container.dart';
+import 'package:frontend_otis/domain/usecases/profile/get_users_usecase.dart';
+import 'package:frontend_otis/domain/entities/user.dart';
 
 class AdminViewListUserScreen extends StatefulWidget {
   const AdminViewListUserScreen({super.key});
@@ -19,7 +21,7 @@ class _AdminViewListUserScreenState extends State<AdminViewListUserScreen> {
   String _statusFilter = 'all'; // all | active | inactive | banned
   String _sort = 'newest'; // newest | oldest
   bool _loading = true;
-  List<Map<String, Object?>> _rows = [];
+  List<User> _users = [];
 
   @override
   void initState() {
@@ -37,53 +39,28 @@ class _AdminViewListUserScreenState extends State<AdminViewListUserScreen> {
     setState(() => _loading = true);
 
     final kw = _searchCtl.text.trim();
-    final db = await DatabaseHelper.database;
 
-    // Query customers only
-    final whereParts = <String>[
-      "r.role_name = 'customer'",
-    ];
-    final args = <Object?>[];
-
-    if (kw.isNotEmpty) {
-      whereParts.add("(u.full_name LIKE ? OR u.phone LIKE ? OR u.shop_name LIKE ?)");
-      args.add('%$kw%');
-      args.add('%$kw%');
-      args.add('%$kw%');
-    }
-
-    if (_statusFilter != 'all') {
-      whereParts.add("u.status = ?");
-      args.add(_statusFilter);
-    }
-
-    final orderBy = _sort == 'oldest' ? 'u.user_id ASC' : 'u.user_id DESC';
-
-    final sql = '''
-      SELECT 
-        u.user_id,
-        u.phone,
-        u.full_name,
-        u.address,
-        u.shop_name,
-        u.avatar_url,
-        u.status,
-        u.created_at,
-        u.role_id,
-        r.role_name
-      FROM users u
-      INNER JOIN user_roles r ON r.role_id = u.role_id
-      WHERE ${whereParts.join(' AND ')}
-      ORDER BY $orderBy
-    ''';
-
-    final rows = await db.rawQuery(sql, args);
+    final result = await sl<GetUsersUseCase>()(
+      query: kw.isEmpty ? null : kw,
+      status: _statusFilter,
+      sortBy: _sort,
+    );
 
     if (!mounted) return;
-    setState(() {
-      _rows = rows;
-      _loading = false;
-    });
+
+    result.fold(
+      (failure) {
+        _users = [];
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Load failed: ${failure.message}')),
+        );
+      },
+      (users) {
+        _users = users;
+      },
+    );
+
+    setState(() => _loading = false);
   }
 
   Color _statusColor(String status) {
@@ -116,12 +93,14 @@ class _AdminViewListUserScreenState extends State<AdminViewListUserScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    final backgroundColor =
-    isDarkMode ? const Color(0xFF101622) : const Color(0xFFF8F9FB);
+    final backgroundColor = isDarkMode
+        ? const Color(0xFF101622)
+        : const Color(0xFFF8F9FB);
     final surfaceColor = isDarkMode ? const Color(0xFF1A2230) : Colors.white;
     final textColor = isDarkMode ? Colors.white : const Color(0xFF333333);
-    final textSecondaryColor =
-    isDarkMode ? Colors.grey[400] : const Color(0xFF6B7280);
+    final textSecondaryColor = isDarkMode
+        ? Colors.grey[400]
+        : const Color(0xFF6B7280);
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -149,32 +128,31 @@ class _AdminViewListUserScreenState extends State<AdminViewListUserScreen> {
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
-                  : _rows.isEmpty
+                  : _users.isEmpty
                   ? Center(
-                child: Text(
-                  'No customers found',
-                  style: TextStyle(color: textSecondaryColor),
-                ),
-              )
+                      child: Text(
+                        'No customers found',
+                        style: TextStyle(color: textSecondaryColor),
+                      ),
+                    )
                   : RefreshIndicator(
-                onRefresh: _load,
-                child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  itemCount: _rows.length,
-                  separatorBuilder: (_, __) =>
-                  const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final u = _rows[index];
-                    return _buildUserCard(
-                      context,
-                      u,
-                      surfaceColor,
-                      textColor,
-                      textSecondaryColor,
-                    );
-                  },
-                ),
-              ),
+                      onRefresh: _load,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        itemCount: _users.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final u = _users[index];
+                          return _buildUserCard(
+                            context,
+                            u,
+                            surfaceColor,
+                            textColor,
+                            textSecondaryColor,
+                          );
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -183,10 +161,10 @@ class _AdminViewListUserScreenState extends State<AdminViewListUserScreen> {
   }
 
   Widget _buildSearchBar(
-      Color surfaceColor,
-      Color textColor,
-      Color? textSecondaryColor,
-      ) {
+    Color surfaceColor,
+    Color textColor,
+    Color? textSecondaryColor,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: surfaceColor,
@@ -228,10 +206,10 @@ class _AdminViewListUserScreenState extends State<AdminViewListUserScreen> {
   }
 
   Widget _buildFiltersRow(
-      Color surfaceColor,
-      Color textColor,
-      Color? textSecondaryColor,
-      ) {
+    Color surfaceColor,
+    Color textColor,
+    Color? textSecondaryColor,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -309,26 +287,22 @@ class _AdminViewListUserScreenState extends State<AdminViewListUserScreen> {
   }
 
   Widget _buildUserCard(
-      BuildContext context,
-      Map<String, Object?> u,
-      Color surfaceColor,
-      Color textColor,
-      Color? textSecondaryColor,
-      ) {
-    final userId = (u['user_id'] as int?) ?? 0;
-    final fullName = (u['full_name'] ?? '').toString().trim();
-    final phone = (u['phone'] ?? '').toString().trim();
-    final shop = (u['shop_name'] ?? '').toString().trim();
-    final avatarUrl = (u['avatar_url'] ?? '').toString().trim();
-    final status = (u['status'] ?? '').toString().trim();
-
-    final title = fullName.isNotEmpty ? fullName : phone;
+    BuildContext context,
+    User u,
+    Color surfaceColor,
+    Color textColor,
+    Color? textSecondaryColor,
+  ) {
+    final title = u.displayName;
+    final phone = u.phone;
+    final shop = u.shopName;
+    final avatarUrl = u.avatarUrl;
+    final status = u.status.name;
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () async {
-        // go to detail, then refresh when back
-        await context.push('/admin/users/$userId');
+        await context.push('/admin/users/${u.id}');
         if (!mounted) return;
         _load();
       },
@@ -351,12 +325,14 @@ class _AdminViewListUserScreenState extends State<AdminViewListUserScreen> {
             CircleAvatar(
               radius: 24,
               backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-              backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+              backgroundImage: avatarUrl.isNotEmpty
+                  ? NetworkImage(avatarUrl)
+                  : null,
               child: avatarUrl.isEmpty
                   ? Text(
-                title.isNotEmpty ? title[0].toUpperCase() : '?',
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              )
+                      title.isNotEmpty ? title[0].toUpperCase() : '?',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    )
                   : null,
             ),
             const SizedBox(width: 12),

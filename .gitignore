@@ -66,3 +66,6 @@ migrate_working_dir/
 # Config files
 config/
 .env
+
+# node
+server/node_modules/

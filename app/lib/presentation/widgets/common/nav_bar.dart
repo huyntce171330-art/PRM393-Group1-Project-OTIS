@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
+import 'package:frontend_otis/core/utils/ui_utils.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 
@@ -63,7 +64,10 @@ class NavBar extends StatelessWidget {
                 isSelected: currentIndex == 1,
                 iconSize: iconSize,
                 padding: itemPadding,
-                onTap: () => onTap(1),
+                onTap: () {
+                  onTap(1);
+                  UiUtils.showComingSoon(context, featureName: 'Service');
+                },
               ),
               // Cart with badge
               _buildNavItemWithBadge(

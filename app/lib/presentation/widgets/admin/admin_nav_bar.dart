@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
+import 'package:frontend_otis/presentation/widgets/admin/directional_page_transition.dart';
 
-class AdminNavBar extends StatelessWidget {
+class AdminNavBar extends StatefulWidget {
   final int currentIndex;
 
   const AdminNavBar({super.key, required this.currentIndex});
 
+  @override
+  State<AdminNavBar> createState() => AdminNavBarState();
+}
+
+class AdminNavBarState extends State<AdminNavBar> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -34,7 +40,6 @@ class AdminNavBar extends StatelessWidget {
           _buildNavItem(context, Icons.receipt_long, 'Orders', 1),
           _buildNavItem(context, Icons.tire_repair, 'Products', 2),
           _buildNavItem(context, Icons.category, 'Categories', 3),
-          _buildNavItem(context, Icons.settings, 'Settings', 4),
         ],
       ),
     );
@@ -46,14 +51,17 @@ class AdminNavBar extends StatelessWidget {
       String label,
       int index,
       ) {
-    final isActive = currentIndex == index;
+    final isActive = widget.currentIndex == index;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primary;
     final inactiveColor = isDarkMode ? Colors.grey[600] : Colors.grey[400];
 
     return GestureDetector(
       onTap: () {
-        if (index == currentIndex) return;
+        if (index == widget.currentIndex) return;
+
+        // Track direction before navigating
+        TabNavigationDirection.updateAndGet(index);
 
         switch (index) {
           case 0:
@@ -67,9 +75,6 @@ class AdminNavBar extends StatelessWidget {
             break;
           case 3:
             context.go('/admin/categories');
-            break;
-          case 4:
-            context.go('/admin/settings');
             break;
         }
       },

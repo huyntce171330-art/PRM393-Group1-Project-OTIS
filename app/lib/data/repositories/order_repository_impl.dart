@@ -56,6 +56,7 @@ class OrderRepositoryImpl implements OrderRepository {
         'shipping_address': order.shippingAddress,
         'code': order.code,
         'status': const OrderStatusConverter().toJson(order.status),
+        'source': order.source,
       };
 
       final orderModel = await remoteDatasource.createOrder(orderData);

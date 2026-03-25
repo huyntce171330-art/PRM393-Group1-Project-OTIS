@@ -13,7 +13,7 @@ import 'package:frontend_otis/presentation/bloc/order/order_event.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_state.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_event.dart';
 import 'package:frontend_otis/presentation/bloc/payment/payment_state.dart';
@@ -206,6 +206,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return '${price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}₫';
   }
 
+  String _cleanErrorMessage(String rawMessage) {
+    // Format: "Create Order Failed: ServerException: Message"
+    // We want to extract just the useful message
+    if (rawMessage.contains('ServerException:')) {
+      return rawMessage.split('ServerException:').last.trim();
+    }
+    return rawMessage.replaceFirst('Create Order Failed:', '').trim();
+  }
+
   void _incrementBuyNowQuantity() {
     if (widget.product != null &&
         _buyNowQuantity < widget.product!.stockQuantity) {
@@ -310,13 +319,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             BlocListener<OrderBloc, OrderState>(
               listener: (context, state) {
                 if (state is OrderCreated) {
-                  // IMPORTANT: Only clear cart if source is 'cart'
-                  if (widget.checkoutSource == 'cart') {
-                    for (var item in widget.items) {
-                      context.read<CartBloc>().add(
-                        RemoveFromCartEvent(productId: item.productId),
-                      );
-                    }
+                  // Standard E-commerce Rule: Remove purchased items from the cart
+                  // even if they were bought via 'Buy Now'.
+                  for (var item in _effectiveItems) {
+                    context.read<CartBloc>().add(
+                      RemoveFromCartEvent(productId: item.productId),
+                    );
                   }
 
                   final order = state.order;
@@ -342,7 +350,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   }
                 } else if (state is OrderError) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Order Failed: ${state.message}')),
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.white),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _cleanErrorMessage(state.message),
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: Colors.redAccent,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      margin: const EdgeInsets.all(16),
+                    ),
                   );
                 }
               },
@@ -412,14 +439,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                               ),
                               PaymentMethodItem(
-                                type: PaymentMethod.transfer,
+                                type: PaymentMethod.bank,
                                 label: 'Bank Transfer',
                                 sublabel: 'Vietcombank, Techcombank',
                                 icon: '🏦',
-                                selected:
-                                    _paymentMethod == PaymentMethod.transfer,
+                                selected: _paymentMethod == PaymentMethod.bank,
                                 onTap: () => setState(
-                                  () => _paymentMethod = PaymentMethod.transfer,
+                                  () => _paymentMethod = PaymentMethod.bank,
                                 ),
                               ),
                             ],

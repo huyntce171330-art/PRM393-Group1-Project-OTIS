@@ -2,8 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
-import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/core/network/socket_service.dart';
+import 'package:frontend_otis/core/injections/injection_container.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_all_chat_rooms_for_viewer_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/insert_message_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/mark_room_messages_as_read_usecase.dart';
 
 class AdminChatListScreen extends StatefulWidget {
   const AdminChatListScreen({super.key});
@@ -15,7 +18,7 @@ class AdminChatListScreen extends StatefulWidget {
 class _AdminChatListScreenState extends State<AdminChatListScreen> {
   static const int _adminId = 1;
 
-  Future<List<Map<String, Object?>>>? _future;
+  Future<List<Map<String, dynamic>>>? _future;
   final TextEditingController _searchController = TextEditingController();
   StreamSubscription? _inboxSub;
 
@@ -34,9 +37,7 @@ class _AdminChatListScreenState extends State<AdminChatListScreen> {
   }
 
   void _load() {
-    _future = DatabaseHelper.getAllChatRoomsForViewer(
-      viewerId: _adminId,
-    );
+    _future = sl<GetAllChatRoomsForViewerUseCase>()(_adminId).then((res) => res.getOrElse(() => []));
     if (mounted) {
       setState(() {});
     }
@@ -60,7 +61,7 @@ class _AdminChatListScreenState extends State<AdminChatListScreen> {
           senderId != null &&
           senderId != _adminId &&
           content.isNotEmpty) {
-        await DatabaseHelper.insertMessage(
+        await sl<InsertMessageUseCase>()(
           roomId: roomId as int,
           senderId: senderId as int,
           content: content,
@@ -127,7 +128,7 @@ class _AdminChatListScreenState extends State<AdminChatListScreen> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<Map<String, Object?>>>(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
               future: _future,
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
@@ -188,7 +189,7 @@ class _AdminChatListScreenState extends State<AdminChatListScreen> {
                       return InkWell(
                         borderRadius: BorderRadius.circular(16),
                         onTap: () async {
-                          await DatabaseHelper.markRoomMessagesAsRead(
+                          await sl<MarkRoomMessagesAsReadUseCase>()(
                             roomId: roomId,
                             viewerId: _adminId,
                           );

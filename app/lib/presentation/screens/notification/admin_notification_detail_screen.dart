@@ -8,7 +8,7 @@ import 'package:frontend_otis/presentation/bloc/notification/notification_event.
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
 class AdminNotificationDetailScreen extends StatefulWidget {
   final String? notificationId;
@@ -91,21 +91,25 @@ class _AdminNotificationDetailScreenState
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xóa thông báo'),
-        content: const Text('Bạn có chắc muốn xóa thông báo này không?'),
+        title: const Text('Delete Notification'),
+        content: const Text(
+          'Are you sure you want to delete this notification?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<NotificationBloc>().add(DeleteNotificationEvent(notification.id));
+              context.read<NotificationBloc>().add(
+                DeleteNotificationEvent(notification.id),
+              );
               context.pop();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xóa'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -137,7 +141,7 @@ class _AdminNotificationDetailScreenState
             ? AppColors.backgroundDark
             : AppColors.backgroundLight,
         appBar: HeaderBar(
-          title: 'Chi tiết thông báo',
+          title: 'Notification Details',
           showBack: true,
           onBack: () => context.pop(true),
           actions: [
@@ -153,8 +157,8 @@ class _AdminNotificationDetailScreenState
                       : Colors.green,
                 ),
                 tooltip: _localNotification!.isRead
-                    ? 'Đánh dấu chưa đọc'
-                    : 'Đánh dấu đã đọc',
+                    ? 'Mark as unread'
+                    : 'Mark as read',
                 onPressed: () {
                   if (_localNotification!.isRead) {
                     context.read<NotificationBloc>().add(
@@ -174,16 +178,17 @@ class _AdminNotificationDetailScreenState
               ),
               // Delete (admin only)
               BlocBuilder<AuthBloc, AuthState>(
-                buildWhen: (prev, curr) =>
-                    prev.runtimeType != curr.runtimeType,
+                buildWhen: (prev, curr) => prev.runtimeType != curr.runtimeType,
                 builder: (context, authState) {
-                  final isAdmin = authState is Authenticated &&
+                  final isAdmin =
+                      authState is Authenticated &&
                       authState.user.role?.isAdmin == true;
                   if (!isAdmin) return const SizedBox.shrink();
                   return IconButton(
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    tooltip: 'Xóa thông báo',
-                    onPressed: () => _confirmDelete(context, _localNotification!),
+                    tooltip: 'Delete notification',
+                    onPressed: () =>
+                        _confirmDelete(context, _localNotification!),
                   );
                 },
               ),
@@ -216,7 +221,10 @@ class _AdminNotificationDetailScreenState
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadFromDb, child: const Text('Thử lại')),
+            ElevatedButton(
+              onPressed: _loadFromDb,
+              child: const Text('Try again'),
+            ),
           ],
         ),
       );
@@ -276,7 +284,7 @@ class _AdminNotificationDetailScreenState
                           ),
                         ),
                         child: const Text(
-                          'Đã đọc',
+                          'Read',
                           style: TextStyle(
                             color: Colors.green,
                             fontSize: 12,
@@ -298,7 +306,7 @@ class _AdminNotificationDetailScreenState
                           ),
                         ),
                         child: const Text(
-                          'Chưa đọc',
+                          'Unread',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 12,
@@ -355,10 +363,19 @@ class _AdminNotificationDetailScreenState
 
   String _formatDateTime(DateTime dt) {
     final months = [
-      'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4',
-      'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8',
-      'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
-    return '${dt.day} ${months[dt.month - 1]}, ${dt.year} lúc ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year} at ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 }

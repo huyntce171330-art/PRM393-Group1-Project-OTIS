@@ -1,17 +1,18 @@
+import 'package:sqflite/sqflite.dart';
 import 'package:frontend_otis/core/error/exceptions.dart';
-import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/data/datasources/order/order_remote_datasource.dart';
 import 'package:frontend_otis/data/models/order_model.dart';
 
 class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
-  OrderRemoteDatasourceImpl();
+  final Database database;
+
+  OrderRemoteDatasourceImpl(this.database);
 
   @override
   Future<List<OrderModel>> fetchOrders() async {
     try {
-      final db = await DatabaseHelper.database;
       // Fetch orders for user_id = 2 (Simulating logged in user)
-      final List<Map<String, dynamic>> orderMaps = await db.query(
+      final List<Map<String, dynamic>> orderMaps = await database.query(
         'orders',
         where: 'user_id = ?',
         whereArgs: [2],
@@ -23,7 +24,7 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
       for (var orderMap in orderMaps) {
         final orderId = orderMap['order_id'];
 
-        final List<Map<String, dynamic>> itemMaps = await db.rawQuery(
+        final List<Map<String, dynamic>> itemMaps = await database.rawQuery(
           '''
           SELECT oi.*, p.name as product_name 
           FROM order_items oi
@@ -48,14 +49,13 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
   @override
   Future<OrderModel> fetchOrderDetail(String id) async {
     try {
-      final db = await DatabaseHelper.database;
 
       // Handle ID being passed as String but DB using Integer
       // If ID starts with "ORD-", query by code, else by ID
       List<Map<String, dynamic>> orderMaps;
 
       if (int.tryParse(id) != null) {
-        orderMaps = await db.query(
+        orderMaps = await database.query(
           'orders',
           where: 'order_id = ?',
           whereArgs: [id],
@@ -70,7 +70,7 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
         // I need to fix createOrder to let DB handle ID, or map "id" to "code".
 
         // Let's query by ID or Code just to be safe
-        orderMaps = await db.query(
+        orderMaps = await database.query(
           'orders',
           where: 'order_id = ? OR code = ?',
           whereArgs: [id, id],
@@ -85,7 +85,7 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
       final orderId = orderMap['order_id'];
 
       // Thực hiện JOIN để lấy name từ bảng products
-      final List<Map<String, dynamic>> itemMaps = await db.rawQuery(
+      final List<Map<String, dynamic>> itemMaps = await database.rawQuery(
         '''
         SELECT oi.*, p.name as product_name 
         FROM order_items oi
@@ -106,8 +106,7 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
 
   @override
   Future<OrderModel> createOrder(Map<String, dynamic> orderData) async {
-    final db = await DatabaseHelper.database;
-    return await db.transaction((txn) async {
+    return await database.transaction((txn) async {
       try {
         // Prepare Order Data
         // orderData comes from Repository which maps Order entity.
@@ -140,15 +139,47 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
           'created_at': DateTime.now().toIso8601String(),
         });
 
-        // Insert Items
+        // Insert Items and Update Stock
         final items = orderData['items'] as List;
         for (var item in items) {
+          final int productId = int.parse(item['product_id'].toString());
+          final int quantity = int.parse(item['quantity'].toString());
+
+          // 1. Check stock availability
+          final List<Map<String, dynamic>> productQueryResult = await txn.query(
+            'products',
+            columns: ['stock_quantity'],
+            where: 'product_id = ?',
+            whereArgs: [productId],
+          );
+
+          if (productQueryResult.isEmpty) {
+            throw ServerException(message: "Product not found: $productId");
+          }
+
+          final int currentStock = productQueryResult.first['stock_quantity'];
+          if (currentStock < quantity) {
+            final String productName = item['product_name'] ?? 'Product';
+            throw ServerException(
+              message: "Insufficient stock for $productName ($currentStock available)",
+            );
+          }
+
+          // 2. Insert Order Item
           await txn.insert('order_items', {
             'order_id': orderId,
-            'product_id': item['product_id'],
-            'quantity': item['quantity'],
+            'product_id': productId,
+            'quantity': quantity,
             'unit_price': item['price'],
           });
+
+          // 3. Decrement Stock
+          await txn.update(
+            'products',
+            {'stock_quantity': currentStock - quantity},
+            where: 'product_id = ?',
+            whereArgs: [productId],
+          );
         }
 
         // Fetch created order to return full model
@@ -191,26 +222,46 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
   @override
   Future<OrderModel> updateOrderStatus(String id, String status) async {
     try {
-      final db = await DatabaseHelper.database;
+      // Fetch current order to check previous status and get items
+      final List<Map<String, dynamic>> maps = await database.query(
+        'orders',
+        where: 'order_id = ? OR code = ?',
+        whereArgs: [id, id],
+      );
+
+      if (maps.isEmpty) {
+        throw ServerException(message: 'Order not found for update');
+      }
+
+      final String currentStatus = maps.first['status'];
+      final int orderId = maps.first['order_id'];
+
+      // If transition to canceled, restore stock
+      if (currentStatus != 'canceled' && status == 'canceled') {
+        final List<Map<String, dynamic>> items = await database.query(
+          'order_items',
+          where: 'order_id = ?',
+          whereArgs: [orderId],
+        );
+
+        for (var item in items) {
+          final int productId = item['product_id'];
+          final int quantity = item['quantity'];
+
+          await database.rawUpdate(
+            'UPDATE products SET stock_quantity = stock_quantity + ? WHERE product_id = ?',
+            [quantity, productId],
+          );
+        }
+      }
 
       // Update status
-      // Handle id vs code
-      int count = await db.update(
+      int count = await database.update(
         'orders',
         {'status': status},
         where: 'order_id = ?',
-        whereArgs: [id],
+        whereArgs: [orderId],
       );
-
-      if (count == 0) {
-        // Try code
-        count = await db.update(
-          'orders',
-          {'status': status},
-          where: 'code = ?',
-          whereArgs: [id],
-        );
-      }
 
       if (count == 0) {
         throw ServerException(message: 'Order not found for update');

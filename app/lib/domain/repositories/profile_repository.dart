@@ -1,8 +1,27 @@
-// This file defines the contract for the Profile Repository in the Domain layer.
-//
-// Steps to implement:
-// 1. imports `dartz` (Either), `failure`, and `User` entity.
-// 2. Define an abstract class `ProfileRepository`.
-// 3. Define the method signature: `Future<Either<Failure, User>> getProfile();`
-// 4. Define the method signature: `Future<Either<Failure, User>> updateProfile(User user);`
-//    - Adjust parameters as needed (e.g., if you only update specific fields).
+import 'package:dartz/dartz.dart';
+import '../../core/error/failures.dart';
+import '../entities/user.dart';
+
+abstract class ProfileRepository {
+  Future<Either<Failure, int>> updateUserProfile({
+    required int userId,
+    required String fullName,
+    required String address,
+    required String phone,
+  });
+
+  Future<Either<Failure, User?>> getUserById(int userId);
+
+  Future<Either<Failure, int>> countCustomers();
+
+  Future<Either<Failure, int>> updateUserStatus({
+    required int userId,
+    required String status,
+  });
+
+  Future<Either<Failure, List<User>>> getUsers({
+    String? query,
+    String? status,
+    String? sortBy,
+  });
+}

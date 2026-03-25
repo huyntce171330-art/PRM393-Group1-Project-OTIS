@@ -52,4 +52,9 @@ class AppStrings {
   static const String reviews = 'Reviews';
   static const String writeReview = 'Write a Review';
   static const String seeAllReviews = 'See All Reviews';
+
+  // ==================== Messages ====================
+
+  static const String comingSoon = 'Coming Soon';
+  static const String featureUnderDevelopment = 'This feature is currently under development and will be available in a future update.';
 }

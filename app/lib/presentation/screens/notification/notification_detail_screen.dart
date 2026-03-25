@@ -6,7 +6,7 @@ import 'package:frontend_otis/domain/entities/notification.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_event.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
 class NotificationDetailScreen extends StatefulWidget {
   final String? notificationId;
@@ -109,7 +109,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
             ? AppColors.backgroundDark
             : AppColors.backgroundLight,
         appBar: HeaderBar(
-          title: 'Chi tiết thông báo',
+          title: 'Notification Details',
           showBack: true,
           onBack: () => context.pop(true),
           actions: [
@@ -124,8 +124,8 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                       : Colors.green,
                 ),
                 tooltip: _localNotification!.isRead
-                    ? 'Đánh dấu chưa đọc'
-                    : 'Đánh dấu đã đọc',
+                    ? 'Mark as unread'
+                    : 'Mark as read',
                 onPressed: () {
                   if (_localNotification!.isRead) {
                     context.read<NotificationBloc>().add(
@@ -171,7 +171,10 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadFromDb, child: const Text('Thử lại')),
+            ElevatedButton(
+              onPressed: _loadFromDb,
+              child: const Text('Try again'),
+            ),
           ],
         ),
       );
@@ -310,10 +313,22 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
 
   String _formatDateTime(DateTime dt) {
     final months = [
-      'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4',
-      'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8',
-      'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
-    return '${dt.day} ${months[dt.month - 1]}, ${dt.year} lúc ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year} at $hour:$minute $ampm';
   }
 }

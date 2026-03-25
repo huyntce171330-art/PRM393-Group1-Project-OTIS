@@ -7,10 +7,17 @@ import 'package:frontend_otis/domain/entities/notification_filter.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_event.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
 class NotificationListScreen extends StatefulWidget {
-  const NotificationListScreen({super.key});
+  final bool isAdminMode;
+  final bool isInboxView;
+
+  const NotificationListScreen({
+    super.key,
+    this.isAdminMode = false,
+    this.isInboxView = false,
+  });
 
   @override
   State<NotificationListScreen> createState() => _NotificationListScreenState();
@@ -34,7 +41,28 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
   void _onFilterChanged(BuildContext context, int index) {
     setState(() => _selectedFilterIndex = index);
-    context.read<NotificationBloc>().add(LoadNotificationsEvent(filter: _buildFilter(index)));
+    context.read<NotificationBloc>().add(
+      LoadNotificationsEvent(filter: _buildFilter(index)),
+    );
+  }
+
+  void _onDelete(BuildContext context, String id) {
+    context.read<NotificationBloc>().add(DeleteNotificationEvent(id));
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Notification deleted'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            context.read<NotificationBloc>().add(
+              const UndoDeleteNotificationEvent(),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   void _onToggleRead(BuildContext context, AppNotification notification) {
@@ -54,7 +82,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: HeaderBar(
-        title: 'Thông báo',
+        title: 'Notifications',
         showBack: true,
         actions: [
           TextButton(
@@ -62,7 +90,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               context.read<NotificationBloc>().add(const MarkAllAsReadEvent());
             },
             child: const Text(
-              'Đánh dấu tất cả đã đọc',
+              'Mark all as read',
               style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -83,7 +111,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               builder: (context, state) {
                 if (state is NotificationInitial) {
                   context.read<NotificationBloc>().add(
-                    LoadNotificationsEvent(filter: _buildFilter(_selectedFilterIndex)),
+                    LoadNotificationsEvent(
+                      filter: _buildFilter(_selectedFilterIndex),
+                    ),
                   );
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -100,7 +130,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   if (state.notifications.isEmpty) {
                     return _buildEmptyState(isDarkMode);
                   }
-                  return _buildNotificationList(context, state.notifications, isDarkMode);
+                  return _buildNotificationList(
+                    context,
+                    state.notifications,
+                    isDarkMode,
+                  );
                 }
 
                 return _buildLoadingSkeleton(isDarkMode);
@@ -198,15 +232,15 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         padding: EdgeInsets.zero,
         children: [
           if (today.isNotEmpty) ...[
-            _buildSectionHeader(context, 'Hôm nay'),
+            _buildSectionHeader(context, 'Today'),
             ...today.map((n) => _buildSwipeItem(context, n, isDarkMode)),
           ],
           if (yesterday.isNotEmpty) ...[
-            _buildSectionHeader(context, 'Hôm qua'),
+            _buildSectionHeader(context, 'Yesterday'),
             ...yesterday.map((n) => _buildSwipeItem(context, n, isDarkMode)),
           ],
           if (earlier.isNotEmpty) ...[
-            _buildSectionHeader(context, 'Trước đó'),
+            _buildSectionHeader(context, 'Earlier'),
             ...earlier.map((n) => _buildSwipeItem(context, n, isDarkMode)),
           ],
           const SizedBox(height: 80),
@@ -215,7 +249,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     );
   }
 
-  Widget _buildSwipeItem(BuildContext context, AppNotification notification, bool isDarkMode) {
+  Widget _buildSwipeItem(
+    BuildContext context,
+    AppNotification notification,
+    bool isDarkMode,
+  ) {
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.startToEnd,
@@ -230,12 +268,14 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         child: Row(
           children: [
             Icon(
-              notification.isRead ? Icons.email_outlined : Icons.mark_email_read,
+              notification.isRead
+                  ? Icons.email_outlined
+                  : Icons.mark_email_read,
               color: Colors.white,
             ),
             const SizedBox(width: 8),
             Text(
-              notification.isRead ? 'Chưa đọc' : 'Đã đọc',
+              notification.isRead ? 'Unread' : 'Read',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -264,18 +304,22 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.check_circle_outline),
-              title: const Text('Đánh dấu đã đọc'),
+              title: const Text('Mark as read'),
               onTap: () {
                 Navigator.pop(ctx);
-                context.read<NotificationBloc>().add(MarkAsReadEvent(notification.id));
+                context.read<NotificationBloc>().add(
+                  MarkAsReadEvent(notification.id),
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.check_circle),
-              title: const Text('Đánh dấu chưa đọc'),
+              title: const Text('Mark as unread'),
               onTap: () {
                 Navigator.pop(ctx);
-                context.read<NotificationBloc>().add(MarkAsUnreadEvent(notification.id));
+                context.read<NotificationBloc>().add(
+                  MarkAsUnreadEvent(notification.id),
+                );
               },
             ),
           ],
@@ -308,7 +352,13 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
     return InkWell(
       onTap: () {
-        context.push('/notifications/${notification.id}', extra: notification);
+        context.push('/notifications/${notification.id}', extra: notification).then((_) {
+          if (context.mounted) {
+            context.read<NotificationBloc>().add(LoadNotificationsEvent(
+              filter: _buildFilter(_selectedFilterIndex),
+            ));
+          }
+        });
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -479,7 +529,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     );
   }
 
-  Widget _buildErrorView(BuildContext context, String message, bool isDarkMode) {
+  Widget _buildErrorView(
+    BuildContext context,
+    String message,
+    bool isDarkMode,
+  ) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -495,11 +549,13 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ElevatedButton.icon(
             onPressed: () {
               context.read<NotificationBloc>().add(
-                LoadNotificationsEvent(filter: _buildFilter(_selectedFilterIndex)),
+                LoadNotificationsEvent(
+                  filter: _buildFilter(_selectedFilterIndex),
+                ),
               );
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Thử lại'),
+            label: const Text('Try again'),
           ),
         ],
       ),
@@ -511,11 +567,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.notifications_none,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.notifications_none, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'Chưa có thông báo nào',
@@ -527,11 +579,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Bạn sẽ nhận được thông báo tại đây!',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            'You will receive notifications here!',
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
       ),

@@ -24,7 +24,7 @@ import 'package:frontend_otis/presentation/widgets/product/product_specs_grid.da
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 import 'package:frontend_otis/core/utils/ui_utils.dart';
 
 /// Screen to display full product details.
@@ -47,20 +47,49 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
 
-  void _incrementQuantity(int stock) {
-    if (_quantity < stock) {
-      setState(() {
-        _quantity++;
-      });
-    }
-  }
 
-  void _decrementQuantity() {
-    if (_quantity > 1) {
-      setState(() {
-        _quantity--;
-      });
-    }
+  void _showQuantityBottomSheet({
+    required Product product,
+    required bool isBuyNow,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.5,
+        builder: (_, scrollController) => _QuantityBottomSheet(
+          product: product,
+          initialQuantity: _quantity,
+          isBuyNow: isBuyNow,
+          onConfirm: (quantity) {
+            setState(() {
+              _quantity = quantity;
+            });
+            if (isBuyNow) {
+              context.push(
+                '/checkout',
+                extra: {
+                  'source': 'buyNow',
+                  'product': product,
+                  'quantity': quantity,
+                },
+              );
+            } else {
+              context.read<CartBloc>().add(
+                    AddProductToCartEvent(product: product, quantity: quantity),
+                  );
+              UiUtils.showSuccessPopup(
+                context,
+                '${product.name} added to cart (x$quantity)',
+              );
+            }
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -266,66 +295,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ),
 
-              // Quantity Selector
-              if (product.stockQuantity > 0)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'Quantity:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              onPressed: _quantity > 1
-                                  ? _decrementQuantity
-                                  : null,
-                              icon: const Icon(Icons.remove),
-                              padding: EdgeInsets.zero,
-                              iconSize: 20,
-                              constraints: const BoxConstraints(
-                                minWidth: 40,
-                                minHeight: 40,
-                              ),
-                            ),
-                            Text(
-                              '$_quantity',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: _quantity < product.stockQuantity
-                                  ? () => _incrementQuantity(
-                                      product.stockQuantity,
-                                    )
-                                  : null,
-                              icon: const Icon(Icons.add),
-                              padding: EdgeInsets.zero,
-                              iconSize: 20,
-                              constraints: const BoxConstraints(
-                                minWidth: 40,
-                                minHeight: 40,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
 
               const SizedBox(height: 8),
 
@@ -364,25 +333,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             return ProductActionBar(
               isInCart: isInCart,
               onViewCart: () => context.push('/cart'),
-              onAddToCart: () {
-                context.read<CartBloc>().add(
-                  AddProductToCartEvent(product: product, quantity: _quantity),
-                );
-                UiUtils.showSuccessPopup(
-                  context,
-                  '${product.name} added to cart (x$_quantity)',
-                );
-              },
+              onAddToCart: () => _showQuantityBottomSheet(
+                product: product,
+                isBuyNow: false,
+              ),
               onBuyNow: () {
-                // Navigate to checkout directly logic
-                context.push(
-                  '/checkout',
-                  extra: {
-                    'source': 'buyNow',
-                    'product': product,
-                    'quantity': _quantity,
-                  },
-                );
+                if (isInCart) {
+                  context.push('/cart');
+                } else {
+                  _showQuantityBottomSheet(
+                    product: product,
+                    isBuyNow: true,
+                  );
+                }
               },
               isDisabled: product.stockQuantity <= 0,
             );
@@ -433,6 +396,177 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _QuantityBottomSheet extends StatefulWidget {
+  final Product product;
+  final int initialQuantity;
+  final bool isBuyNow;
+  final Function(int) onConfirm;
+
+  const _QuantityBottomSheet({
+    required this.product,
+    required this.initialQuantity,
+    required this.isBuyNow,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_QuantityBottomSheet> createState() => _QuantityBottomSheetState();
+}
+
+class _QuantityBottomSheetState extends State<_QuantityBottomSheet> {
+  late int _quantity;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantity = widget.initialQuantity;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode ? AppColors.backgroundDark : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  widget.product.imageUrl,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.product.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.product.formattedPrice,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Stock: ${widget.product.stockQuantity}',
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            'Select Quantity',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildQtyBtn(Icons.remove, () {
+                if (_quantity > 1) {
+                  setState(() => _quantity--);
+                }
+              }),
+              Container(
+                width: 60,
+                alignment: Alignment.center,
+                child: Text(
+                  '$_quantity',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              _buildQtyBtn(Icons.add, () {
+                if (_quantity < widget.product.stockQuantity) {
+                  setState(() => _quantity++);
+                }
+              }),
+            ],
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                widget.onConfirm(_quantity);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                widget.isBuyNow ? 'Buy Now' : 'Add to Cart',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQtyBtn(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon),
+      ),
     );
   }
 }

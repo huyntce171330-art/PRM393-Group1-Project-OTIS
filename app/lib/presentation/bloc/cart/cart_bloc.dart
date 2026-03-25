@@ -7,6 +7,9 @@ import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/domain/usecases/cart/remove_from_cart_usecase.dart';
 import 'package:frontend_otis/domain/usecases/cart/clear_cart_usecase.dart';
+import 'package:frontend_otis/domain/usecases/product/get_product_detail_usecase.dart';
+import 'package:frontend_otis/domain/entities/product.dart';
+import 'package:frontend_otis/domain/entities/cart_item.dart';
 
 class CartBloc extends Bloc<CartEvent, CartState> {
   final GetCartUsecase getCartUsecase;
@@ -14,6 +17,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   final UpdateCartUsecase updateCartUsecase;
   final RemoveFromCartUsecase removeFromCartUsecase;
   final ClearCartUsecase clearCartUsecase;
+  final GetProductDetailUsecase getProductDetailUsecase;
 
   CartBloc({
     required this.getCartUsecase,
@@ -21,6 +25,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     required this.updateCartUsecase,
     required this.removeFromCartUsecase,
     required this.clearCartUsecase,
+    required this.getProductDetailUsecase,
   }) : super(CartInitial()) {
     on<LoadCartEvent>(_onLoadCart);
     on<AddProductToCartEvent>(_onAddProductToCart);
@@ -32,9 +37,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   Future<void> _onLoadCart(LoadCartEvent event, Emitter<CartState> emit) async {
     emit(CartLoading());
     final result = await getCartUsecase();
-    result.fold(
-      (failure) => emit(CartError(message: _mapFailureToMessage(failure))),
-      (cartItems) => emit(CartLoaded.fromItems(cartItems)),
+    await result.fold(
+      (failure) async => emit(CartError(message: _mapFailureToMessage(failure))),
+      (cartItems) async {
+        final populatedItems = await _populateProducts(cartItems);
+        emit(CartLoaded.fromItems(populatedItems));
+      },
     );
   }
 
@@ -42,6 +50,26 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     AddProductToCartEvent event,
     Emitter<CartState> emit,
   ) async {
+    // Rule: Total in cart cannot exceed stock
+    int currentInCart = 0;
+    if (state is CartLoaded) {
+      final existing = (state as CartLoaded).cartItems.firstWhere(
+        (i) => i.productId == event.product.id,
+        orElse: () => CartItem(productId: event.product.id, quantity: 0),
+      );
+      currentInCart = existing.quantity;
+    }
+
+    if (currentInCart + event.quantity > event.product.stockQuantity) {
+      final availableToAdd = event.product.stockQuantity - currentInCart;
+      String msg = availableToAdd <= 0 
+          ? "Sản phẩm đã đạt giới hạn trong giỏ hàng (Tối đa ${event.product.stockQuantity})"
+          : "Chỉ có thể thêm tối đa $availableToAdd sản phẩm nữa (Kho còn ${event.product.stockQuantity})";
+      
+      emit(CartError(message: msg, previousState: state));
+      return;
+    }
+
     final result = await addProductToCartUsecase(
       event.product.id,
       event.quantity,
@@ -80,25 +108,26 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     UpdateCartItemEvent event,
     Emitter<CartState> emit,
   ) async {
-    final result = await updateCartUsecase(event.productId, event.quantity);
-    result.fold(
-      (failure) => emit(CartError(message: _mapFailureToMessage(failure))),
-      (cartItems) {
-        // Merge with existing product data to avoid losing product details
-        final updatedItems = cartItems.map((item) {
-          if (state is CartLoaded) {
-            final oldItem = (state as CartLoaded).cartItems.firstWhere(
-              (old) => old.productId == item.productId,
-              orElse: () => item,
-            );
-            if (oldItem.product != null) {
-              return item.copyWith(product: oldItem.product);
-            }
-          }
-          return item;
-        }).toList();
+    // Check stock if we have product info in current state
+    if (state is CartLoaded) {
+      try {
+        final item = (state as CartLoaded).cartItems.firstWhere((i) => i.productId == event.productId);
+        if (item.product != null && event.quantity > item.product!.stockQuantity) {
+          emit(CartError(
+            message: "Không thể vượt quá số lượng trong kho (${item.product!.stockQuantity})",
+            previousState: state,
+          ));
+          return;
+        }
+      } catch (_) {}
+    }
 
-        emit(CartLoaded.fromItems(updatedItems));
+    final result = await updateCartUsecase(event.productId, event.quantity);
+    await result.fold(
+      (failure) async => emit(CartError(message: _mapFailureToMessage(failure))),
+      (cartItems) async {
+        final populatedItems = await _populateProducts(cartItems);
+        emit(CartLoaded.fromItems(populatedItems));
       },
     );
   }
@@ -108,28 +137,11 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     final result = await removeFromCartUsecase(event.productId);
-    result.fold(
-      (failure) => emit(CartError(message: _mapFailureToMessage(failure))),
-      (cartItems) {
-        // Merge with existing product data to avoid losing product details
-        final updatedItems = cartItems.map((item) {
-          if (state is CartLoaded) {
-            final currentState = state as CartLoaded;
-            try {
-              final oldItem = currentState.cartItems.firstWhere(
-                (old) => old.productId == item.productId,
-              );
-              if (oldItem.product != null) {
-                return item.copyWith(product: oldItem.product);
-              }
-            } catch (_) {
-              // Item might be new or not found, just ignore
-            }
-          }
-          return item;
-        }).toList();
-
-        emit(CartLoaded.fromItems(updatedItems));
+    await result.fold(
+      (failure) async => emit(CartError(message: _mapFailureToMessage(failure))),
+      (cartItems) async {
+        final populatedItems = await _populateProducts(cartItems);
+        emit(CartLoaded.fromItems(populatedItems));
       },
     );
   }
@@ -145,13 +157,42 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     );
   }
 
-  String _mapFailureToMessage(Failure failure) {
-    if (failure is ServerFailure) {
-      return 'Server Failure';
-    } else if (failure is CacheFailure) {
-      return 'Cache Failure';
-    } else {
-      return 'Unexpected Error';
+  /// Helper to populate products for a list of cart items.
+  /// It first tries to find the product in the current state,
+  /// then fetches from repository if still missing.
+  Future<List<CartItem>> _populateProducts(List<CartItem> items) async {
+    final List<CartItem> populatedItems = [];
+    final currentState = state;
+
+    for (var item in items) {
+      Product? product;
+
+      // 1. Try to find in current state
+      if (currentState is CartLoaded) {
+        try {
+          final oldItem = currentState.cartItems.firstWhere(
+            (old) => old.productId == item.productId,
+          );
+          product = oldItem.product;
+        } catch (_) {}
+      }
+
+      // 2. If still missing, fetch from detail usecase
+      if (product == null) {
+        final productResult = await getProductDetailUsecase(item.productId);
+        productResult.fold(
+          (_) => product = null, // Log error or handle as unknown
+          (p) => product = p,
+        );
+      }
+
+      populatedItems.add(item.copyWith(product: product));
     }
+
+    return populatedItems;
+  }
+
+  String _mapFailureToMessage(Failure failure) {
+    return failure.message;
   }
 }

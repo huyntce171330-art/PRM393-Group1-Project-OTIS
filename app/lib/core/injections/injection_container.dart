@@ -59,6 +59,15 @@ import 'package:frontend_otis/domain/usecases/order/get_order_detail_usecase.dar
 import 'package:frontend_otis/domain/usecases/order/get_orders_usecase.dart';
 import 'package:frontend_otis/domain/usecases/order/update_order_status_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/order/order_bloc.dart';
+import 'package:frontend_otis/data/datasources/profile/profile_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/profile/profile_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/datasources/chat/chat_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/chat/chat_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/datasources/map/map_remote_datasource.dart';
+import 'package:frontend_otis/data/datasources/map/map_remote_datasource_impl.dart';
+import 'package:frontend_otis/data/repositories/map_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/map_repository.dart';
+import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
 
 // AUTH IMPORTS
 import 'package:frontend_otis/data/datasources/auth/auth_remote_datasource.dart';
@@ -102,11 +111,35 @@ import 'package:frontend_otis/domain/usecases/notification/search_notifications_
 import 'package:frontend_otis/domain/usecases/notification/update_notification_status_usecase.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import '../../presentation/bloc/category/category_bloc.dart';
-import 'package:frontend_otis/data/datasources/map/map_remote_datasource.dart';
-import 'package:frontend_otis/data/datasources/map/map_remote_datasource_impl.dart';
-import 'package:frontend_otis/data/repositories/map_repository_impl.dart';
-import 'package:frontend_otis/domain/repositories/map_repository.dart';
-import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/dashboard/dashboard_bloc.dart';
+import 'package:frontend_otis/domain/usecases/dashboard/get_dashboard_statistics_usecase.dart';
+import 'package:frontend_otis/domain/repositories/dashboard_repository.dart';
+import 'package:frontend_otis/data/repositories/dashboard_repository_impl.dart';
+import 'package:frontend_otis/data/datasources/dashboard/dashboard_local_datasource.dart';
+import 'package:frontend_otis/data/datasources/dashboard/dashboard_local_datasource_impl.dart';
+import 'package:frontend_otis/domain/repositories/profile_repository.dart';
+import 'package:frontend_otis/data/repositories/profile_repository_impl.dart';
+import 'package:frontend_otis/domain/repositories/chat_repository.dart';
+import 'package:frontend_otis/data/repositories/chat_repository_impl.dart';
+import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
+import 'package:frontend_otis/core/network/socket_service.dart';
+import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_total_unread_count_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_messages_by_room_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/mark_room_messages_as_read_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/save_current_user_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/get_current_user_id_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/clear_current_user_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/update_user_profile_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/get_users_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/get_user_by_id_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/count_customers_usecase.dart';
+import 'package:frontend_otis/domain/usecases/profile/update_user_status_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_room_by_user_id_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_unread_count_for_room_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/insert_message_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_all_chat_rooms_for_viewer_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_chat_room_list_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -141,17 +174,32 @@ Future<void> init() async {
 
   // Payment Data Source
   sl.registerLazySingleton<PaymentRemoteDataSource>(
-    () => PaymentRemoteDataSourceImpl(),
+    () => PaymentRemoteDataSourceImpl(sl()),
   );
 
   // Order Data Source
   sl.registerLazySingleton<OrderRemoteDatasource>(
-    () => OrderRemoteDatasourceImpl(),
+    () => OrderRemoteDatasourceImpl(sl()),
   );
 
   // Auth Data Source
   sl.registerLazySingleton<AuthRemoteDatasource>(
     () => AuthRemoteDatasourceImpl(sl()),
+  );
+
+  // Profile Data Source
+  sl.registerLazySingleton<ProfileRemoteDatasource>(
+    () => ProfileRemoteDatasourceImpl(sl()),
+  );
+
+  // Chat Data Source
+  sl.registerLazySingleton<ChatRemoteDatasource>(
+    () => ChatRemoteDatasourceImpl(sl()),
+  );
+
+  // Map Data Source
+  sl.registerLazySingleton<MapRemoteDatasource>(
+    () => MapRemoteDatasourceImpl(database: sl()),
   );
 
   // ========== 4. REPOSITORIES ==========
@@ -178,6 +226,19 @@ Future<void> init() async {
 
   // Auth Repository
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
+
+  // Profile Repository
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(profileRemoteDatasource: sl()),
+  );
+
+  // Chat Repository
+  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(sl()));
+
+  // Map Repository
+  sl.registerLazySingleton<MapRepository>(
+    () => MapRepositoryImpl(remoteDatasource: sl<MapRemoteDatasource>()),
+  );
 
   // ========== 5. USE CASES ==========
   // Product Use Cases
@@ -290,6 +351,9 @@ Future<void> init() async {
     () => ProductBloc(getProductsUsecase: sl(), getProductDetailUsecase: sl()),
   );
 
+  // Map BLoC
+  sl.registerFactory<MapBloc>(() => MapBloc(repository: sl<MapRepository>()));
+
   // Cart BLoC
   sl.registerLazySingleton<CartBloc>(
     () => CartBloc(
@@ -298,6 +362,7 @@ Future<void> init() async {
       updateCartUsecase: sl(),
       removeFromCartUsecase: sl(),
       clearCartUsecase: sl(),
+      getProductDetailUsecase: sl(),
     ),
   );
 
@@ -329,6 +394,19 @@ Future<void> init() async {
       otpUseCase: sl(),
       forgotPasswordUseCase: sl(),
       changePasswordUseCase: sl(),
+      saveCurrentUserUseCase: sl(),
+      getCurrentUserIdUseCase: sl(),
+      clearCurrentUserUseCase: sl(),
+    ),
+  );
+
+  // Chat BLoC
+  sl.registerFactory<ChatBloc>(
+    () => ChatBloc(
+      datasource: ChatSocketDatasource(SocketService.instance),
+      getMessagesByRoomUseCase: sl<GetMessagesByRoomUseCase>(),
+      insertMessageUseCase: sl<InsertMessageUseCase>(),
+      markRoomMessagesAsReadUseCase: sl<MarkRoomMessagesAsReadUseCase>(),
     ),
   );
 
@@ -344,15 +422,6 @@ Future<void> init() async {
       updateProductUsecase: sl(),
     ),
   );
-
-  // Map / admin shop locations (SQLite)
-  sl.registerLazySingleton<MapRemoteDatasource>(
-    () => MapRemoteDatasourceImpl(database: sl()),
-  );
-  sl.registerLazySingleton<MapRepository>(
-    () => MapRepositoryImpl(remoteDatasource: sl()),
-  );
-  sl.registerFactory<MapBloc>(() => MapBloc(repository: sl()));
 
   // ========== BRAND DATASOURCE ==========
   sl.registerLazySingleton<TireBrandDataSource>(
@@ -434,7 +503,7 @@ Future<void> init() async {
 
   // ========== NOTIFICATION FEATURE ==========
   sl.registerLazySingleton<NotificationRemoteDatasource>(
-    () => NotificationRemoteDatasourceImpl(),
+    () => NotificationRemoteDatasourceImpl(sl()),
   );
 
   sl.registerLazySingleton<NotificationRepository>(
@@ -446,6 +515,26 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateNotificationStatusUsecase(sl()));
   sl.registerLazySingleton(() => DeleteNotificationUsecase(sl()));
   sl.registerLazySingleton(() => SearchNotificationsUsecase(sl()));
+  sl.registerLazySingleton(() => SaveCurrentUserUseCase(sl()));
+  sl.registerLazySingleton(() => GetCurrentUserIdUseCase(sl()));
+  sl.registerLazySingleton(() => ClearCurrentUserUseCase(sl()));
+
+  // Profile Use Cases
+  sl.registerLazySingleton(() => UpdateUserProfileUseCase(sl()));
+  sl.registerLazySingleton(() => GetUsersUseCase(sl()));
+  sl.registerLazySingleton(() => GetUserByIdUseCase(sl()));
+  sl.registerLazySingleton(() => CountCustomersUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateUserStatusUseCase(sl()));
+
+  // Chat Use Cases
+  sl.registerLazySingleton(() => GetChatRoomListUseCase(sl()));
+  sl.registerLazySingleton(() => InsertMessageUseCase(sl()));
+  sl.registerLazySingleton(() => GetMessagesByRoomUseCase(sl()));
+  sl.registerLazySingleton(() => MarkRoomMessagesAsReadUseCase(sl()));
+  sl.registerLazySingleton(() => GetRoomByUserIdUseCase(sl()));
+  sl.registerLazySingleton(() => GetUnreadCountForRoomUseCase(sl()));
+  sl.registerLazySingleton(() => GetAllChatRoomsForViewerUseCase(sl()));
+  sl.registerLazySingleton(() => GetTotalUnreadCountUseCase(sl()));
   sl.registerLazySingleton(() => CreateNotificationUsecase(sl()));
   sl.registerLazySingleton(() => MarkAllAsReadUsecase(sl()));
 
@@ -459,6 +548,22 @@ Future<void> init() async {
       createNotification: sl(),
       markAllAsRead: sl(),
     ),
+  );
+  // ========== DASHBOARD FEATURE ==========
+  sl.registerLazySingleton<DashboardLocalDataSource>(
+    () => DashboardLocalDataSourceImpl(database: sl()),
+  );
+
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton<GetDashboardStatisticsUseCase>(
+    () => GetDashboardStatisticsUseCase(sl()),
+  );
+
+  sl.registerLazySingleton<DashboardBloc>(
+    () => DashboardBloc(getDashboardUseCase: sl()),
   );
 
   print("All dependencies registered successfully");

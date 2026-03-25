@@ -56,10 +56,16 @@ class CartItem extends Equatable {
   /// Get the product SKU or fallback
   String get productSku => product?.sku ?? '';
 
-  /// Check if the product is in stock for the requested quantity
+  /// Check if the cart item is in stock for the current quantity
   bool get isInStock {
     if (product == null) return false;
     return product!.stockQuantity >= quantity;
+  }
+
+  /// Check if the cart item can be increased (less than stock)
+  bool get canIncrement {
+    if (product == null) return false;
+    return quantity < product!.stockQuantity;
   }
 
   /// Get available quantity message

@@ -9,21 +9,20 @@ import 'package:frontend_otis/presentation/bloc/notification/notification_event.
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend_otis/presentation/widgets/header_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/header_bar.dart';
 
 class AdminNotificationListScreen extends StatefulWidget {
   final bool isInboxView;
 
-  const AdminNotificationListScreen({
-    super.key,
-    this.isInboxView = false,
-  });
+  const AdminNotificationListScreen({super.key, this.isInboxView = false});
 
   @override
-  State<AdminNotificationListScreen> createState() => _AdminNotificationListScreenState();
+  State<AdminNotificationListScreen> createState() =>
+      _AdminNotificationListScreenState();
 }
 
-class _AdminNotificationListScreenState extends State<AdminNotificationListScreen> {
+class _AdminNotificationListScreenState
+    extends State<AdminNotificationListScreen> {
   int _selectedFilterIndex = 0;
   final List<String> _filters = ['All', 'Orders', 'Promotions', 'System'];
 
@@ -41,7 +40,9 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
 
   void _onFilterChanged(BuildContext context, int index) {
     setState(() => _selectedFilterIndex = index);
-    context.read<NotificationBloc>().add(LoadNotificationsEvent(filter: _buildFilter(index)));
+    context.read<NotificationBloc>().add(
+      LoadNotificationsEvent(filter: _buildFilter(index)),
+    );
   }
 
   void _onDelete(BuildContext context, String id) {
@@ -49,12 +50,14 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Đã xóa thông báo'),
+        content: const Text('Notification deleted'),
         duration: const Duration(seconds: 5),
         action: SnackBarAction(
-          label: 'Hoàn tác',
+          label: 'Undo',
           onPressed: () {
-            context.read<NotificationBloc>().add(const UndoDeleteNotificationEvent());
+            context.read<NotificationBloc>().add(
+              const UndoDeleteNotificationEvent(),
+            );
           },
         ),
       ),
@@ -78,7 +81,7 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: HeaderBar(
-        title: widget.isInboxView ? 'Thông báo' : 'Quản lý thông báo',
+        title: widget.isInboxView ? 'Notifications' : 'Notification Management',
         showBack: true,
         actions: [
           TextButton(
@@ -86,7 +89,7 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
               context.read<NotificationBloc>().add(const MarkAllAsReadEvent());
             },
             child: const Text(
-              'Đánh dấu tất cả đã đọc',
+              'Mark all as read',
               style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -104,7 +107,8 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
           : BlocBuilder<AuthBloc, AuthState>(
               buildWhen: (prev, curr) => prev.runtimeType != curr.runtimeType,
               builder: (context, authState) {
-                final isAdmin = authState is Authenticated &&
+                final isAdmin =
+                    authState is Authenticated &&
                     authState.user.role?.isAdmin == true;
                 if (!isAdmin) return const SizedBox.shrink();
                 return FloatingActionButton(
@@ -124,7 +128,9 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
               builder: (context, state) {
                 if (state is NotificationInitial) {
                   context.read<NotificationBloc>().add(
-                    LoadNotificationsEvent(filter: _buildFilter(_selectedFilterIndex)),
+                    LoadNotificationsEvent(
+                      filter: _buildFilter(_selectedFilterIndex),
+                    ),
                   );
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -141,7 +147,11 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
                   if (state.notifications.isEmpty) {
                     return _buildEmptyState(isDarkMode);
                   }
-                  return _buildNotificationList(context, state.notifications, isDarkMode);
+                  return _buildNotificationList(
+                    context,
+                    state.notifications,
+                    isDarkMode,
+                  );
                 }
 
                 return _buildLoadingSkeleton(isDarkMode);
@@ -239,16 +249,20 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
         padding: EdgeInsets.zero,
         children: [
           if (today.isNotEmpty) ...[
-            _buildSectionHeader(context, 'Hôm nay'),
+            _buildSectionHeader(context, 'Today'),
             ...today.map((n) => _buildDismissibleItem(context, n, isDarkMode)),
           ],
           if (yesterday.isNotEmpty) ...[
-            _buildSectionHeader(context, 'Hôm qua'),
-            ...yesterday.map((n) => _buildDismissibleItem(context, n, isDarkMode)),
+            _buildSectionHeader(context, 'Yesterday'),
+            ...yesterday.map(
+              (n) => _buildDismissibleItem(context, n, isDarkMode),
+            ),
           ],
           if (earlier.isNotEmpty) ...[
-            _buildSectionHeader(context, 'Trước đó'),
-            ...earlier.map((n) => _buildDismissibleItem(context, n, isDarkMode)),
+            _buildSectionHeader(context, 'Earlier'),
+            ...earlier.map(
+              (n) => _buildDismissibleItem(context, n, isDarkMode),
+            ),
           ],
           const SizedBox(height: 80),
         ],
@@ -256,7 +270,11 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
     );
   }
 
-  Widget _buildDismissibleItem(BuildContext context, AppNotification notification, bool isDarkMode) {
+  Widget _buildDismissibleItem(
+    BuildContext context,
+    AppNotification notification,
+    bool isDarkMode,
+  ) {
     // Admin: full swipe (left = delete, right = toggle read)
     return Dismissible(
       key: Key(notification.id),
@@ -305,23 +323,27 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
           children: [
             ListTile(
               leading: const Icon(Icons.check_circle_outline),
-              title: const Text('Đánh dấu đã đọc'),
+              title: const Text('Mark as read'),
               onTap: () {
                 Navigator.pop(ctx);
-                context.read<NotificationBloc>().add(MarkAsReadEvent(notification.id));
+                context.read<NotificationBloc>().add(
+                  MarkAsReadEvent(notification.id),
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.check_circle),
-              title: const Text('Đánh dấu chưa đọc'),
+              title: const Text('Mark as unread'),
               onTap: () {
                 Navigator.pop(ctx);
-                context.read<NotificationBloc>().add(MarkAsUnreadEvent(notification.id));
+                context.read<NotificationBloc>().add(
+                  MarkAsUnreadEvent(notification.id),
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text('Xóa', style: TextStyle(color: Colors.red)),
+              title: const Text('Delete', style: TextStyle(color: Colors.red)),
               onTap: () {
                 Navigator.pop(ctx);
                 _onDelete(context, notification.id);
@@ -357,7 +379,16 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
 
     return InkWell(
       onTap: () {
-        context.push('/admin/notifications/${notification.id}', extra: notification);
+        context.push(
+          '/admin/notifications/${notification.id}',
+          extra: notification,
+        ).then((_) {
+          if (context.mounted) {
+            context.read<NotificationBloc>().add(LoadNotificationsEvent(
+              filter: _buildFilter(_selectedFilterIndex),
+            ));
+          }
+        });
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -528,7 +559,11 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
     );
   }
 
-  Widget _buildErrorView(BuildContext context, String message, bool isDarkMode) {
+  Widget _buildErrorView(
+    BuildContext context,
+    String message,
+    bool isDarkMode,
+  ) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -544,11 +579,13 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
           ElevatedButton.icon(
             onPressed: () {
               context.read<NotificationBloc>().add(
-                LoadNotificationsEvent(filter: _buildFilter(_selectedFilterIndex)),
+                LoadNotificationsEvent(
+                  filter: _buildFilter(_selectedFilterIndex),
+                ),
               );
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Thử lại'),
+            label: const Text('Try again'),
           ),
         ],
       ),
@@ -560,14 +597,10 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.notifications_none,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.notifications_none, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'Chưa có thông báo nào',
+            'No notifications yet',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -577,12 +610,9 @@ class _AdminNotificationListScreenState extends State<AdminNotificationListScree
           const SizedBox(height: 8),
           Text(
             widget.isInboxView
-                ? 'Bạn sẽ nhận được thông báo tại đây!'
-                : 'Tạo thông báo mới bằng nút +',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+                ? 'You will receive notifications here!'
+                : 'Create new notifications using the + button',
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
       ),

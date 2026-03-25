@@ -10,7 +10,6 @@ import '../../bloc/category/category_bloc.dart';
 import '../../bloc/category/category_event.dart';
 import '../../bloc/category/category_state.dart';
 
-import '../../widgets/admin/admin_nav_bar.dart';
 import '../../widgets/category/category_dialog.dart';
 import '../../widgets/admin/admin_header.dart';
 
@@ -143,8 +142,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
         onPressed: _openCreateDialog,
         child: const Icon(Icons.add),
       ),
-
-      bottomNavigationBar: const AdminNavBar(currentIndex: 3),
     );
   }
 

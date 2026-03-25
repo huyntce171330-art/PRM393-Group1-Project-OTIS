@@ -12,8 +12,8 @@ enum OrderStatus {
 }
 
 /// Payment method for orders.
-/// Maps to database payment_method: 'cash', 'transfer'
-enum PaymentMethod { cash, transfer }
+/// Maps to database payment_method: 'cash', 'bank'
+enum PaymentMethod { cash, bank }
 
 /// Payment status in the system.
 /// Maps to database status: 'pending', 'success', 'failed'
@@ -71,12 +71,11 @@ class PaymentMethodConverter implements JsonConverter<PaymentMethod, String> {
   @override
   PaymentMethod fromJson(String json) {
     switch (json.toLowerCase()) {
-      case 'cash':
+      case 'cod':
         return PaymentMethod.cash;
-      case 'transfer':
-        return PaymentMethod.transfer;
+      case 'bank':
+        return PaymentMethod.bank;
       default:
-        // Default to cash for unknown values (defensive programming)
         return PaymentMethod.cash;
     }
   }
@@ -85,9 +84,9 @@ class PaymentMethodConverter implements JsonConverter<PaymentMethod, String> {
   String toJson(PaymentMethod object) {
     switch (object) {
       case PaymentMethod.cash:
-        return 'cash';
-      case PaymentMethod.transfer:
-        return 'transfer';
+        return 'cod';
+      case PaymentMethod.bank:
+        return 'bank';
     }
   }
 }
@@ -145,7 +144,9 @@ extension OrderStatusExtension on OrderStatus {
 
   /// Check if the order can be cancelled
   bool get canBeCancelled =>
-      this == OrderStatus.pendingPayment || this == OrderStatus.paid;
+      this == OrderStatus.pendingPayment ||
+      this == OrderStatus.paid ||
+      this == OrderStatus.processing;
 
   /// Check if the order is completed
   bool get isCompleted => this == OrderStatus.completed;
@@ -164,7 +165,7 @@ extension PaymentMethodExtension on PaymentMethod {
     switch (this) {
       case PaymentMethod.cash:
         return 'Cash';
-      case PaymentMethod.transfer:
+      case PaymentMethod.bank:
         return 'Bank Transfer';
     }
   }
@@ -174,7 +175,7 @@ extension PaymentMethodExtension on PaymentMethod {
     switch (this) {
       case PaymentMethod.cash:
         return 'Pay with cash upon delivery';
-      case PaymentMethod.transfer:
+      case PaymentMethod.bank:
         return 'Pay via bank transfer';
     }
   }

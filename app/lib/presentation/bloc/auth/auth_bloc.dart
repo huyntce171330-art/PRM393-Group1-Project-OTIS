@@ -1,12 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:frontend_otis/domain/usecases/auth/login_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/register_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/logout_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/otp_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/forgot_usecase.dart';
 import 'package:frontend_otis/domain/usecases/auth/change_usecase.dart';
-import 'package:frontend_otis/core/injections/database_helper.dart';
+import 'package:frontend_otis/domain/usecases/auth/save_current_user_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/get_current_user_id_usecase.dart';
+import 'package:frontend_otis/domain/usecases/auth/clear_current_user_usecase.dart';
 
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -18,6 +19,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final OtpUseCase otpUseCase;
   final ForgotPasswordUseCase forgotPasswordUseCase;
   final ChangePasswordUseCase changePasswordUseCase;
+  final SaveCurrentUserUseCase saveCurrentUserUseCase;
+  final GetCurrentUserIdUseCase getCurrentUserIdUseCase;
+  final ClearCurrentUserUseCase clearCurrentUserUseCase;
 
   AuthBloc({
     required this.loginUsecase,
@@ -26,6 +30,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.otpUseCase,
     required this.forgotPasswordUseCase,
     required this.changePasswordUseCase,
+    required this.saveCurrentUserUseCase,
+    required this.getCurrentUserIdUseCase,
+    required this.clearCurrentUserUseCase,
   }) : super(AuthInitial()) {
 
     /// ───────────── LOGIN ─────────────
@@ -39,7 +46,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (result.isRight()) {
         final user = result.getOrElse(() => throw UnimplementedError());
-        await DatabaseHelper.saveCurrentUser(int.parse(user.id));
+        await saveCurrentUserUseCase(int.parse(user.id));
         emit(Authenticated(user));
       } else {
         final failure = result.swap().getOrElse(() => throw UnimplementedError());
@@ -59,7 +66,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (result.isRight()) {
         final user = result.getOrElse(() => throw UnimplementedError());
-        await DatabaseHelper.saveCurrentUser(int.parse(user.id));
+        await saveCurrentUserUseCase(int.parse(user.id));
         emit(Authenticated(user));
       } else {
         final failure = result.swap().getOrElse(() => throw UnimplementedError());
@@ -71,7 +78,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LogoutEvent>((event, emit) async {
       emit(AuthLoading());
 
-      await DatabaseHelper.clearCurrentUser();
+      await clearCurrentUserUseCase();
 
       final result = await logoutUsecase();
 
@@ -85,7 +92,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RestoreSessionEvent>((event, emit) async {
       emit(AuthLoading());
 
-      final userId = await DatabaseHelper.getCurrentUserId();
+      final idResult = await getCurrentUserIdUseCase();
+      final userId = idResult.fold((_) => null, (id) => id);
+      
       if (userId == null) {
         emit(Unauthenticated());
         return;
@@ -96,7 +105,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (result.isRight()) {
         emit(Authenticated(result.getOrElse(() => throw UnimplementedError())));
       } else {
-        await DatabaseHelper.clearCurrentUser();
+        await clearCurrentUserUseCase();
         emit(Unauthenticated());
       }
     });

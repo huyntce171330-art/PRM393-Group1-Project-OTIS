@@ -14,7 +14,6 @@ import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'package:frontend_otis/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend_otis/core/injections/database_helper.dart';
 import 'package:frontend_otis/core/constants/app_colors.dart';
 import 'package:frontend_otis/core/injections/injection_container.dart';
 import 'package:frontend_otis/domain/entities/product.dart';
@@ -25,16 +24,19 @@ import 'package:frontend_otis/presentation/bloc/product/product_state.dart';
 import 'package:frontend_otis/presentation/widgets/product/product_card.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/cart/cart_event.dart';
-import 'package:frontend_otis/presentation/bloc/cart/cart_state.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/bloc/notification/notification_state.dart';
 import 'package:frontend_otis/core/utils/ui_utils.dart';
-import 'package:frontend_otis/presentation/widgets/nav_bar.dart';
+import 'package:frontend_otis/presentation/widgets/common/nav_bar.dart';
 import 'package:frontend_otis/presentation/widgets/filter/smart_filter_sheet.dart';
 import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
 import 'package:frontend_otis/presentation/widgets/chat/chat_bottom_sheet.dart';
 import 'package:frontend_otis/core/network/socket_service.dart';
-import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_room_by_user_id_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/insert_message_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/mark_room_messages_as_read_usecase.dart';
+import 'package:frontend_otis/domain/usecases/chat/get_unread_count_for_room_usecase.dart';
+
 
 /// Home screen - Main landing page.
 class HomeScreen extends StatefulWidget {
@@ -67,7 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<int?> _getCurrentRoomId() async {
     final userId = _currentUserId;
     if (userId == null) return null;
-    return DatabaseHelper.getRoomIdByUserId(userId);
+    final result = await sl<GetRoomByUserIdUseCase>()(userId);
+    return result.fold((_) => null, (id) => id);
   }
 
   Future<void> _initUserChatBadge() async {
@@ -79,7 +82,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     SocketService.instance.reset();
     SocketService.instance.connect(url: _socketUrl, userId: userId);
+    SocketService.instance.connect(url: _socketUrl, userId: userId);
 
+    SocketService.instance.joinRoom(roomId, userId: userId);
     SocketService.instance.joinRoom(roomId, userId: userId);
 
     await _chatBadgeSub?.cancel();
@@ -95,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
           senderId != null &&
           senderId != userId &&
           content.isNotEmpty) {
-        await DatabaseHelper.insertMessage(
+        await sl<InsertMessageUseCase>()(
           roomId: roomId,
           senderId: senderId as int,
           content: content,
@@ -111,18 +116,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // Banner data
   final List<Map<String, String>> _banners = [
     {
-      'imageUrl':
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCyc2sGVAca2Hw2aS4Y_yRr3Gs5HWz9pU4Vo4gA3DyIiH6CxKUQZM9KBnWsDrm6vUHjvalu5KFk2bqELSmtQTX6FHAyC8ugZyVJSkIwB4gJacnqvzewp6a068UQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW-gpOnMXrouIAk-CfEQDty2j_IyRoVWxLGxgTpoZPkOiBdsrKMr11t_toXU241N8Ja6dUF9OLHqJr0gtsGJGDLSAPPRVeX6Ish-URE',
+      'imageUrl': 'assets/images/car_promotion.png',
       'title': 'Summer Sale',
       'subtitle': '15% off all Michelin Tires',
       'badge': 'PROMO',
-    },
-    {
-      'imageUrl':
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCsAl8SBoQTX23DBYA0h8vlyPvXJeoaQNmGIcyjbZnAVEpHii-NZpA7Fw6yOFQhV_9aQCt7RKwkI2pSgT3gcuPzLI7T5U8rP0cjFht7N8ceWpi9U5VFMUQDvDUxFShoWWbHougyHjr0tFz3E38fX8e0bnTUpya-P0mXW_WzqGzGdLBjQlCOpvNJi9zrdgkVMHNA3OMRHfV3r2DYQceWoAbrG8Y8Sd0FSWye0kd1CYzyVZzqZjuOrlX_tMB7075TbByjMzwik2bskLA',
-      'title': 'Bridgestone Deals',
-      'subtitle': 'Buy 3 Get 1 Free on select models',
-      'badge': 'NEW',
     },
   ];
 
@@ -132,11 +129,6 @@ class _HomeScreenState extends State<HomeScreen> {
     {'icon': Icons.local_shipping, 'label': 'Truck'},
     {'icon': Icons.oil_barrel, 'label': 'Oil'},
     {'icon': Icons.battery_charging_full, 'label': 'Battery'},
-    {
-      'icon': Icons.store,
-      'label': 'Shop\nLocations',
-      'route': '/shop-locations',
-    },
   ];
 
   @override
@@ -179,21 +171,25 @@ class _HomeScreenState extends State<HomeScreen> {
       // Navigate to product list with the filter
       context.push('/products', extra: filter).then((_) {
         if (mounted) {
-          _productBloc.add(const RestoreProductListEvent());
+          _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
         }
       });
     }
   }
 
   void _navigateToProductList() {
-    context.push('/products');
+    context.push('/products').then((_) {
+      if (mounted) {
+        _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
+      }
+    });
   }
 
   void _navigateToProductDetail(Product product) {
     // Use push() to maintain back stack, allowing user to navigate back
     context.push('/product/${product.id}').then((_) {
       if (mounted) {
-        _productBloc.add(const RestoreProductListEvent());
+        _productBloc.add(const GetProductsEvent(filter: ProductFilter()));
       }
     });
   }
@@ -219,10 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     _isChatSheetOpen = true;
 
-    await DatabaseHelper.markRoomMessagesAsRead(
-      roomId: roomId,
-      viewerId: userId,
-    );
+    await sl<MarkRoomMessagesAsReadUseCase>()(roomId: roomId, viewerId: userId);
 
     if (mounted) setState(() {});
 
@@ -232,9 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         return BlocProvider(
-          create: (_) => ChatBloc(
-            datasource: ChatSocketDatasource(SocketService.instance),
-          ),
+          create: (_) => sl<ChatBloc>(),
           child: ChatBottomSheet(
             roomId: roomId,
             userId: userId,
@@ -293,6 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 isSmallScreen,
                               ),
                               const SizedBox(height: 16),
+                              const SizedBox(height: 16),
                               // All Products Section
                               _buildAllProductsSection(
                                 context,
@@ -300,6 +292,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 productCardWidth,
                                 isSmallScreen,
                               ),
+                              const SizedBox(height: 24),
+
                               SizedBox(
                                 height:
                                     kBottomNavigationBarHeight +
@@ -331,10 +325,10 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             return FutureBuilder<int>(
-              future: DatabaseHelper.getUnreadCountForRoom(
+              future: sl<GetUnreadCountForRoomUseCase>()(
                 roomId: roomId,
                 viewerId: userId,
-              ),
+              ).then((res) => res.getOrElse(() => 0)),
               builder: (context, snap) {
                 final unread = snap.data ?? 0;
                 final badgeText = unread > 9 ? '9+' : unread.toString();
@@ -564,18 +558,31 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // Background image
                       Positioned.fill(
-                        child: Image.network(
-                          banner['imageUrl']!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[300],
-                              child: const Center(
-                                child: Icon(Icons.image_not_supported),
+                        child: banner['imageUrl']!.startsWith('http')
+                            ? Image.network(
+                                banner['imageUrl']!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Center(
+                                      child: Icon(Icons.image_not_supported),
+                                    ),
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                banner['imageUrl']!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Center(
+                                      child: Icon(Icons.image_not_supported),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
                       ),
                       // Gradient overlay
                       Positioned.fill(
@@ -704,7 +711,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               GestureDetector(
                 onTap: () {
-                  // TODO: View all services
+                  UiUtils.showComingSoon(context, featureName: 'All Services');
                 },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -770,9 +777,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: IconButton(
                       onPressed: () {
-                        final route = service['route'] as String?;
-                        if (route != null) {
-                          context.push(route);
+                        if (service['label'] == 'Stores') {
+                          context.push('/shop-locations');
+                        } else {
+                          UiUtils.showComingSoon(
+                            context,
+                            featureName: service['label'] as String,
+                          );
                         }
                       },
                       icon: Icon(
@@ -883,33 +894,31 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isSmallScreen,
   ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    List<Product> allProducts = state.products ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Section Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'All Products',
+                'Featured Products',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: isDarkMode ? Colors.white : AppColors.textPrimary,
                 ),
               ),
-              // View All link
               GestureDetector(
                 onTap: _navigateToProductList,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'View All',
+                      'Explore',
                       style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 13,
@@ -928,96 +937,41 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        // All Products Horizontal List
-        if (state is ProductLoading)
-          SizedBox(
-            height: isSmallScreen ? 190 : 210,
-            child: const Center(
-              child: SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          )
-        else if (allProducts.isNotEmpty)
-          SizedBox(
-            height: isSmallScreen ? 190 : 210,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              separatorBuilder: (_, _) => const SizedBox(width: 10),
-              itemCount: allProducts.length,
-              itemBuilder: (context, index) {
-                final product = allProducts[index];
-                return SizedBox(
-                  width: cardWidth,
-                  child: BlocBuilder<CartBloc, CartState>(
-                    builder: (context, cartState) {
-                      bool isInCart = false;
-                      if (cartState is CartLoaded) {
-                        isInCart = cartState.cartItems.any(
-                          (item) => item.productId == product.id,
-                        );
-                      }
-                      return ProductCard(
+        const SizedBox(height: 12),
+
+        // Products Horizontal List
+        SizedBox(
+          height: isSmallScreen ? 230 : 250,
+          child: state is ProductLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                )
+              : state is ProductLoaded
+              ? ListView.builder(
+                  padding: const EdgeInsets.only(left: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: state.products.length,
+                  cacheExtent: 1000,
+                  itemBuilder: (context, index) {
+                    final product = state.products[index];
+                    return Container(
+                      width: cardWidth,
+                      margin: const EdgeInsets.only(right: 12),
+                      child: ProductCard(
                         product: product,
                         onTap: () => _navigateToProductDetail(product),
-                        isInCart: isInCart,
-                        onViewCart: () => context.push('/cart'),
                         onAddToCart: () => _onAddToCart(product),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          )
-        else if (state is ProductError)
-          Container(
-            constraints: const BoxConstraints(minHeight: 150),
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? AppColors.surfaceDark
-                  : AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    state.message,
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : AppColors.textPrimary,
-                      fontSize: 13,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _onRefresh,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
                       ),
-                    ),
-                    child: const Text('Thử lại'),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          const SizedBox.shrink(),
+                    );
+                  },
+                )
+              : state is ProductError
+              ? Center(child: Text(state.message))
+              : const SizedBox.shrink(),
+        ),
       ],
     );
   }
+
+
 }

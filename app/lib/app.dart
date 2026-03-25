@@ -48,18 +48,20 @@ import 'package:frontend_otis/presentation/screens/notification/notification_det
 import 'package:frontend_otis/presentation/screens/notification/notification_create_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/admin_notification_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/notification/admin_notification_detail_screen.dart';
+
 import 'package:frontend_otis/presentation/bloc/notification/notification_bloc.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_list_user.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_view_user_detail.dart';
+import 'package:frontend_otis/presentation/bloc/dashboard/dashboard_bloc.dart';
+import 'package:frontend_otis/presentation/bloc/dashboard/dashboard_event.dart';
 
-import 'package:frontend_otis/core/network/socket_service.dart';
-import 'package:frontend_otis/data/datasources/chat/chat_socket_datasource.dart';
 import 'package:frontend_otis/presentation/bloc/chat/chat_bloc.dart';
 import 'package:frontend_otis/presentation/screens/chat/chat_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_chat_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_chat_detail_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_shop_location_list_screen.dart';
 import 'package:frontend_otis/presentation/screens/admin/admin_shop_location_form_screen.dart';
+import 'package:frontend_otis/presentation/screens/admin/admin_profile_screen.dart';
 import 'package:frontend_otis/presentation/screens/map/shop_locations_map_screen.dart';
 import 'package:frontend_otis/presentation/bloc/map/map_bloc.dart';
 
@@ -141,7 +143,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/shop-locations',
       name: 'shop-locations',
-      builder: (context, state) => const ShopLocationsMapScreen(),
+      builder: (context, state) => BlocProvider<MapBloc>(
+        create: (_) => di.sl<MapBloc>(),
+        child: const ShopLocationsMapScreen(),
+      ),
     ),
     // Customer Routes
     // Admin Routes - Wrap with BlocProvider to share state between List and Detail
@@ -193,9 +198,7 @@ final GoRouter router = GoRouter(
             final socketUrl = extra['socketUrl'] as String;
 
             return BlocProvider(
-              create: (_) => ChatBloc(
-                datasource: ChatSocketDatasource(SocketService.instance),
-              ),
+              create: (_) => di.sl<ChatBloc>(),
               child: ChatScreen(
                 roomId: roomId,
                 userId: userId,
@@ -293,11 +296,17 @@ final GoRouter router = GoRouter(
         return BookingSuccessScreen(order: order);
       },
     ),
-    // Admin Routes - ShellRoute with both AdminLayout (bottom nav) and BlocProvider
+    // Admin Routes - ShellRoute with both AdminLayout (bottom nav) and BlocProviders
+    // DashboardBloc is provided at shell level so it persists across all admin tab navigation.
     ShellRoute(
       builder: (context, state, child) {
-        return BlocProvider<AdminProductBloc>.value(
-          value: di.sl<AdminProductBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider<AdminProductBloc>.value(value: di.sl<AdminProductBloc>()),
+            BlocProvider<DashboardBloc>.value(
+              value: di.sl<DashboardBloc>()..add(const LoadDashboardEvent()),
+            ),
+          ],
           child: AdminLayout(child: child),
         );
       },
@@ -324,6 +333,77 @@ final GoRouter router = GoRouter(
           path: '/admin/products',
           name: 'admin-product-list',
           builder: (context, state) => const AdminProductListScreen(),
+        ),
+        GoRoute(
+          path: '/admin/categories',
+          name: 'admin-categories',
+          builder: (context, state) {
+            final bloc = di.sl<CategoryBloc>();
+
+            bloc.add(LoadCategories(CategoryType.tireBrand));
+            bloc.add(LoadCategories(CategoryType.vehicleMake));
+            bloc.add(LoadCategories(CategoryType.tireSpec));
+
+            return BlocProvider(create: (_) => bloc, child: const CategoryScreen());
+          },
+        ),
+        GoRoute(
+          path: '/admin/profile',
+          name: 'admin-profile',
+          builder: (context, state) => const AdminProfileScreen(),
+        ),
+        GoRoute(
+          path: '/admin/shop-locations',
+          name: 'admin-shop-locations',
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<MapBloc>(),
+            child: const AdminShopLocationListScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/admin/shop-locations/create',
+          name: 'admin-shop-locations-create',
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<MapBloc>(),
+            child: const AdminShopLocationFormScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/admin/shop-locations/:id/edit',
+          name: 'admin-shop-locations-edit',
+          builder: (context, state) {
+            final shopId = state.pathParameters['id']!;
+            return BlocProvider(
+              create: (context) => di.sl<MapBloc>(),
+              child: AdminShopLocationFormScreen(shopId: shopId),
+            );
+          },
+        ),
+        // Admin Notifications: inbox (bell icon from admin header) = view only
+        GoRoute(
+          path: '/admin/notifications-inbox',
+          name: 'admin-notifications-inbox',
+          builder: (context, state) =>
+              const NotificationListScreen(isAdminMode: true, isInboxView: true),
+        ),
+        // Admin Notifications CRUD (from Settings > Quản lý thông báo)
+        GoRoute(
+          path: '/admin/notifications',
+          name: 'admin-notifications',
+          builder: (context, state) => const AdminNotificationListScreen(),
+        ),
+        // Admin notification detail (full CRUD)
+        GoRoute(
+          path: '/admin/notifications/:id',
+          name: 'admin-notification-detail',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            final notification = state.extra as AppNotification?;
+            return AdminNotificationDetailScreen(
+              notificationId: id,
+              notification: notification,
+            );
+          },
         ),
       ],
     ),
@@ -368,69 +448,6 @@ final GoRouter router = GoRouter(
       path: '/profile/update',
       name: 'profile-update',
       builder: (context, state) => const ProfileUpdateScreen(),
-    ),
-    GoRoute(
-      path: '/admin/categories',
-      builder: (context, state) {
-        final bloc = di.sl<CategoryBloc>();
-
-        bloc.add(LoadCategories(CategoryType.tireBrand));
-        bloc.add(LoadCategories(CategoryType.vehicleMake));
-        bloc.add(LoadCategories(CategoryType.tireSpec));
-
-        return BlocProvider(create: (_) => bloc, child: const CategoryScreen());
-      },
-    ),
-    // Admin shop locations (profile → Shop Locations; list/create/edit)
-    GoRoute(
-      path: '/admin/shop-locations/create',
-      builder: (context, state) => BlocProvider<MapBloc>(
-        create: (_) => di.sl<MapBloc>(),
-        child: const AdminShopLocationFormScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/admin/shop-locations/:shopId/edit',
-      builder: (context, state) {
-        final shopId = state.pathParameters['shopId']!;
-        return BlocProvider<MapBloc>(
-          create: (_) => di.sl<MapBloc>(),
-          child: AdminShopLocationFormScreen(shopId: shopId),
-        );
-      },
-    ),
-    GoRoute(
-      path: '/admin/shop-locations',
-      builder: (context, state) => BlocProvider<MapBloc>(
-        create: (_) => di.sl<MapBloc>(),
-        child: const AdminShopLocationListScreen(),
-      ),
-    ),
-    // Admin Notifications: inbox (bell icon from admin header) = view only
-    GoRoute(
-      path: '/admin/notifications-inbox',
-      name: 'admin-notifications-inbox',
-      builder: (context, state) =>
-          const AdminNotificationListScreen(isInboxView: true),
-    ),
-    // Admin Notifications CRUD (from Settings > Quản lý thông báo)
-    GoRoute(
-      path: '/admin/notifications',
-      name: 'admin-notifications',
-      builder: (context, state) => const AdminNotificationListScreen(),
-    ),
-    // Admin notification detail (full CRUD)
-    GoRoute(
-      path: '/admin/notifications/:id',
-      name: 'admin-notification-detail',
-      builder: (context, state) {
-        final id = state.pathParameters['id']!;
-        final notification = state.extra as AppNotification?;
-        return AdminNotificationDetailScreen(
-          notificationId: id,
-          notification: notification,
-        );
-      },
     ),
     GoRoute(
       path: '/otp',

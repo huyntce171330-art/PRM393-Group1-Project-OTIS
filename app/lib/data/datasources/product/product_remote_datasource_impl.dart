@@ -92,8 +92,18 @@ class ProductRemoteDatasourceImpl implements ProductRemoteDatasource {
     final whereString = whereClauses.join(' AND ');
 
     // 1. Get total count of filtered products
-    final countQuery =
-        'SELECT COUNT(*) as total FROM products p WHERE $whereString';
+    // NOTE: All JOINs (tire_specs, brands, vehicle_makes) must be included here
+    //       so that WHERE clauses referencing their aliases (ts.*, b.*, vm.*)
+    //       resolve correctly. Without this, tire-spec filters cause
+    //       "no such column: ts.width" errors.
+    final countQuery = '''
+      SELECT COUNT(*) as total
+      FROM products p
+      LEFT JOIN brands b ON p.brand_id = b.brand_id
+      LEFT JOIN vehicle_makes vm ON p.make_id = vm.make_id
+      LEFT JOIN tire_specs ts ON p.tire_spec_id = ts.tire_spec_id
+      WHERE $whereString
+    ''';
     final countResult = await database.rawQuery(countQuery, whereArgs);
     final total = countResult.first['total'] as int;
 

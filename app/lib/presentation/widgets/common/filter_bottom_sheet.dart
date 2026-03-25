@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_otis/domain/entities/product_filter.dart';
-import 'package:frontend_otis/presentation/widgets/custom_button.dart';
+import 'package:frontend_otis/presentation/widgets/common/custom_button.dart';
 
 /// Bottom sheet for filtering products.
 ///
@@ -101,7 +101,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   void _updateResetState() {
-    final hasChanges = _minPriceController.text.isNotEmpty ||
+    final hasChanges =
+        _minPriceController.text.isNotEmpty ||
         _maxPriceController.text.isNotEmpty ||
         _selectedCategory != null ||
         _sortBy != 'createdAt';
@@ -114,7 +115,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final categories = widget.categories ?? ['Lốp xe', 'Mâm xe', 'Phụ tùng'];
+    final categories = widget.categories ?? ['Tires', 'Rims', 'Accessories'];
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -127,7 +128,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Bộ lọc',
+                'Filters',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -135,7 +136,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
               if (_isResetEnabled)
                 TextButton(
                   onPressed: _resetFilters,
-                  child: const Text('Xóa bộ lọc'),
+                  child: const Text('Reset filters'),
                 ),
             ],
           ),
@@ -143,7 +144,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
           // Price Range
           Text(
-            'Khoảng giá',
+            'Price Range',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -157,7 +158,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   onChanged: (_) => _updateResetState(),
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: 'Từ',
+                    labelText: 'From',
                     prefixText: '₫ ',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -172,7 +173,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   onChanged: (_) => _updateResetState(),
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: 'Đến',
+                    labelText: 'To',
                     prefixText: '₫ ',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -186,7 +187,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
           // Sort Options
           Text(
-            'Sắp xếp theo',
+            'Sort by',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -196,17 +197,17 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildSortChip('Mới nhất', 'createdAt'),
-              _buildSortChip('Giá tăng', 'price', asc: true),
-              _buildSortChip('Giá giảm', 'price', asc: false),
-              _buildSortChip('Tên A-Z', 'name', asc: true),
+              _buildSortChip('Newest', 'createdAt'),
+              _buildSortChip('Price: Low to High', 'price', asc: true),
+              _buildSortChip('Price: High to Low', 'price', asc: false),
+              _buildSortChip('Name A-Z', 'name', asc: true),
             ],
           ),
           const SizedBox(height: 24),
 
           // Category
           Text(
-            'Danh mục',
+            'Categories',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -234,14 +235,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           // Apply Button
           SizedBox(
             width: double.infinity,
-            child: CustomButton(
-              text: 'Áp dụng',
-              onPressed: _applyFilters,
-            ),
+            child: CustomButton(text: 'Apply Filters', onPressed: _applyFilters),
           ),
-          SizedBox(
-            height: MediaQuery.of(context).viewInsets.bottom,
-          ),
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
         ],
       ),
     );
@@ -265,46 +261,55 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 }
 
 /// Sort option enum matching ProductFilter
-enum SortOption {
-  newest,
-  priceAsc,
-  priceDesc,
-  nameAsc,
-  nameDesc,
-  popular,
-}
+enum SortOption { newest, priceAsc, priceDesc, nameAsc, nameDesc, popular }
 
 extension SortOptionExtension on SortOption {
   String get label {
     switch (this) {
-      case SortOption.newest: return 'Mới nhất';
-      case SortOption.priceAsc: return 'Giá tăng dần';
-      case SortOption.priceDesc: return 'Giá giảm dần';
-      case SortOption.nameAsc: return 'Tên A-Z';
-      case SortOption.nameDesc: return 'Tên Z-A';
-      case SortOption.popular: return 'Phổ biến nhất';
+      case SortOption.newest:
+        return 'Newest';
+      case SortOption.priceAsc:
+        return 'Price: Low to High';
+      case SortOption.priceDesc:
+        return 'Price: High to Low';
+      case SortOption.nameAsc:
+        return 'Name A-Z';
+      case SortOption.nameDesc:
+        return 'Name Z-A';
+      case SortOption.popular:
+        return 'Most Popular';
     }
   }
 
   String get sortBy {
     switch (this) {
-      case SortOption.newest: return 'createdAt';
+      case SortOption.newest:
+        return 'createdAt';
       case SortOption.priceAsc:
-      case SortOption.priceDesc: return 'price';
+      case SortOption.priceDesc:
+        return 'price';
       case SortOption.nameAsc:
-      case SortOption.nameDesc: return 'name';
-      case SortOption.popular: return 'stockQuantity';
+      case SortOption.nameDesc:
+        return 'name';
+      case SortOption.popular:
+        return 'stockQuantity';
     }
   }
 
   bool get ascending {
     switch (this) {
-      case SortOption.newest: return false;
-      case SortOption.priceAsc: return true;
-      case SortOption.priceDesc: return false;
-      case SortOption.nameAsc: return true;
-      case SortOption.nameDesc: return false;
-      case SortOption.popular: return false;
+      case SortOption.newest:
+        return false;
+      case SortOption.priceAsc:
+        return true;
+      case SortOption.priceDesc:
+        return false;
+      case SortOption.nameAsc:
+        return true;
+      case SortOption.nameDesc:
+        return false;
+      case SortOption.popular:
+        return false;
     }
   }
 }
