@@ -13,6 +13,7 @@ class NotificationFilter extends Equatable {
   final NotificationType? type;
   final bool? isRead;
   final String? searchQuery;
+  final String? userId; // Added userId filtering
 
   const NotificationFilter({
     this.page = 1,
@@ -20,6 +21,7 @@ class NotificationFilter extends Equatable {
     this.type,
     this.isRead,
     this.searchQuery,
+    this.userId,
   });
 
   NotificationFilter copyWith({
@@ -28,6 +30,7 @@ class NotificationFilter extends Equatable {
     NotificationType? type,
     bool? isRead,
     String? searchQuery,
+    String? userId,
   }) {
     return NotificationFilter(
       page: page ?? this.page,
@@ -35,12 +38,16 @@ class NotificationFilter extends Equatable {
       type: type ?? this.type,
       isRead: isRead ?? this.isRead,
       searchQuery: searchQuery ?? this.searchQuery,
+      userId: userId ?? this.userId,
     );
   }
 
   bool get hasFilters =>
-      type != null || isRead != null || (searchQuery?.isNotEmpty ?? false);
+      type != null ||
+      isRead != null ||
+      (searchQuery?.isNotEmpty ?? false) ||
+      userId != null;
 
   @override
-  List<Object?> get props => [page, limit, type, isRead, searchQuery];
+  List<Object?> get props => [page, limit, type, isRead, searchQuery, userId];
 }

@@ -267,6 +267,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       code:
           'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+      userId: currentUser?.id ?? '0',
       items: _effectiveItems
           .map(
             (cartItem) => OrderItem(

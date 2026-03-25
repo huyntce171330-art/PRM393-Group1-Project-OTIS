@@ -103,7 +103,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     final result = await createOrderUseCase.call(event.order);
     result.fold(
       (failure) => emit(OrderError(failure.message)),
-      (order) => emit(OrderCreated(order)),
+      (order) {
+        emit(OrderOperationSuccess('Order created successfully', order: order));
+        emit(OrderCreated(order));
+      },
     );
   }
 
@@ -123,20 +126,20 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     );
 
     result.fold((failure) => emit(OrderError(failure.message)), (updatedOrder) {
+      // Emit success state first for listeners
+      emit(OrderOperationSuccess('Order status updated: ${event.status}', order: updatedOrder));
+
       if (currentState is OrderLoaded) {
         final updatedList = currentState.orders.map((order) {
           return order.id == updatedOrder.id ? updatedOrder : order;
         }).toList();
         emit(OrderLoaded(updatedList));
       } else if (currentState is OrderDetailLoaded) {
-        // Update the order in the cached list as well
         final List<Order> updatedCachedList = (currentState.cachedList ?? []).map((order) {
           return order.id == updatedOrder.id ? updatedOrder : order;
         }).toList();
         
-        emit(
-          OrderDetailLoaded(updatedOrder, cachedList: updatedCachedList),
-        );
+        emit(OrderDetailLoaded(updatedOrder, cachedList: updatedCachedList));
       } else {
         emit(OrderDetailLoaded(updatedOrder));
       }

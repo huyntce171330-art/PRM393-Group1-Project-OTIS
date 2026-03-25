@@ -36,12 +36,16 @@ class Order extends Equatable {
   /// Source of the order ('buy_now' or 'cart')
   final String source;
 
+  /// User ID this order belongs to
+  final String userId;
+
   const Order({
     required this.id,
     required this.code,
     required this.totalAmount,
     required this.status,
     required this.shippingAddress,
+    required this.userId,
     this.customerName,
     this.paymentMethod,
     required this.createdAt,
@@ -51,17 +55,18 @@ class Order extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    code,
-    totalAmount,
-    status,
-    shippingAddress,
-    customerName,
-    paymentMethod,
-    createdAt,
-    items,
-    source,
-  ];
+        id,
+        code,
+        totalAmount,
+        status,
+        shippingAddress,
+        userId,
+        customerName,
+        paymentMethod,
+        createdAt,
+        items,
+        source,
+      ];
 
   /// Create a copy of Order with modified fields
   Order copyWith({
@@ -70,6 +75,7 @@ class Order extends Equatable {
     double? totalAmount,
     OrderStatus? status,
     String? shippingAddress,
+    String? userId,
     String? customerName,
     String? paymentMethod,
     DateTime? createdAt,
@@ -82,6 +88,7 @@ class Order extends Equatable {
       totalAmount: totalAmount ?? this.totalAmount,
       status: status ?? this.status,
       shippingAddress: shippingAddress ?? this.shippingAddress,
+      userId: userId ?? this.userId,
       customerName: customerName ?? this.customerName,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       createdAt: createdAt ?? this.createdAt,

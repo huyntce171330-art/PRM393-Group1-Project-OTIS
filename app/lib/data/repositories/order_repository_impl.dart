@@ -72,6 +72,7 @@ class OrderRepositoryImpl implements OrderRepository {
         'source': order.source,
         'customer_name': order.customerName,
         'payment_method': order.paymentMethod,
+        'user_id': order.userId,
       };
 
       final orderModel = await remoteDatasource.createOrder(orderData);

@@ -87,6 +87,13 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
         whereArgs.add('%$searchQuery%');
         whereArgs.add('%$searchQuery%');
       }
+
+      final userId = filterParams['userId'];
+      if (userId != null) {
+        // Only show notifications for this user OR system-wide ones (NULL)
+        whereClauses.add('(user_id = ? OR user_id IS NULL)');
+        whereArgs.add(userId);
+      }
     }
 
     final whereString = whereClauses.join(' AND ');

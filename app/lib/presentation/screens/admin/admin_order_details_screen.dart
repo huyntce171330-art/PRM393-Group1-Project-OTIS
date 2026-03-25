@@ -75,39 +75,75 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
           ),
         ),
       ),
-      body: BlocBuilder<OrderBloc, OrderState>(
-        builder: (context, state) {
-          if (state is OrderLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          } else if (state is OrderDetailLoaded) {
-            return Column(
-              children: [
-                Expanded(
-                  child: _buildContent(
-                    context,
+      body: BlocListener<OrderBloc, OrderState>(
+        listener: (context, state) {
+          if (state is OrderOperationSuccess) {
+            String title = "Success";
+            String body = state.message;
+            if (state.message.contains('canceled')) {
+              title = "Order Canceled";
+              body = "The order has been successfully canceled.";
+              UiUtils.showCancelPopup(context, body, title: title);
+            } else {
+              UiUtils.showSuccessPopup(context, body, title: title);
+            }
+          }
+        },
+        child: BlocBuilder<OrderBloc, OrderState>(
+          builder: (context, state) {
+            if (state is OrderLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
+            } else if (state is OrderOperationSuccess && state.order != null) {
+              return Column(
+                children: [
+                  Expanded(
+                    child: _buildContent(
+                      context,
+                      state.order!,
+                      surfaceColor,
+                      textMain,
+                      textSub,
+                      primaryColor,
+                      isDarkMode,
+                    ),
+                  ),
+                  _buildStickyBottomBar(state.order!, surfaceColor, primaryColor),
+                ],
+              );
+            } else if (state is OrderDetailLoaded) {
+              return Column(
+                children: [
+                  Expanded(
+                    child: _buildContent(
+                      context,
+                      state.order,
+                      surfaceColor,
+                      textMain,
+                      textSub,
+                      primaryColor,
+                      isDarkMode,
+                    ),
+                  ),
+                  _buildStickyBottomBar(
                     state.order,
                     surfaceColor,
-                    textMain,
-                    textSub,
                     primaryColor,
-                    isDarkMode,
                   ),
+                ],
+              );
+            } else if (state is OrderError) {
+              return Center(
+                child: Text(
+                  state.message,
+                  style: const TextStyle(color: Colors.red),
                 ),
-                _buildStickyBottomBar(state.order, surfaceColor, primaryColor),
-              ],
-            );
-          } else if (state is OrderError) {
-            return Center(
-              child: Text(
-                state.message,
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
@@ -666,22 +702,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
 
   void _updateStatus(String orderId, String newStatus) {
     context.read<OrderBloc>().add(UpdateOrderStatusEvent(orderId, newStatus));
-
-    // Show feedback popup
-    if (newStatus == 'canceled') {
-      UiUtils.showCancelPopup(
-        context,
-        "The order has been successfully canceled.",
-        title: "Order Canceled",
-      );
-    } else {
-      String msg = "Order status updated to $newStatus";
-      if (newStatus == 'processing') msg = "Order is now being processed";
-      if (newStatus == 'shipping') msg = "Order is now out for delivery";
-      if (newStatus == 'completed') msg = "Order marked as completed";
-
-      UiUtils.showSuccessPopup(context, msg);
-    }
   }
 
   Widget _buildActionButton({

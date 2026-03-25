@@ -42,18 +42,37 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: const HeaderBar(title: 'Order Details', showBack: true),
-      body: BlocBuilder<OrderBloc, OrderState>(
-        builder: (context, state) {
-          if (state is OrderLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-          } else if (state is OrderDetailLoaded) {
-            final order = state.order;
-            return _buildContent(context, order, surfaceColor);
-          } else if (state is OrderError) {
-            return Center(child: Text(state.message));
+      body: BlocListener<OrderBloc, OrderState>(
+        listener: (context, state) {
+          if (state is OrderOperationSuccess) {
+            String title = "Success";
+            String body = state.message;
+            if (state.message.contains('canceled')) {
+              title = "Order Canceled";
+              body = "The order has been successfully canceled.";
+              UiUtils.showCancelPopup(context, body, title: title);
+            } else {
+              UiUtils.showSuccessPopup(context, body, title: title);
+            }
           }
-          return const SizedBox.shrink();
         },
+        child: BlocBuilder<OrderBloc, OrderState>(
+          builder: (context, state) {
+            if (state is OrderLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
+            } else if (state is OrderOperationSuccess && state.order != null) {
+              return _buildContent(context, state.order!, surfaceColor);
+            } else if (state is OrderDetailLoaded) {
+              final order = state.order;
+              return _buildContent(context, order, surfaceColor);
+            } else if (state is OrderError) {
+              return Center(child: Text(state.message));
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
@@ -119,61 +138,61 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                height: 4,
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-              ),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  double progressWidth = 0;
-                  if (currentStep == 1) {
-                    progressWidth = (constraints.maxWidth - 32) / 2;
-                  } else if (currentStep == 2) {
-                    progressWidth = constraints.maxWidth - 32;
-                  }
+          LayoutBuilder(
+            builder: (context, constraints) {
+              double progressWidth = 0;
+              if (currentStep == 1) {
+                progressWidth = (constraints.maxWidth - 32) / 2;
+              } else if (currentStep == 2) {
+                progressWidth = constraints.maxWidth - 32;
+              }
 
-                  return Positioned(
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    height: 4,
+                    width: double.infinity,
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  ),
+                  Positioned(
                     left: 16,
                     child: Container(
                       height: 4,
                       width: progressWidth,
                       color: statusColor,
                     ),
-                  );
-                },
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildStepCircle(
-                    Icons.check,
-                    currentStep >= 0,
-                    'Ordered',
-                    statusColor,
-                    true,
                   ),
-                  _buildStepCircle(
-                    Icons.local_shipping,
-                    currentStep >= 1,
-                    'Shipping',
-                    statusColor,
-                    currentStep >= 1,
-                  ),
-                  _buildStepCircle(
-                    Icons.home,
-                    currentStep >= 2,
-                    'Delivered',
-                    statusColor,
-                    currentStep >= 2,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStepCircle(
+                        Icons.check,
+                        currentStep >= 0,
+                        'Ordered',
+                        statusColor,
+                        true,
+                      ),
+                      _buildStepCircle(
+                        Icons.local_shipping,
+                        currentStep >= 1,
+                        'Shipping',
+                        statusColor,
+                        currentStep >= 1,
+                      ),
+                      _buildStepCircle(
+                        Icons.home,
+                        currentStep >= 2,
+                        'Delivered',
+                        statusColor,
+                        currentStep >= 2,
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 24),
         ],

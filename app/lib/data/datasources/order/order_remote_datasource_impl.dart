@@ -155,7 +155,11 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
         final code =
             orderData['code'] ?? 'ORD-${DateTime.now().millisecondsSinceEpoch}';
         final status = orderData['status'] ?? 'pending_payment';
-        final userId = 2; // Hardcoded logged in user
+
+        // Extract and parse user_id
+        final userIdRaw = orderData['user_id'];
+        final userId = (userIdRaw is int) ? userIdRaw : int.tryParse(userIdRaw.toString()) ?? 2;
+        
         final totalAmount = orderData['total_amount'];
         final shippingAddress = orderData['shipping_address'];
 
@@ -167,7 +171,28 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
           'shipping_address': shippingAddress,
           'source': orderData['source'] ?? 'cart',
           'user_id': userId,
-          'created_at': DateTime.now().toIso8601String(),
+          'created_at': DateTime.now()
+              .toUtc()
+              .toIso8601String()
+              .replaceAll('T', ' ')
+              .split('.')
+              .first,
+        });
+
+        // 1.5 Create order notification for user (Not for Admin)
+        await txn.insert('notifications', {
+          'title': 'Order Placed successfully',
+          'body': 'Your order $code has been placed successfully.',
+          'type': 'order',
+          'user_id': userId,
+          'payload': orderId.toString(),
+          'is_read': 0,
+          'created_at': DateTime.now()
+              .toUtc()
+              .toIso8601String()
+              .replaceAll('T', ' ')
+              .split('.')
+              .first,
         });
 
         // 2. Insert Payment Record
@@ -298,6 +323,39 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
         where: 'order_id = ?',
         whereArgs: [orderId],
       );
+
+      if (count > 0) {
+        // Create Status Update Notification for User
+        String title = '';
+        String body = '';
+
+        if (status == 'canceled') {
+          title = 'Order Canceled';
+          body = 'Your order ${maps.first['code']} has been canceled.';
+        } else if (status == 'shipping') {
+          title = 'Order Shipping';
+          body = 'Your order ${maps.first['code']} is out for delivery.';
+        } else if (status == 'completed') {
+          title = 'Order Completed';
+          body = 'Your order ${maps.first['code']} has been completed successfully.';
+        } else if (status == 'processing') {
+          title = 'Order Processing';
+          body = 'Your order ${maps.first['code']} is currently being prepared.';
+        }
+
+        if (title.isNotEmpty) {
+          final customerId = maps.first['user_id'];
+          await database.insert('notifications', {
+            'title': title,
+            'body': body,
+            'type': 'order',
+            'user_id': (customerId is String) ? int.tryParse(customerId) : customerId,
+            'payload': orderId.toString(),
+            'is_read': 0,
+            'created_at': DateTime.now().toUtc().toIso8601String().replaceAll('T', ' ').split('.').first,
+          });
+        }
+      }
 
       if (count == 0) {
         throw ServerException(message: 'Order not found for update');

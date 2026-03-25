@@ -44,3 +44,12 @@ class OrderError extends OrderState {
   @override
   List<Object?> get props => [message];
 }
+
+class OrderOperationSuccess extends OrderState {
+  final String message;
+  final Order? order;
+  const OrderOperationSuccess(this.message, {this.order});
+
+  @override
+  List<Object?> get props => [message, order];
+}
