@@ -335,6 +335,19 @@ final GoRouter router = GoRouter(
           builder: (context, state) => const AdminProductListScreen(),
         ),
         GoRoute(
+          path: '/admin/categories',
+          name: 'admin-categories',
+          builder: (context, state) {
+            final bloc = di.sl<CategoryBloc>();
+
+            bloc.add(LoadCategories(CategoryType.tireBrand));
+            bloc.add(LoadCategories(CategoryType.vehicleMake));
+            bloc.add(LoadCategories(CategoryType.tireSpec));
+
+            return BlocProvider(create: (_) => bloc, child: const CategoryScreen());
+          },
+        ),
+        GoRoute(
           path: '/admin/profile',
           name: 'admin-profile',
           builder: (context, state) => const AdminProfileScreen(),
@@ -435,18 +448,6 @@ final GoRouter router = GoRouter(
       path: '/profile/update',
       name: 'profile-update',
       builder: (context, state) => const ProfileUpdateScreen(),
-    ),
-    GoRoute(
-      path: '/admin/categories',
-      builder: (context, state) {
-        final bloc = di.sl<CategoryBloc>();
-
-        bloc.add(LoadCategories(CategoryType.tireBrand));
-        bloc.add(LoadCategories(CategoryType.vehicleMake));
-        bloc.add(LoadCategories(CategoryType.tireSpec));
-
-        return BlocProvider(create: (_) => bloc, child: const CategoryScreen());
-      },
     ),
     GoRoute(
       path: '/otp',
